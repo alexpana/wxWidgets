@@ -28,29 +28,29 @@ public :
 
     virtual ~wxD2DRenderer();
 
-    wxGraphicsContext *CreateContext(const wxWindowDC& dc);
+    wxGraphicsContext* CreateContext(const wxWindowDC& dc);
 
-    wxGraphicsContext *CreateContext(const wxMemoryDC& dc) wxOVERRIDE;
+    wxGraphicsContext* CreateContext(const wxMemoryDC& dc) wxOVERRIDE;
 
 #if wxUSE_PRINTING_ARCHITECTURE
-    wxGraphicsContext *CreateContext(const wxPrinterDC& dc) wxOVERRIDE;
+    wxGraphicsContext* CreateContext(const wxPrinterDC& dc) wxOVERRIDE;
 #endif
 
 #if wxUSE_ENH_METAFILE
-    wxGraphicsContext *CreateContext(const wxEnhMetaFileDC& dc) wxOVERRIDE;
+    wxGraphicsContext* CreateContext(const wxEnhMetaFileDC& dc) wxOVERRIDE;
 #endif
 
-    wxGraphicsContext *CreateContextFromNativeContext(void * context) wxOVERRIDE;
+    wxGraphicsContext* CreateContextFromNativeContext(void* context) wxOVERRIDE;
 
-    wxGraphicsContext *CreateContextFromNativeWindow(void * window) wxOVERRIDE;
+    wxGraphicsContext* CreateContextFromNativeWindow(void* window) wxOVERRIDE;
 
-    wxGraphicsContext *CreateContext(wxWindow *window) wxOVERRIDE;
+    wxGraphicsContext* CreateContext(wxWindow* window) wxOVERRIDE;
 
 #if wxUSE_IMAGE
-    wxGraphicsContext *CreateContextFromImage(wxImage& image) wxOVERRIDE;
+    wxGraphicsContext* CreateContextFromImage(wxImage& image) wxOVERRIDE;
 #endif // wxUSE_IMAGE
 
-    wxGraphicsContext *CreateMeasuringContext() wxOVERRIDE;
+    wxGraphicsContext* CreateMeasuringContext() wxOVERRIDE;
 
     wxGraphicsPath CreatePath() wxOVERRIDE;
 
@@ -95,7 +95,7 @@ public :
     wxGraphicsBitmap CreateSubBitmap(const wxGraphicsBitmap& bitmap, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
 
     wxString GetName() const wxOVERRIDE;
-    void GetVersion(int *major, int *minor, int *micro) const wxOVERRIDE;
+    void GetVersion(int* major, int* minor, int* micro) const wxOVERRIDE;
 
 protected :
 
@@ -126,53 +126,53 @@ wxD2DRenderer::~wxD2DRenderer()
     wxFAIL_MSG("not implemented");
 }
 
-wxGraphicsContext *wxD2DRenderer::CreateContext(const wxWindowDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& dc)
 {
     wxFAIL_MSG("not implemented");
 }
 
-wxGraphicsContext *wxD2DRenderer::CreateContext(const wxMemoryDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& dc)
 {
     wxFAIL_MSG("not implemented");
 }
 
 #if wxUSE_PRINTING_ARCHITECTURE
-wxGraphicsContext *wxD2DRenderer::CreateContext(const wxPrinterDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxPrinterDC& dc)
 {
     wxFAIL_MSG("not implemented");
 }
 #endif
 
 #if wxUSE_ENH_METAFILE
-wxGraphicsContext *wxD2DRenderer::CreateContext(const wxEnhMetaFileDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxEnhMetaFileDC& dc)
 {
     wxFAIL_MSG("not implemented");
 }
 #endif
 
-wxGraphicsContext *wxD2DRenderer::CreateContextFromNativeContext(void * context)
+wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* context)
 {
     wxFAIL_MSG("not implemented");
 }
 
-wxGraphicsContext *wxD2DRenderer::CreateContextFromNativeWindow(void * window)
+wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeWindow(void* window)
 {
     wxFAIL_MSG("not implemented");
 }
 
-wxGraphicsContext *wxD2DRenderer::CreateContext(wxWindow *window)
+wxGraphicsContext* wxD2DRenderer::CreateContext(wxWindow* window)
 {
     wxFAIL_MSG("not implemented");
 }
 
 #if wxUSE_IMAGE
-wxGraphicsContext *wxD2DRenderer::CreateContextFromImage(wxImage& image)
+wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& image)
 {
     wxFAIL_MSG("not implemented");
 }
 #endif // wxUSE_IMAGE
 
-wxGraphicsContext *wxD2DRenderer::CreateMeasuringContext()
+wxGraphicsContext* wxD2DRenderer::CreateMeasuringContext()
 {
     wxFAIL_MSG("not implemented");
 }
@@ -265,7 +265,7 @@ wxString wxD2DRenderer::GetName() const
     wxFAIL_MSG("not implemented");
 }
 
-void wxD2DRenderer::GetVersion(int *major, int *minor, int *micro)
+void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro)
 {
     wxFAIL_MSG("not implemented");
 }
