@@ -17,6 +17,268 @@
 // add individual includes here
 #endif
 
+#include "wx/graphics.h"
+
+//-----------------------------------------------------------------------------
+// wxD2DContext declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DContext : public wxGraphicsContext
+{
+public:
+    wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc);
+    wxD2DContext(wxGraphicsRenderer* renderer, HDC hdc, wxDouble width, wxDouble height);
+    wxD2DContext(wxGraphicsRenderer* renderer, HWND hwnd);
+    wxD2DContext(wxGraphicsRenderer* renderer);
+
+    ~wxD2DContext() wxOVERRIDE;
+
+    void Clip(const wxRegion &region) wxOVERRIDE;
+    void Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+    void ResetClip() wxOVERRIDE;
+
+    void* GetNativeContext() wxOVERRIDE;
+
+    void StrokePath(const wxGraphicsPath& p) wxOVERRIDE;
+    void FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
+
+    void DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE; 
+
+    void StrokeLines(size_t n, const wxPoint2DDouble* points) wxOVERRIDE;
+    void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE
+    {
+        wxGraphicsContext::StrokeLines(n, beginPoints, endPoints);
+    }
+
+    void DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
+
+    bool SetAntialiasMode(wxAntialiasMode antialias) wxOVERRIDE;
+
+    bool SetInterpolationQuality(wxInterpolationQuality interpolation) wxOVERRIDE;
+
+    bool SetCompositionMode(wxCompositionMode op) wxOVERRIDE;
+
+    void BeginLayer(wxDouble opacity) wxOVERRIDE;
+
+    void EndLayer() wxOVERRIDE;
+
+    void Translate(wxDouble dx, wxDouble dy) wxOVERRIDE;
+    void Scale(wxDouble xScale, wxDouble yScale) wxOVERRIDE;
+    void Rotate(wxDouble angle) wxOVERRIDE;
+
+    void ConcatTransform(const wxGraphicsMatrix& matrix) wxOVERRIDE;
+
+    void SetTransform(const wxGraphicsMatrix& matrix) wxOVERRIDE;
+
+    wxGraphicsMatrix GetTransform() const wxOVERRIDE;
+
+    void DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+    void DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+
+    void DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+
+    void PushState() wxOVERRIDE;
+    void PopState() wxOVERRIDE;
+
+    void GetTextExtent(
+        const wxString& str, 
+        wxDouble* width, 
+        wxDouble* height,
+        wxDouble* descent,
+        wxDouble* externalLeading) const wxOVERRIDE;
+
+    void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE;
+    bool ShouldOffset() const wxOVERRIDE;
+    void GetSize(wxDouble* width, wxDouble* height) wxOVERRIDE;
+
+private:
+    wxDECLARE_NO_COPY_CLASS(wxD2DContext);
+};
+
+//-----------------------------------------------------------------------------
+// wxD2DContext implementation
+//-----------------------------------------------------------------------------
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HDC hdc, wxDouble width, wxDouble height)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HWND hwnd)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DContext::~wxD2DContext()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::Clip(const wxRegion& region)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::ResetClip()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void* wxD2DContext::GetNativeContext()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::StrokePath(const wxGraphicsPath& p)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* points)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints)
+{
+    wxGraphicsContext::StrokeLines(n, beginPoints, endPoints);
+}
+
+void wxD2DContext::DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::BeginLayer(wxDouble opacity)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::EndLayer()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::Translate(wxDouble dx, wxDouble dy)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::Scale(wxDouble xScale, wxDouble yScale)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::Rotate(wxDouble angle)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::ConcatTransform(const wxGraphicsMatrix& matrix)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxGraphicsMatrix wxD2DContext::GetTransform() const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::PushState()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::PopState()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::GetTextExtent(
+    const wxString& str, 
+    wxDouble* width, 
+    wxDouble* height,
+    wxDouble* descent,
+    wxDouble* externalLeading) const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+bool wxD2DContext::ShouldOffset() const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DContext::GetSize(wxDouble* width, wxDouble* height)
+{
+    wxFAIL_MSG("not implemented");
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DRenderer declaration
 //-----------------------------------------------------------------------------
