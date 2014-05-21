@@ -529,5 +529,10 @@ wxString wxD2DRenderer::GetName() const
 
 void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro)
 {
-    wxFAIL_MSG("not implemented");
+    if ( major )
+        *major = wxPlatformInfo::Get().GetOSMajorVersion();
+    if ( minor )
+        *minor = wxPlatformInfo::Get().GetOSMinorVersion();
+    if ( micro )
+        *micro = 0;
 }
