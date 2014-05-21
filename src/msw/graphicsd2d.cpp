@@ -524,7 +524,7 @@ wxGraphicsBitmap wxD2DRenderer::CreateSubBitmap(const wxGraphicsBitmap& bitmap, 
 
 wxString wxD2DRenderer::GetName() const
 {
-    wxFAIL_MSG("not implemented");
+    return "direct2d";
 }
 
 void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro)
