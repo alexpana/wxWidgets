@@ -142,6 +142,7 @@ void wxD2DContext::ResetClip()
 void* wxD2DContext::GetNativeContext()
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 void wxD2DContext::StrokePath(const wxGraphicsPath& p)
@@ -177,16 +178,19 @@ void wxD2DContext::DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonF
 bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
 {
     wxFAIL_MSG("not implemented");
+    return false;
 }
 
 bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
 {
     wxFAIL_MSG("not implemented");
+    return false;
 }
 
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 {
     wxFAIL_MSG("not implemented");
+    return false;
 }
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
@@ -227,6 +231,7 @@ void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
 wxGraphicsMatrix wxD2DContext::GetTransform() const
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsMatrix();
 }
 
 void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
@@ -272,6 +277,7 @@ void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& wi
 bool wxD2DContext::ShouldOffset() const
 {
     wxFAIL_MSG("not implemented");
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -386,17 +392,20 @@ wxD2DRenderer::~wxD2DRenderer()
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& dc)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& dc)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 #if wxUSE_PRINTING_ARCHITECTURE
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxPrinterDC& dc)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 #endif
 
@@ -404,39 +413,46 @@ wxGraphicsContext* wxD2DRenderer::CreateContext(const wxPrinterDC& dc)
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxEnhMetaFileDC& dc)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 #endif
 
 wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* context)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeWindow(void* window)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(wxWindow* window)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 #if wxUSE_IMAGE
 wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& image)
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 #endif // wxUSE_IMAGE
 
 wxGraphicsContext* wxD2DRenderer::CreateMeasuringContext()
 {
     wxFAIL_MSG("not implemented");
+    return NULL;
 }
 
 wxGraphicsPath wxD2DRenderer::CreatePath()
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsPath();
 }
 
 wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
@@ -444,16 +460,19 @@ wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
     wxDouble tx, wxDouble ty)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsMatrix();
 }
 
 wxGraphicsPen wxD2DRenderer::CreatePen(const wxPen& pen)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsPen();
 }
 
 wxGraphicsBrush wxD2DRenderer::CreateBrush(const wxBrush& brush)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBrush();
 }
 
 
@@ -463,6 +482,7 @@ wxGraphicsBrush wxD2DRenderer::CreateLinearGradientBrush(
     const wxGraphicsGradientStops& stops)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBrush();
 }
 
 wxGraphicsBrush wxD2DRenderer::CreateRadialGradientBrush(
@@ -472,29 +492,34 @@ wxGraphicsBrush wxD2DRenderer::CreateRadialGradientBrush(
     const wxGraphicsGradientStops& stops)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBrush();
 }
 
 // create a native bitmap representation
 wxGraphicsBitmap wxD2DRenderer::CreateBitmap(const wxBitmap& bitmap)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBitmap();
 }
 
 #if wxUSE_IMAGE
 wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromImage(const wxImage& image)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBitmap();
 }
 
 wxImage wxD2DRenderer::CreateImageFromBitmap(const wxGraphicsBitmap& bmp)
 {
     wxFAIL_MSG("not implemented");
+    return wxImage();
 }
 #endif
 
 wxGraphicsFont wxD2DRenderer::CreateFont(const wxFont& font, const wxColour& col)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsFont();
 }
 
 wxGraphicsFont wxD2DRenderer::CreateFont(
@@ -503,18 +528,21 @@ wxGraphicsFont wxD2DRenderer::CreateFont(
     const wxColour& col)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsFont();
 }
 
 // create a graphics bitmap from a native bitmap
 wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromNativeBitmap(void* bitmap)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBitmap();
 }
 
 // create a sub-image from a native image representation
 wxGraphicsBitmap wxD2DRenderer::CreateSubBitmap(const wxGraphicsBitmap& bitmap, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
     wxFAIL_MSG("not implemented");
+    return wxGraphicsBitmap();
 }
 
 wxString wxD2DRenderer::GetName() const
