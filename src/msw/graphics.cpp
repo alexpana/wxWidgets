@@ -1977,9 +1977,18 @@ IMPLEMENT_DYNAMIC_CLASS(wxGDIPlusRenderer,wxGraphicsRenderer)
 
 static wxGDIPlusRenderer gs_GDIPlusRenderer;
 
-wxGraphicsRenderer* wxGraphicsRenderer::GetDefaultRenderer()
+wxGraphicsRenderer* wxGraphicsRenderer::GetGDIPlusRenderer()
 {
     return &gs_GDIPlusRenderer;
+}
+
+wxGraphicsRenderer* wxGraphicsRenderer::GetDefaultRenderer()
+{
+#if wxUSE_GRAPHICS_DIRECT2D
+    return wxGraphicsRenderer::GetDirect2DRenderer();
+#else
+    return wxGraphicsRenderer::GetGDIPlusRenderer()()
+#endif // wxUSE_GRAPHICS_DIRECT2D
 }
 
 bool wxGDIPlusRenderer::EnsureIsLoaded()

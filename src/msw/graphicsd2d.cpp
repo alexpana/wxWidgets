@@ -374,7 +374,7 @@ IMPLEMENT_DYNAMIC_CLASS(wxD2DRenderer,wxGraphicsRenderer)
 
 static wxD2DRenderer gs_D2DRenderer;
 
-wxGraphicsRenderer* wxGraphicsRenderer::GetDefaultRenderer()
+wxGraphicsRenderer* wxGraphicsRenderer::GetDirect2DRenderer()
 {
     return &gs_D2DRenderer;
 }
