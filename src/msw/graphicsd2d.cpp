@@ -49,10 +49,7 @@ public:
     void DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE; 
 
     void StrokeLines(size_t n, const wxPoint2DDouble* points) wxOVERRIDE;
-    void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE
-    {
-        wxGraphicsContext::StrokeLines(n, beginPoints, endPoints);
-    }
+    void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE;
 
     void DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
 
