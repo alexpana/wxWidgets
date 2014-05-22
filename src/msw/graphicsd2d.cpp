@@ -531,7 +531,7 @@ wxString wxD2DRenderer::GetName() const
     return "direct2d";
 }
 
-void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro)
+void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro) const
 {
     if ( major )
         *major = wxPlatformInfo::Get().GetOSMajorVersion();
