@@ -16,7 +16,7 @@
 
 #include "wx/dc.h"
 
-#if wxUSE_GRAPHICS_CONTEXT
+#if wxUSE_GRAPHICS_GDIPLUS
 
 #ifndef WX_PRECOMP
     #include "wx/msw/wrapcdlg.h"
@@ -2373,4 +2373,4 @@ void wxGCDC::ReleaseHDC(WXHDC hdc)
     g->ReleaseHDC((HDC)hdc);
 }
 
-#endif  // wxUSE_GRAPHICS_CONTEXT
+#endif // wxUSE_GRAPHICS_GDIPLUS

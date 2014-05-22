@@ -13,6 +13,10 @@
 #pragma hdrstop
 #endif
 
+#include "wx/dc.h"
+
+#if wxUSE_GRAPHICS_DIRECT2D
+
 #ifndef WX_PRECOMP
 // add individual includes here
 #endif
@@ -536,3 +540,5 @@ void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro)
     if ( micro )
         *micro = 0;
 }
+
+#endif // wxUSE_GRAPHICS_DIRECT2D
