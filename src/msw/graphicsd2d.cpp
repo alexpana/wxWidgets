@@ -99,22 +99,22 @@ private:
 // wxD2DContext implementation
 //-----------------------------------------------------------------------------
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc)
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc) : wxGraphicsContext(renderer)
 {
     wxFAIL_MSG("not implemented");
 }
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HDC hdc, wxDouble width, wxDouble height)
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HDC hdc, wxDouble width, wxDouble height) : wxGraphicsContext(renderer)
 {
     wxFAIL_MSG("not implemented");
 }
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HWND hwnd)
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HWND hwnd) : wxGraphicsContext(renderer)
 {
     wxFAIL_MSG("not implemented");
 }
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer)
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer) : wxGraphicsContext(renderer)
 {
     wxFAIL_MSG("not implemented");
 }
