@@ -150,7 +150,7 @@ void wxD2DContext::StrokePath(const wxGraphicsPath& p)
     wxFAIL_MSG("not implemented");
 }
 
-void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE)
+void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle)
 {
     wxFAIL_MSG("not implemented");
 }
@@ -170,7 +170,7 @@ void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, con
     wxGraphicsContext::StrokeLines(n, beginPoints, endPoints);
 }
 
-void wxD2DContext::DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE)
+void wxD2DContext::DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle)
 {
     wxFAIL_MSG("not implemented");
 }
