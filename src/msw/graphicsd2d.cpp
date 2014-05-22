@@ -373,9 +373,9 @@ private :
 // wxD2DRenderer implementation
 //-----------------------------------------------------------------------------
 
-IMPLEMENT_DYNAMIC_CLASS(wxGDIPlusRenderer,wxGraphicsRenderer)
+IMPLEMENT_DYNAMIC_CLASS(wxD2DRenderer,wxGraphicsRenderer)
 
-static wxGDIPlusRenderer gs_D2DRenderer;
+static wxD2DRenderer gs_D2DRenderer;
 
 wxGraphicsRenderer* wxGraphicsRenderer::GetDefaultRenderer()
 {
