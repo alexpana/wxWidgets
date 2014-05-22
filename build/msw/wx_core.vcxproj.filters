@@ -684,6 +684,9 @@
     <ClCompile Include="..\..\src\msw\graphics.cpp">
       <Filter>MSW Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\msw\graphicsd2d.cpp">
+      <Filter>MSW Sources</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\msw\headerctrl.cpp">
       <Filter>MSW Sources</Filter>
     </ClCompile>

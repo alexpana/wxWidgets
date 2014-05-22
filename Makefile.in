@@ -5186,6 +5186,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS =  \
 	monodll_msw_gdiobj.o \
 	monodll_gdiplus.o \
 	monodll_msw_graphics.o \
+	monodll_graphicsd2d.o \
 	monodll_msw_icon.o \
 	monodll_msw_imaglist.o \
 	monodll_msw_minifram.o \
@@ -5248,6 +5249,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS =  \
 	monodll_msw_gdiobj.o \
 	monodll_gdiplus.o \
 	monodll_msw_graphics.o \
+	monodll_graphicsd2d.o \
 	monodll_msw_icon.o \
 	monodll_msw_imaglist.o \
 	monodll_msw_minifram.o \
@@ -6048,6 +6050,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_1 =  \
 	monodll_msw_gdiobj.o \
 	monodll_gdiplus.o \
 	monodll_msw_graphics.o \
+	monodll_graphicsd2d.o \
 	monodll_msw_icon.o \
 	monodll_msw_imaglist.o \
 	monodll_msw_minifram.o \
@@ -6110,6 +6113,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_1 =  \
 	monodll_msw_gdiobj.o \
 	monodll_gdiplus.o \
 	monodll_msw_graphics.o \
+	monodll_graphicsd2d.o \
 	monodll_msw_icon.o \
 	monodll_msw_imaglist.o \
 	monodll_msw_minifram.o \
@@ -7330,6 +7334,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_2 =  \
 	monolib_msw_gdiobj.o \
 	monolib_gdiplus.o \
 	monolib_msw_graphics.o \
+	monolib_graphicsd2d.o \
 	monolib_msw_icon.o \
 	monolib_msw_imaglist.o \
 	monolib_msw_minifram.o \
@@ -7392,6 +7397,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_2 =  \
 	monolib_msw_gdiobj.o \
 	monolib_gdiplus.o \
 	monolib_msw_graphics.o \
+	monolib_graphicsd2d.o \
 	monolib_msw_icon.o \
 	monolib_msw_imaglist.o \
 	monolib_msw_minifram.o \
@@ -8192,6 +8198,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_3 =  \
 	monolib_msw_gdiobj.o \
 	monolib_gdiplus.o \
 	monolib_msw_graphics.o \
+	monolib_graphicsd2d.o \
 	monolib_msw_icon.o \
 	monolib_msw_imaglist.o \
 	monolib_msw_minifram.o \
@@ -8254,6 +8261,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_3 =  \
 	monolib_msw_gdiobj.o \
 	monolib_gdiplus.o \
 	monolib_msw_graphics.o \
+	monolib_graphicsd2d.o \
 	monolib_msw_icon.o \
 	monolib_msw_imaglist.o \
 	monolib_msw_minifram.o \
@@ -9631,6 +9639,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_4 =  \
 	coredll_msw_gdiobj.o \
 	coredll_gdiplus.o \
 	coredll_msw_graphics.o \
+	coredll_graphicsd2d.o \
 	coredll_msw_icon.o \
 	coredll_msw_imaglist.o \
 	coredll_msw_minifram.o \
@@ -9693,6 +9702,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_4 =  \
 	coredll_msw_gdiobj.o \
 	coredll_gdiplus.o \
 	coredll_msw_graphics.o \
+	coredll_graphicsd2d.o \
 	coredll_msw_icon.o \
 	coredll_msw_imaglist.o \
 	coredll_msw_minifram.o \
@@ -10493,6 +10503,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_5 =  \
 	coredll_msw_gdiobj.o \
 	coredll_gdiplus.o \
 	coredll_msw_graphics.o \
+	coredll_graphicsd2d.o \
 	coredll_msw_icon.o \
 	coredll_msw_imaglist.o \
 	coredll_msw_minifram.o \
@@ -10555,6 +10566,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_5 =  \
 	coredll_msw_gdiobj.o \
 	coredll_gdiplus.o \
 	coredll_msw_graphics.o \
+	coredll_graphicsd2d.o \
 	coredll_msw_icon.o \
 	coredll_msw_imaglist.o \
 	coredll_msw_minifram.o \
@@ -11223,6 +11235,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_6 =  \
 	corelib_msw_gdiobj.o \
 	corelib_gdiplus.o \
 	corelib_msw_graphics.o \
+	corelib_graphicsd2d.o \
 	corelib_msw_icon.o \
 	corelib_msw_imaglist.o \
 	corelib_msw_minifram.o \
@@ -11285,6 +11298,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_6 =  \
 	corelib_msw_gdiobj.o \
 	corelib_gdiplus.o \
 	corelib_msw_graphics.o \
+	corelib_graphicsd2d.o \
 	corelib_msw_icon.o \
 	corelib_msw_imaglist.o \
 	corelib_msw_minifram.o \
@@ -12085,6 +12099,7 @@ COND_TOOLKIT_MSW___LOWLEVEL_SRC_OBJECTS_7 =  \
 	corelib_msw_gdiobj.o \
 	corelib_gdiplus.o \
 	corelib_msw_graphics.o \
+	corelib_graphicsd2d.o \
 	corelib_msw_icon.o \
 	corelib_msw_imaglist.o \
 	corelib_msw_minifram.o \
@@ -12147,6 +12162,7 @@ COND_TOOLKIT_WINCE___LOWLEVEL_SRC_OBJECTS_7 =  \
 	corelib_msw_gdiobj.o \
 	corelib_gdiplus.o \
 	corelib_msw_graphics.o \
+	corelib_graphicsd2d.o \
 	corelib_msw_icon.o \
 	corelib_msw_imaglist.o \
 	corelib_msw_minifram.o \
@@ -19020,6 +19036,12 @@ monodll_sound_sdl.o: $(srcdir)/src/unix/sound_sdl.cpp $(MONODLL_ODEP)
 @COND_TOOLKIT_WINCE_USE_GUI_1@monodll_msw_graphics.o: $(srcdir)/src/msw/graphics.cpp $(MONODLL_ODEP)
 @COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(MONODLL_CXXFLAGS) $(srcdir)/src/msw/graphics.cpp
 
+@COND_TOOLKIT_MSW_USE_GUI_1@monodll_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(MONODLL_ODEP)
+@COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(MONODLL_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
+
+@COND_TOOLKIT_WINCE_USE_GUI_1@monodll_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(MONODLL_ODEP)
+@COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(MONODLL_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
+
 @COND_TOOLKIT_MSW_USE_GUI_1@monodll_msw_icon.o: $(srcdir)/src/msw/icon.cpp $(MONODLL_ODEP)
 @COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(MONODLL_CXXFLAGS) $(srcdir)/src/msw/icon.cpp
 
@@ -24587,6 +24609,12 @@ monolib_sound_sdl.o: $(srcdir)/src/unix/sound_sdl.cpp $(MONOLIB_ODEP)
 
 @COND_TOOLKIT_WINCE_USE_GUI_1@monolib_msw_graphics.o: $(srcdir)/src/msw/graphics.cpp $(MONOLIB_ODEP)
 @COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(MONOLIB_CXXFLAGS) $(srcdir)/src/msw/graphics.cpp
+
+@COND_TOOLKIT_MSW_USE_GUI_1@monolib_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(MONOLIB_ODEP)
+@COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(MONOLIB_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
+
+@COND_TOOLKIT_WINCE_USE_GUI_1@monolib_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(MONOLIB_ODEP)
+@COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(MONOLIB_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
 
 @COND_TOOLKIT_MSW_USE_GUI_1@monolib_msw_icon.o: $(srcdir)/src/msw/icon.cpp $(MONOLIB_ODEP)
 @COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(MONOLIB_CXXFLAGS) $(srcdir)/src/msw/icon.cpp
@@ -30273,6 +30301,12 @@ coredll_win32.o: $(srcdir)/src/univ/themes/win32.cpp $(COREDLL_ODEP)
 @COND_TOOLKIT_WINCE_USE_GUI_1@coredll_msw_graphics.o: $(srcdir)/src/msw/graphics.cpp $(COREDLL_ODEP)
 @COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(COREDLL_CXXFLAGS) $(srcdir)/src/msw/graphics.cpp
 
+@COND_TOOLKIT_MSW_USE_GUI_1@coredll_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(COREDLL_ODEP)
+@COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(COREDLL_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
+
+@COND_TOOLKIT_WINCE_USE_GUI_1@coredll_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(COREDLL_ODEP)
+@COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(COREDLL_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
+
 @COND_TOOLKIT_MSW_USE_GUI_1@coredll_msw_icon.o: $(srcdir)/src/msw/icon.cpp $(COREDLL_ODEP)
 @COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(COREDLL_CXXFLAGS) $(srcdir)/src/msw/icon.cpp
 
@@ -34388,6 +34422,12 @@ corelib_win32.o: $(srcdir)/src/univ/themes/win32.cpp $(CORELIB_ODEP)
 
 @COND_TOOLKIT_WINCE_USE_GUI_1@corelib_msw_graphics.o: $(srcdir)/src/msw/graphics.cpp $(CORELIB_ODEP)
 @COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(CORELIB_CXXFLAGS) $(srcdir)/src/msw/graphics.cpp
+
+@COND_TOOLKIT_MSW_USE_GUI_1@corelib_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(CORELIB_ODEP)
+@COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(CORELIB_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
+
+@COND_TOOLKIT_WINCE_USE_GUI_1@corelib_graphicsd2d.o: $(srcdir)/src/msw/graphicsd2d.cpp $(CORELIB_ODEP)
+@COND_TOOLKIT_WINCE_USE_GUI_1@	$(CXXC) -c -o $@ $(CORELIB_CXXFLAGS) $(srcdir)/src/msw/graphicsd2d.cpp
 
 @COND_TOOLKIT_MSW_USE_GUI_1@corelib_msw_icon.o: $(srcdir)/src/msw/icon.cpp $(CORELIB_ODEP)
 @COND_TOOLKIT_MSW_USE_GUI_1@	$(CXXC) -c -o $@ $(CORELIB_CXXFLAGS) $(srcdir)/src/msw/icon.cpp

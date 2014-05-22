@@ -738,6 +738,7 @@
     <ClCompile Include="..\..\src\msw\gdiobj.cpp" />
     <ClCompile Include="..\..\src\msw\gdiplus.cpp" />
     <ClCompile Include="..\..\src\msw\graphics.cpp" />
+    <ClCompile Include="..\..\src\msw\graphicsd2d.cpp" />
     <ClCompile Include="..\..\src\msw\headerctrl.cpp" />
     <ClCompile Include="..\..\src\msw\helpchm.cpp" />
     <ClCompile Include="..\..\src\msw\helpwin.cpp" />
