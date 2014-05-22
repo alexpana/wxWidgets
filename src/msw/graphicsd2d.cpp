@@ -90,7 +90,6 @@ public:
 
     void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE;
     bool ShouldOffset() const wxOVERRIDE;
-    void GetSize(wxDouble* width, wxDouble* height) wxOVERRIDE;
 
 private:
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
@@ -271,11 +270,6 @@ void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& wi
 }
 
 bool wxD2DContext::ShouldOffset() const
-{
-    wxFAIL_MSG("not implemented");
-}
-
-void wxD2DContext::GetSize(wxDouble* width, wxDouble* height)
 {
     wxFAIL_MSG("not implemented");
 }
