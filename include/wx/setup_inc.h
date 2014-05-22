@@ -760,6 +760,53 @@
 #   define wxUSE_GRAPHICS_CONTEXT 0
 #endif
 
+// Enable wxGraphicsContext implementation using the GDI+ API.
+//
+// Please note that on Windows gdiplus.dll is loaded dynamically which means
+// that nothing special needs to be done as long as you don't use
+// wxGraphicsContext at all or only use it on XP and later systems but you
+// still do need to distribute it yourself for an application using
+// wxGraphicsContext to be runnable on pre-XP systems.
+//
+// Default is 1 except if you're using a non-Microsoft compiler under Windows
+// as only MSVC7+ is known to ship with gdiplus.h. For other compilers (e.g.
+// mingw32) you may need to install the headers (and just the headers)
+// yourself. If you do, change the setting below manually.
+//
+// Recommended setting: 1 if supported by the compilation environment
+//
+// notice that we can't use wxCHECK_VISUALC_VERSION() here as this file is
+// included from wx/platform.h before wxCHECK_VISUALC_VERSION() is defined
+#ifdef _MSC_VER
+#   define wxUSE_GRAPHICS_GDIPLUS 1
+#else
+// Disable support for other Windows compilers, enable it if your compiler
+// comes with new enough SDK or you installed the headers manually.
+//
+// Notice that this will be set by configure under non-Windows platforms
+// anyhow so the value there is not important.
+#   define wxUSE_GRAPHICS_GDIPLUS 0
+#endif
+
+// Enable wxGraphicsContext implementation using the Direct2D API.
+//
+// Default is 1 
+//
+// Recommended setting: 1 if supported by the Windows platform.
+//
+// notice that we can't use wxCHECK_VISUALC_VERSION() here as this file is
+// included from wx/platform.h before wxCHECK_VISUALC_VERSION() is defined
+#ifdef _MSC_VER
+#   define wxUSE_GRAPHICS_DIRECT2D 1
+#else
+// Disable support for other Windows compilers, enable it if your compiler
+// comes with new enough SDK or you installed the headers manually.
+//
+// Notice that this will be set by configure under non-Windows platforms
+// anyhow so the value there is not important.
+#   define wxUSE_GRAPHICS_DIRECT2D 0
+#endif
+
 // Enable wxGraphicsContext implementation using Cairo library.
 //
 // This is not needed under Windows and detected automatically by configure

@@ -713,6 +713,14 @@
 #   endif
 #endif /* !defined(wxUSE_GRAPHICS_CONTEXT) */
 
+#if !wxUSE_GRAPHICS_CONTEXT
+#   if wxUSE_GRAPHICS_GDIPLUS
+#       error "Cannot enable wxUSE_GRAPHICS_GDIPLUS without wxUSE_GRAPHICS_CONTEXT"
+#   endif
+#   if wxUSE_GRAPHICS_DIRECT2D
+#       error "Cannot enable wxUSE_GRAPHICS_DIRECT2D without wxUSE_GRAPHICS_CONTEXT"
+#   endif
+#endif
 
 #ifndef wxUSE_GRID
 #   ifdef wxABORT_ON_CONFIG_ERROR
