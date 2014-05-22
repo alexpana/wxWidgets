@@ -449,8 +449,8 @@ wxGraphicsPath wxD2DRenderer::CreatePath()
 }
 
 wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
-    wxDouble a = 1.0, wxDouble b = 0.0, wxDouble c = 0.0, wxDouble d = 1.0,
-    wxDouble tx = 0.0, wxDouble ty = 0.0)
+    wxDouble a, wxDouble b, wxDouble c, wxDouble d,
+    wxDouble tx, wxDouble ty)
 {
     wxFAIL_MSG("not implemented");
 }
@@ -508,8 +508,8 @@ wxGraphicsFont wxD2DRenderer::CreateFont(const wxFont& font, const wxColour& col
 
 wxGraphicsFont wxD2DRenderer::CreateFont(
     double size, const wxString& facename, 
-    int flags = wxFONTFLAG_DEFAULT, 
-    const wxColour& col = *wxBLACK)
+    int flags, 
+    const wxColour& col)
 {
     wxFAIL_MSG("not implemented");
 }
