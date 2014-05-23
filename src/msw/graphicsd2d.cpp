@@ -23,6 +23,17 @@
 
 #include "wx/graphics.h"
 
+#include <d2d1.h>
+
+template <class T> void SafeRelease(T **ppT)
+{
+    if (*ppT)
+    {
+        (*ppT)->Release();
+        *ppT = NULL;
+    }
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DContext declaration
 //-----------------------------------------------------------------------------
@@ -367,7 +378,8 @@ public :
     wxString GetName() const wxOVERRIDE;
     void GetVersion(int* major, int* minor, int* micro) const wxOVERRIDE;
 
-protected :
+private:
+    ID2D1Factory* m_direct2dFactory;
 
 private :
     DECLARE_DYNAMIC_CLASS_NO_COPY(wxD2DRenderer)
@@ -388,12 +400,16 @@ wxGraphicsRenderer* wxGraphicsRenderer::GetDirect2DRenderer()
 
 wxD2DRenderer::wxD2DRenderer()
 {
-    wxFAIL_MSG("not implemented");
+    HRESULT result;
+    result = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &m_direct2dFactory);
+    if (FAILED(result)) {
+        wxFAIL_MSG("Could not create Direct2D Factory.");
+    }
 }
 
 wxD2DRenderer::~wxD2DRenderer()
 {
-    wxFAIL_MSG("not implemented");
+    SafeRelease(&m_direct2dFactory);
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& dc)
