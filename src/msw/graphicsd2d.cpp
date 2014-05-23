@@ -44,10 +44,6 @@ template <class T> void SafeRelease(T **ppT)
 class wxD2DContext : public wxGraphicsContext
 {
 public:
-    wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc);
-    wxD2DContext(wxGraphicsRenderer* renderer, HDC hdc, wxDouble width, wxDouble height);
-    wxD2DContext(wxGraphicsRenderer* renderer, HWND hwnd);
-    wxD2DContext(wxGraphicsRenderer* renderer);
 
     ~wxD2DContext() wxOVERRIDE;
 
@@ -118,21 +114,7 @@ private:
 wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc) : wxGraphicsContext(renderer)
 {
     wxFAIL_MSG("not implemented");
-}
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HDC hdc, wxDouble width, wxDouble height) : wxGraphicsContext(renderer)
-{
-    wxFAIL_MSG("not implemented");
-}
-
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, HWND hwnd) : wxGraphicsContext(renderer)
-{
-    wxFAIL_MSG("not implemented");
-}
-
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer) : wxGraphicsContext(renderer)
-{
-    wxFAIL_MSG("not implemented");
 }
 
 wxD2DContext::~wxD2DContext()
