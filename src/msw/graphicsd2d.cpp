@@ -9,6 +9,11 @@
 
 #include "wx/wxprec.h"
 
+// Ensure no previous defines interfere with the Direct2D API headers
+#undef GetHwnd()
+
+#include <d2d1.h>
+
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
@@ -22,8 +27,6 @@
 #endif
 
 #include "wx/graphics.h"
-
-#include <d2d1.h>
 
 template <class T> void SafeRelease(T **ppT)
 {
