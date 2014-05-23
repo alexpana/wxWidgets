@@ -44,6 +44,7 @@ template <class T> void SafeRelease(T **ppT)
 class wxD2DContext : public wxGraphicsContext
 {
 public:
+    wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd);
 
     ~wxD2DContext() wxOVERRIDE;
 
@@ -104,6 +105,15 @@ public:
 private:
     void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
 
+    void EnsureInitialized();
+    HRESULT CreateRenderTarget();
+
+private:
+    HWND m_hwnd;
+    ID2D1Factory* m_direct2dFactory;
+    ID2D1HwndRenderTarget* m_renderTarget;
+
+private:
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
 };
 
@@ -111,15 +121,17 @@ private:
 // wxD2DContext implementation
 //-----------------------------------------------------------------------------
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, const wxDC& dc) : wxGraphicsContext(renderer)
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : wxGraphicsContext(renderer)
 {
-    wxFAIL_MSG("not implemented");
-
+    m_hwnd = hwnd;
+    m_renderTarget = NULL;
+    m_direct2dFactory = direct2dFactory;
 }
 
 wxD2DContext::~wxD2DContext()
 {
-    wxFAIL_MSG("not implemented");
+    m_renderTarget->EndDraw();
+    SafeRelease(&m_renderTarget);
 }
 
 void wxD2DContext::Clip(const wxRegion& region)
@@ -283,6 +295,38 @@ void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
     wxFAIL_MSG("not implemented");
 }
 
+void wxD2DContext::EnsureInitialized()
+{
+    if ( !m_renderTarget ) 
+    {
+        HRESULT result;
+
+        result = CreateRenderTarget();
+
+        if (FAILED(result))
+        {
+            wxFAIL_MSG("Could not create Direct2D render target");
+        }
+
+        m_renderTarget->BeginDraw();
+    }
+}
+
+HRESULT wxD2DContext::CreateRenderTarget()
+{
+    RECT clientRect;
+    GetClientRect(m_hwnd, &clientRect);
+
+    D2D1_SIZE_U size = D2D1::SizeU(
+        clientRect.right = clientRect.left,
+        clientRect.bottom - clientRect.top);
+
+    return m_direct2dFactory->CreateHwndRenderTarget(
+        D2D1::RenderTargetProperties(),
+        D2D1::HwndRenderTargetProperties(m_hwnd, size),
+        &m_renderTarget);
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DRenderer declaration
 //-----------------------------------------------------------------------------
@@ -368,7 +412,7 @@ private:
 
 private :
     DECLARE_DYNAMIC_CLASS_NO_COPY(wxD2DRenderer)
-} ;
+};
 
 //-----------------------------------------------------------------------------
 // wxD2DRenderer implementation
@@ -386,7 +430,7 @@ wxGraphicsRenderer* wxGraphicsRenderer::GetDirect2DRenderer()
 wxD2DRenderer::wxD2DRenderer()
 {
     HRESULT result;
-    result = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &m_direct2dFactory);
+    result = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_direct2dFactory);
     if (FAILED(result)) {
         wxFAIL_MSG("Could not create Direct2D Factory.");
     }
@@ -439,8 +483,7 @@ wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeWindow(void* window)
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(wxWindow* window)
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return new wxD2DContext(this, m_direct2dFactory, (HWND)window->GetHWND());
 }
 
 #if wxUSE_IMAGE
