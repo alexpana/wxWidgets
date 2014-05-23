@@ -92,6 +92,8 @@ public:
     bool ShouldOffset() const wxOVERRIDE;
 
 private:
+    void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
+
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
 };
 
@@ -278,6 +280,11 @@ bool wxD2DContext::ShouldOffset() const
 {
     wxFAIL_MSG("not implemented");
     return false;
+}
+
+void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
+{
+    wxFAIL_MSG("not implemented");
 }
 
 //-----------------------------------------------------------------------------
