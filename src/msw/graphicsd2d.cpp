@@ -28,6 +28,7 @@
 
 #include "wx/graphics.h"
 
+#include "wx/private/graphics.h"
 template <class T> void SafeRelease(T **ppT)
 {
     if (*ppT)
@@ -35,6 +36,108 @@ template <class T> void SafeRelease(T **ppT)
         (*ppT)->Release();
         *ppT = NULL;
     }
+}
+
+//-----------------------------------------------------------------------------
+// wxGDIPlusPathData declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DPathData : public wxGraphicsPathData
+{
+public :
+
+    // ID2D1PathGeometry objects are device-independent resources created
+    // from a ID2D1Factory. This means we can safely create the resource outside
+    // (the wxD2DRenderer handles this) and store it here since it never gets 
+    // thrown away by the GPU.
+    wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry);
+
+    ~wxD2DPathData();
+
+    wxGraphicsObjectRefData* Clone() const wxOVERRIDE;
+
+    // begins a new subpath at (x,y)
+    void MoveToPoint(wxDouble x, wxDouble y) wxOVERRIDE;
+
+    // adds a straight line from the current point to (x,y)
+    void AddLineToPoint(wxDouble x, wxDouble y) wxOVERRIDE;
+
+    // adds a cubic Bezier curve from the current point, using two control points and an end point
+    void AddCurveToPoint(wxDouble cx1, wxDouble cy1, wxDouble cx2, wxDouble cy2, wxDouble x, wxDouble y) wxOVERRIDE;
+
+    // adds an arc of a circle centering at (x,y) with radius (r) from startAngle to endAngle
+    void AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAngle, wxDouble endAngle, bool clockwise) wxOVERRIDE;
+
+    // gets the last point of the current path, (0,0) if not yet set
+    void GetCurrentPoint(wxDouble* x, wxDouble* y) const wxOVERRIDE;
+
+    // adds another path
+    void AddPath(const wxGraphicsPathData* path) wxOVERRIDE;
+
+    // closes the current sub-path
+    void CloseSubpath() wxOVERRIDE;
+
+private :
+    D2D1_POINT_2F m_cursorPosition;
+
+    ID2D1PathGeometry* m_pathGeometry;
+};
+
+wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry) : wxGraphicsPathData(renderer)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DPathData::~wxD2DPathData()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DPathData::wxGraphicsObjectRefData* wxD2DPathData::Clone() const
+{
+    wxFAIL_MSG("not implemented");
+    return NULL;
+}
+
+void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+// adds a straight line from the current point to (x,y)
+void wxD2DPathData::AddLineToPoint(wxDouble x, wxDouble y)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+// adds a cubic Bezier curve from the current point, using two control points and an end point
+void wxD2DPathData::AddCurveToPoint(wxDouble cx1, wxDouble cy1, wxDouble cx2, wxDouble cy2, wxDouble x, wxDouble y)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+// adds an arc of a circle centering at (x,y) with radius (r) from startAngle to endAngle
+void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAngle, wxDouble endAngle, bool clockwise)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+// gets the last point of the current path, (0,0) if not yet set
+void wxD2DPathData::GetCurrentPoint(wxDouble* x, wxDouble* y) const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+// adds another path
+void wxD2DPathData::AddPath(const wxGraphicsPathData* path)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+// closes the current sub-path
+void wxD2DPathData::CloseSubpath()
+{
+    wxFAIL_MSG("not implemented");
 }
 
 //-----------------------------------------------------------------------------
