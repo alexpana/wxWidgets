@@ -278,7 +278,19 @@ wxD2DPenData::~wxD2DPenData()
 
 void wxD2DPenData::CreateStrokeStyle()
 {
-    wxFAIL_MSG("not implemented");
+    D2D1_CAP_STYLE capStyle = ConvertPenCap(m_sourcePen.GetCap());
+    D2D1_LINE_JOIN lineJoin = ConvertPenJoin(m_sourcePen.GetJoin());
+    D2D1_DASH_STYLE dashStyle = ConvertPenStyle(m_sourcePen.GetStyle());
+
+    m_factory->CreateStrokeStyle(
+        D2D1::StrokeStyleProperties(
+            capStyle, capStyle, capStyle,
+            lineJoin, 0, dashStyle, 0.0f),
+        NULL,
+        0,
+        &m_strokeStyle);
+
+    // TODO: Handle user-defined dashes
 }
 
 void wxD2DPenData::EnsureInitialized()
