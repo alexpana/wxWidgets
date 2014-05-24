@@ -56,7 +56,7 @@ D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
     }
 }
 
-D2D1_LINE_JOIN ConvertLineJoin(wxPenJoin join)
+D2D1_LINE_JOIN ConvertPenJoin(wxPenJoin join)
 {
     switch (join)
     {
@@ -74,7 +74,7 @@ D2D1_LINE_JOIN ConvertLineJoin(wxPenJoin join)
     }
 }
 
-D2D1_DASH_STYLE ConvertDashStyle(wxPenStyle dashStyle)
+D2D1_DASH_STYLE ConvertPenStyle(wxPenStyle dashStyle)
 {
     switch (dashStyle)
     {
