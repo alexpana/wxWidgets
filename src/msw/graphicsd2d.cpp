@@ -254,14 +254,17 @@ private:
     // A brush is a device-dependent resource.
     // Drawing outlines with Direct2D requires a brush for the color or stipple.
     ID2D1Brush* m_strokeBrush;
+
+    FLOAT m_width;
 };
 
 //-----------------------------------------------------------------------------
 // wxD2DPenData implementation
 //-----------------------------------------------------------------------------
 
-wxD2DPenData::wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* m_d2dFactory, const wxPen &pen) 
-    : wxGraphicsObjectRefData(renderer)
+wxD2DPenData::wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, const wxPen &pen) 
+    : wxGraphicsObjectRefData(renderer), m_factory(direct2dFactory), m_sourcePen(pen), 
+    m_width(pen.GetWidth()), m_strokeBrush(NULL), m_strokeStyle(NULL)
 {
     CreateStrokeStyle();
     EnsureInitialized();
