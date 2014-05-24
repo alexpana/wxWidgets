@@ -309,7 +309,15 @@ void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
 
 void wxD2DPenData::EnsureInitialized()
 {
-    wxFAIL_MSG("not implemented");
+    // Create the solid color stroke brush
+    if (m_sourcePen.GetStyle() != wxPENSTYLE_STIPPLE && m_solidColorStrokeBrush == NULL)
+    {
+        m_renderTarget->CreateSolidColorBrush(
+            ConvertColour(m_sourcePen.GetColour()),
+            &m_solidColorStrokeBrush);
+    }
+
+    // TODO: Handle stipple pens
 }
 
 
