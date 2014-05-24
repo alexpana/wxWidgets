@@ -74,6 +74,50 @@ D2D1_LINE_JOIN ConvertLineJoin(wxPenJoin join)
     }
 }
 
+D2D1_DASH_STYLE ConvertDashStyle(wxPenStyle dashStyle)
+{
+    switch (dashStyle)
+    {
+    case wxPENSTYLE_SOLID:
+        return D2D1_DASH_STYLE_SOLID;
+    case wxPENSTYLE_DOT:
+        return D2D1_DASH_STYLE_DOT;
+    case wxPENSTYLE_LONG_DASH:
+        return D2D1_DASH_STYLE_DASH;
+    case wxPENSTYLE_SHORT_DASH:
+        return D2D1_DASH_STYLE_DASH;
+    case wxPENSTYLE_DOT_DASH:
+        return D2D1_DASH_STYLE_DASH_DOT;
+    case wxPENSTYLE_USER_DASH:
+        return D2D1_DASH_STYLE_CUSTOM;
+
+    // NB: These styles cannot be converted to a D2D1_DASH_STYLE
+    // and must be handled separately.
+    case wxPENSTYLE_TRANSPARENT:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_INVALID:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_STIPPLE_MASK_OPAQUE:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_STIPPLE_MASK:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_STIPPLE:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_BDIAGONAL_HATCH: 
+        wxFALLTHROUGH;
+    case wxPENSTYLE_CROSSDIAG_HATCH:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_FDIAGONAL_HATCH:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_CROSS_HATCH:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_HORIZONTAL_HATCH:
+        wxFALLTHROUGH;
+    case wxPENSTYLE_VERTICAL_HATCH:
+        return D2D1_DASH_STYLE_SOLID;
+    }
+}
+
 //-----------------------------------------------------------------------------
 // wxGDIPlusPathData declaration
 //-----------------------------------------------------------------------------
