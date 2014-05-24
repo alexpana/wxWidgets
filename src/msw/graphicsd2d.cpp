@@ -410,7 +410,7 @@ private:
 private:
     // We store the Direct2D RenderTarget for later when we need to recreate
     // the device-dependent resources.
-    const ID2D1RenderTarget* m_renderTarget;
+    ID2D1RenderTarget* const m_renderTarget;
 
     // We store the source brush for later when we need to recreate the
     // device-independent resources.
@@ -519,7 +519,14 @@ void wxD2DBrushData::CreateRadialGradientBrush(
 
 void wxD2DBrushData::EnsureInitialized()
 {
-    wxFAIL_MSG("not implemented");
+    if (m_brushType == wxD2DBRUSHTYPE_SOLID && !IsAcquired(m_solidColorBrush)) 
+    {
+        m_renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
+    } 
+    else 
+    {
+        wxFAIL_MSG("not implemented");
+    }
 }
 
 
