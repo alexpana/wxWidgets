@@ -131,7 +131,7 @@ D2D1_COLOR_F ConvertColour(wxColour colour)
 }
 
 //-----------------------------------------------------------------------------
-// wxGDIPlusPathData declaration
+// wxD2DPathData declaration
 //-----------------------------------------------------------------------------
 
 class wxD2DPathData : public wxGraphicsPathData
