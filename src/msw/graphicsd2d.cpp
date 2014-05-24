@@ -118,6 +118,15 @@ D2D1_DASH_STYLE ConvertPenStyle(wxPenStyle dashStyle)
     }
 }
 
+D2D1_COLOR_F ConvertColour(wxColour colour)
+{
+    return D2D1::ColorF(
+        colour.Red() / 255.0f, 
+        colour.Green() / 255.0f, 
+        colour.Blue() / 255.0f, 
+        colour.Alpha() / 255.0f);
+}
+
 //-----------------------------------------------------------------------------
 // wxGDIPlusPathData declaration
 //-----------------------------------------------------------------------------
