@@ -347,6 +347,7 @@ public:
         wxD2DBRUSHTYPE_LINEAR_GRADIENT,
         wxD2DBRUSHTYPE_RADIAL_GRADIENT,
         wxD2DBRUSHTYPE_BITMAP,
+        wxD2DBRUSHTYPE_UNSPECIFIED
     };
 
     struct LinearGradientBrushInfo {
@@ -445,7 +446,7 @@ private:
 
 wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget, const wxBrush &brush) 
     : wxGraphicsObjectRefData(renderer), m_renderTarget(renderTarget), m_sourceBrush(brush),
-    m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_SOLID),
+    m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
     if ( brush.GetStyle() == wxBRUSHSTYLE_SOLID)
@@ -463,7 +464,9 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* 
 }
 
 wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget)
-    : wxGraphicsObjectRefData(renderer)
+    : wxGraphicsObjectRefData(renderer), m_renderTarget(renderTarget),
+    m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
+    m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
     wxFAIL_MSG("not implemented");
 }
