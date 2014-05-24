@@ -83,6 +83,10 @@ private :
     ID2D1PathGeometry* m_pathGeometry;
 };
 
+//-----------------------------------------------------------------------------
+// wxD2DPathData implementation
+//-----------------------------------------------------------------------------
+
 wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry) : wxGraphicsPathData(renderer)
 {
     wxFAIL_MSG("not implemented");
