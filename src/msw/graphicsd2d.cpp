@@ -29,6 +29,9 @@
 #include "wx/graphics.h"
 
 #include "wx/private/graphics.h"
+
+extern WXDLLIMPEXP_DATA_CORE(wxGraphicsPen) wxNullGraphicsPen;
+
 template <class T> void SafeRelease(T **ppT)
 {
     if (*ppT)
@@ -332,6 +335,8 @@ public:
 
     ~wxD2DContext() wxOVERRIDE;
 
+    wxGraphicsPen CreatePen(const wxPen& pen) const wxOVERRIDE;
+
     void Clip(const wxRegion &region) wxOVERRIDE;
     void Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
     void ResetClip() wxOVERRIDE;
@@ -416,6 +421,17 @@ wxD2DContext::~wxD2DContext()
 {
     m_renderTarget->EndDraw();
     SafeRelease(&m_renderTarget);
+}
+
+wxGraphicsPen wxD2DContext::CreatePen(const wxPen& pen) const {
+    if (!pen.IsOk() || pen.GetStyle() == wxPENSTYLE_TRANSPARENT)
+        return wxNullGraphicsPen;
+    else
+    {
+        wxGraphicsPen p;
+        p.SetRefData(new wxD2DPenData(GetRenderer(), m_direct2dFactory, m_renderTarget, pen));
+        return p;
+    }
 }
 
 void wxD2DContext::Clip(const wxRegion& region)
@@ -800,8 +816,8 @@ wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
 
 wxGraphicsPen wxD2DRenderer::CreatePen(const wxPen& pen)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsPen();
+    wxFAIL_MSG("The Direct2D renderer cannot create wxGraphicsPen objects. Please use a graphics context instead.");
+    return wxNullGraphicsPen;
 }
 
 wxGraphicsBrush wxD2DRenderer::CreateBrush(const wxBrush& brush)
