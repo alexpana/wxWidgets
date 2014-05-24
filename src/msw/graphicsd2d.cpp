@@ -41,6 +41,11 @@ template <class T> void SafeRelease(T **ppT)
     }
 }
 
+template <class T> bool IsAcquired(T *ppT)
+{
+    return ppT != NULL;
+}
+
 D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
 {
     switch (cap)
@@ -319,7 +324,7 @@ void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
 void wxD2DPenData::EnsureInitialized()
 {
     // Create the solid color stroke brush
-    if (m_sourcePen.GetStyle() != wxPENSTYLE_STIPPLE && m_solidColorStrokeBrush == NULL)
+    if (m_sourcePen.GetStyle() != wxPENSTYLE_STIPPLE && !IsAcquired(m_solidColorStrokeBrush))
     {
         m_renderTarget->CreateSolidColorBrush(
             ConvertColour(m_sourcePen.GetColour()),
