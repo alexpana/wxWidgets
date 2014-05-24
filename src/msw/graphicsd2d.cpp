@@ -141,6 +141,66 @@ void wxD2DPathData::CloseSubpath()
 }
 
 //-----------------------------------------------------------------------------
+// wxD2DPenData declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DPenData : public wxGraphicsObjectRefData
+{
+public:
+    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* m_d2dFactory, const wxPen &pen);
+    ~wxD2DPenData();
+
+    void CreateStrokeStyle();
+
+    void EnsureInitialized();
+
+private:
+    // We store the Direct2D factory for later when we need to recreate
+    // the device-dependent resources.
+    ID2D1Factory* m_factory;
+
+    // We store the source pen for later when we need to recreate the
+    // device-independent resources.
+    wxPen m_sourcePen;
+
+    // A stroke style is a device-independent resource.
+    // Describes the caps, miter limit, line join, and dash information.
+    ID2D1StrokeStyle* m_strokeStyle;
+
+    // A brush is a device-dependent resource.
+    // Drawing outlines with Direct2D requires a brush for the color or stipple.
+    ID2D1Brush* m_strokeBrush;
+};
+
+//-----------------------------------------------------------------------------
+// wxD2DPenData implementation
+//-----------------------------------------------------------------------------
+
+wxD2DPenData::wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* m_d2dFactory, const wxPen &pen) 
+    : wxGraphicsObjectRefData(renderer)
+{
+    CreateStrokeStyle();
+    EnsureInitialized();
+}
+
+wxD2DPenData::~wxD2DPenData()
+{
+    SafeRelease(&m_strokeStyle);
+    SafeRelease(&m_strokeBrush);
+}
+
+void wxD2DPenData::CreateStrokeStyle()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DPenData::EnsureInitialized()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+
+//-----------------------------------------------------------------------------
 // wxD2DContext declaration
 //-----------------------------------------------------------------------------
 
