@@ -57,6 +57,8 @@ D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
     case wxCAP_INVALID: 
         return D2D1_CAP_STYLE_FLAT;
     }
+
+    return D2D1_CAP_STYLE_FLAT;
 }
 
 D2D1_LINE_JOIN ConvertPenJoin(wxPenJoin join)
@@ -75,6 +77,8 @@ D2D1_LINE_JOIN ConvertPenJoin(wxPenJoin join)
     case wxJOIN_INVALID:
         return D2D1_LINE_JOIN_MITER;
     }
+
+    return D2D1_LINE_JOIN_MITER;
 }
 
 D2D1_DASH_STYLE ConvertPenStyle(wxPenStyle dashStyle)
@@ -119,6 +123,8 @@ D2D1_DASH_STYLE ConvertPenStyle(wxPenStyle dashStyle)
     case wxPENSTYLE_VERTICAL_HATCH:
         return D2D1_DASH_STYLE_SOLID;
     }
+
+    return D2D1_DASH_STYLE_SOLID;
 }
 
 D2D1_COLOR_F ConvertColour(wxColour colour)
