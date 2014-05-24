@@ -38,6 +38,24 @@ template <class T> void SafeRelease(T **ppT)
     }
 }
 
+D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
+{
+    switch (cap)
+    {
+    case wxCAP_ROUND:
+        return D2D1_CAP_STYLE_ROUND;
+
+    case wxCAP_PROJECTING:
+        return D2D1_CAP_STYLE_SQUARE;
+
+    case wxCAP_BUTT:
+        return D2D1_CAP_STYLE_FLAT;
+
+    case wxCAP_INVALID: 
+        return D2D1_CAP_STYLE_FLAT;
+    }
+}
+
 //-----------------------------------------------------------------------------
 // wxGDIPlusPathData declaration
 //-----------------------------------------------------------------------------
