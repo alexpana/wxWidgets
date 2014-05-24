@@ -447,6 +447,9 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* 
 
 wxD2DBrushData::~wxD2DBrushData()
 {
+    delete m_linearGradientBrushInfo;
+    delete m_radialGradientBrushInfo;
+
     SafeRelease(&m_solidColorBrush);
     SafeRelease(&m_linearGradientBrush);
     SafeRelease(&m_radialGradientBrush);
