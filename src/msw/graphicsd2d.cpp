@@ -392,7 +392,14 @@ public:
         wxDouble radius,
         const wxGraphicsGradientStops& stops);
 
+    void EnsureInitialized();
+
     ID2D1Brush* GetBrush() const;
+
+private:
+    void CreateSolidColorBrush();
+
+    void CreateBitmapBrush();
 
 private:
     // We store the Direct2D RenderTarget for later when we need to recreate
@@ -436,7 +443,18 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* 
     m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_SOLID),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
-    wxFAIL_MSG("not implemented");
+    if ( brush.GetStyle() == wxBRUSHSTYLE_SOLID)
+    {
+        CreateSolidColorBrush();
+    } 
+    else if (brush.IsHatch())
+    {
+        wxFAIL_MSG("hatch brushes are not implemented");
+    }
+    else
+    {
+        CreateBitmapBrush();
+    }
 }
 
 wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget)
@@ -456,11 +474,26 @@ wxD2DBrushData::~wxD2DBrushData()
     SafeRelease(&m_bitmapBrush);
 }
 
+void wxD2DBrushData::CreateSolidColorBrush()
+{
+    m_brushType = wxD2DBRUSHTYPE_SOLID;
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DBrushData::CreateBitmapBrush()
+{
+    m_brushType = wxD2DBRUSHTYPE_BITMAP;
+    wxFAIL_MSG("not implemented");
+}
+
 void wxD2DBrushData::CreateLinearGradientBrush(
     wxDouble x1, wxDouble y1,
     wxDouble x2, wxDouble y2,
     const wxGraphicsGradientStops& stops)
 {
+    m_brushType = wxD2DBRUSHTYPE_LINEAR_GRADIENT;
+    m_linearGradientBrushInfo = new LinearGradientBrushInfo(x1, y1, x2, y2, stops);
+
     wxFAIL_MSG("not implemented");
 }
 
@@ -470,13 +503,33 @@ void wxD2DBrushData::CreateRadialGradientBrush(
     wxDouble radius,
     const wxGraphicsGradientStops& stops)
 {
+    m_brushType = wxD2DBRUSHTYPE_RADIAL_GRADIENT;
+    m_radialGradientBrushInfo = new RadialGradientBrushInfo(xo, yo, xc, yc, radius, stops);
+
     wxFAIL_MSG("not implemented");
 }
 
-ID2D1Brush* wxD2DBrushData::GetBrush() const
+void wxD2DBrushData::EnsureInitialized()
 {
     wxFAIL_MSG("not implemented");
-    return NULL;
+}
+
+
+ID2D1Brush* wxD2DBrushData::GetBrush() const
+{
+    switch (m_brushType)
+    {
+    case wxD2DBrushData::wxD2DBRUSHTYPE_SOLID:
+        return m_solidColorBrush;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_LINEAR_GRADIENT:
+        return m_linearGradientBrush;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_RADIAL_GRADIENT:
+        return m_radialGradientBrush;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_BITMAP:
+        return m_bitmapBrush;
+    }
+
+    return m_solidColorBrush;
 }
 
 //-----------------------------------------------------------------------------
