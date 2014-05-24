@@ -241,11 +241,11 @@ public:
 private:
     // We store the Direct2D factory for later when we need to recreate
     // the device-dependent resources.
-    ID2D1Factory* m_factory;
+    ID2D1Factory* const m_factory;
 
     // We store the source pen for later when we need to recreate the
     // device-independent resources.
-    wxPen m_sourcePen;
+    const wxPen m_sourcePen;
 
     // A stroke style is a device-independent resource.
     // Describes the caps, miter limit, line join, and dash information.
