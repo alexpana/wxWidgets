@@ -240,17 +240,17 @@ void wxD2DPathData::CloseSubpath()
 class wxD2DPenData : public wxGraphicsObjectRefData
 {
 public:
-    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* m_d2dFactory, const wxPen &pen);
+    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, ID2D1RenderTarget* renderTarget, const wxPen& pen);
     ~wxD2DPenData();
 
-    void CreateStrokeStyle();
+    void CreateStrokeStyle(ID2D1Factory* const direct2dfactory);
 
     void EnsureInitialized();
 
 private:
-    // We store the Direct2D factory for later when we need to recreate
+    // We store the Direct2D RenderTarget for later when we need to recreate
     // the device-dependent resources.
-    ID2D1Factory* const m_factory;
+    ID2D1RenderTarget* const m_renderTarget;
 
     // We store the source pen for later when we need to recreate the
     // device-independent resources.
@@ -262,7 +262,7 @@ private:
 
     // A brush is a device-dependent resource.
     // Drawing outlines with Direct2D requires a brush for the color or stipple.
-    ID2D1Brush* m_strokeBrush;
+    ID2D1SolidColorBrush* m_solidColorStrokeBrush;
 
     FLOAT m_width;
 };
@@ -271,27 +271,32 @@ private:
 // wxD2DPenData implementation
 //-----------------------------------------------------------------------------
 
-wxD2DPenData::wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, const wxPen &pen) 
-    : wxGraphicsObjectRefData(renderer), m_factory(direct2dFactory), m_sourcePen(pen), 
-    m_width(pen.GetWidth()), m_strokeBrush(NULL), m_strokeStyle(NULL)
+wxD2DPenData::wxD2DPenData(
+    wxGraphicsRenderer* renderer, 
+    ID2D1Factory* direct2dFactory, 
+    ID2D1RenderTarget* renderTarget, 
+    const wxPen& pen)
+
+    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_renderTarget(renderTarget),
+    m_width(pen.GetWidth()), m_solidColorStrokeBrush(NULL), m_strokeStyle(NULL)
 {
-    CreateStrokeStyle();
+    CreateStrokeStyle(direct2dFactory);
     EnsureInitialized();
 }
 
 wxD2DPenData::~wxD2DPenData()
 {
     SafeRelease(&m_strokeStyle);
-    SafeRelease(&m_strokeBrush);
+    SafeRelease(&m_solidColorStrokeBrush);
 }
 
-void wxD2DPenData::CreateStrokeStyle()
+void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
 {
     D2D1_CAP_STYLE capStyle = ConvertPenCap(m_sourcePen.GetCap());
     D2D1_LINE_JOIN lineJoin = ConvertPenJoin(m_sourcePen.GetJoin());
     D2D1_DASH_STYLE dashStyle = ConvertPenStyle(m_sourcePen.GetStyle());
 
-    m_factory->CreateStrokeStyle(
+    direct2dfactory->CreateStrokeStyle(
         D2D1::StrokeStyleProperties(
             capStyle, capStyle, capStyle,
             lineJoin, 0, dashStyle, 0.0f),
