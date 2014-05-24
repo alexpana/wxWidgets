@@ -323,6 +323,152 @@ void wxD2DPenData::EnsureInitialized()
     // TODO: Handle stipple pens
 }
 
+//-----------------------------------------------------------------------------
+// wxD2DBrushData declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DBrushData : public wxGraphicsObjectRefData
+{
+public:
+    enum wxD2DBrushType 
+    {
+        wxD2DBRUSHTYPE_SOLID,
+        wxD2DBRUSHTYPE_LINEAR_GRADIENT,
+        wxD2DBRUSHTYPE_RADIAL_GRADIENT,
+        wxD2DBRUSHTYPE_BITMAP,
+    };
+
+    struct LinearGradientBrushInfo {
+        const wxDouble x1;
+        const wxDouble y1;
+        const wxDouble x2;
+        const wxDouble y2;
+        const wxGraphicsGradientStops stops;
+
+        LinearGradientBrushInfo(
+            wxDouble& x1, wxDouble& y1,
+            wxDouble& x2, wxDouble& y2,
+            const wxGraphicsGradientStops& stops)
+            : x1(x1), y1(y1), x2(x2), y2(y2), stops(stops)
+        {}
+    };
+
+    struct RadialGradientBrushInfo {
+        const wxDouble x1;
+        const wxDouble y1;
+        const wxDouble x2;
+        const wxDouble y2;
+        const wxDouble radius;
+        const wxGraphicsGradientStops stops;
+
+        RadialGradientBrushInfo(
+            wxDouble x1, wxDouble y1,
+            wxDouble x2, wxDouble y2,
+            wxDouble radius,
+            const wxGraphicsGradientStops& stops)
+            : x1(x1), y1(y1), x2(x2), y2(y2), radius(radius), stops(stops)
+        {}
+    };
+
+    wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget, const wxBrush &brush);
+    wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget);
+
+    ~wxD2DBrushData();
+
+    void CreateLinearGradientBrush(
+        wxDouble x1, wxDouble y1,
+        wxDouble x2, wxDouble y2,
+        const wxGraphicsGradientStops& stops);
+
+    void CreateRadialGradientBrush(
+        wxDouble xo, wxDouble yo,
+        wxDouble xc, wxDouble yc,
+        wxDouble radius,
+        const wxGraphicsGradientStops& stops);
+
+    ID2D1Brush* GetBrush() const;
+
+private:
+    // We store the Direct2D RenderTarget for later when we need to recreate
+    // the device-dependent resources.
+    const ID2D1RenderTarget* m_renderTarget;
+
+    // We store the source brush for later when we need to recreate the
+    // device-independent resources.
+    const wxBrush m_sourceBrush;
+
+    // We store the information required to create a linear gradient brush for
+    // later when we need to recreate the device-dependent resources.
+    LinearGradientBrushInfo* m_linearGradientBrushInfo;
+
+    // We store the information required to create a radial gradient brush for
+    // later when we need to recreate the device-dependent resources.
+    RadialGradientBrushInfo* m_radialGradientBrushInfo;
+
+    // Used to identify which brush resource represents this brush.
+    wxD2DBrushType m_brushType;
+
+    // A ID2D1SolidColorBrush is a device-dependent resource.
+    ID2D1SolidColorBrush* m_solidColorBrush;
+
+    // A ID2D1LinearGradientBrush is a device-dependent resource.
+    ID2D1LinearGradientBrush* m_linearGradientBrush;
+
+    // A ID2D1RadialGradientBrush is a device-dependent resource.
+    ID2D1RadialGradientBrush* m_radialGradientBrush;
+
+    // A ID2D1BitmapBrush is a device-dependent resource.
+    ID2D1BitmapBrush* m_bitmapBrush;
+};
+
+//-----------------------------------------------------------------------------
+// wxD2DBrushData implementation
+//-----------------------------------------------------------------------------
+
+wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget, const wxBrush &brush) 
+    : wxGraphicsObjectRefData(renderer), m_renderTarget(renderTarget), m_sourceBrush(brush),
+    m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_SOLID),
+    m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget)
+    : wxGraphicsObjectRefData(renderer)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+wxD2DBrushData::~wxD2DBrushData()
+{
+    SafeRelease(&m_solidColorBrush);
+    SafeRelease(&m_linearGradientBrush);
+    SafeRelease(&m_radialGradientBrush);
+    SafeRelease(&m_bitmapBrush);
+}
+
+void wxD2DBrushData::CreateLinearGradientBrush(
+    wxDouble x1, wxDouble y1,
+    wxDouble x2, wxDouble y2,
+    const wxGraphicsGradientStops& stops)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DBrushData::CreateRadialGradientBrush(
+    wxDouble xo, wxDouble yo,
+    wxDouble xc, wxDouble yc,
+    wxDouble radius,
+    const wxGraphicsGradientStops& stops)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+ID2D1Brush* wxD2DBrushData::GetBrush() const
+{
+    wxFAIL_MSG("not implemented");
+    return NULL;
+}
 
 //-----------------------------------------------------------------------------
 // wxD2DContext declaration
