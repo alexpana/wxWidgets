@@ -56,6 +56,24 @@ D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
     }
 }
 
+D2D1_LINE_JOIN ConvertLineJoin(wxPenJoin join)
+{
+    switch (join)
+    {
+    case wxJOIN_BEVEL:
+        return D2D1_LINE_JOIN_BEVEL;
+
+    case wxJOIN_MITER:
+        return D2D1_LINE_JOIN_MITER;
+
+    case wxJOIN_ROUND:
+        return D2D1_LINE_JOIN_ROUND;
+
+    case wxJOIN_INVALID:
+        return D2D1_LINE_JOIN_MITER;
+    }
+}
+
 //-----------------------------------------------------------------------------
 // wxGDIPlusPathData declaration
 //-----------------------------------------------------------------------------
