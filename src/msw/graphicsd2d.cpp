@@ -141,6 +141,19 @@ D2D1_COLOR_F ConvertColour(wxColour colour)
         colour.Alpha() / 255.0f);
 }
 
+D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
+{
+    switch (antialiasMode)
+    {
+    case wxANTIALIAS_NONE:
+        return D2D1_ANTIALIAS_MODE_ALIASED;
+    case wxANTIALIAS_DEFAULT:
+        return D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
+    }
+
+    return D2D1_ANTIALIAS_MODE_ALIASED;;
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DPathData declaration
 //-----------------------------------------------------------------------------
