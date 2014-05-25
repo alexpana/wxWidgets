@@ -903,7 +903,7 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
 
     if ( &m_pen != &wxNullGraphicsPen )
     {
-        wxD2DPenData* penData = static_cast<wxD2DPenData*>(m_pen.GetGraphicsData());
+        wxD2DPenData* penData = GetD2DPenData(pen);
         penData->AcquireDeviceDependentResources(this->m_renderTarget);
         m_deviceDependentResourceHolders.push_back(penData);
     }
