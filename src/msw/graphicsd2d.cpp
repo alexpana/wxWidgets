@@ -947,10 +947,20 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
     D2D1_RECT_F rect = {x, y, x + w, y + h};
 
-    wxD2DPenData* penData = GetD2DPenData(m_pen);
-    penData->AcquireDeviceDependentResources(m_renderTarget);
 
-    m_renderTarget->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+    if (!m_brush.IsNull())
+    {
+        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        brushData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->FillRectangle(rect, brushData->GetBrush());
+    }
+
+    if (!m_pen.IsNull()) 
+    {
+        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        penData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+    }
 }
 
 void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius)
@@ -962,14 +972,19 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
 
     D2D1_ROUNDED_RECT roundedRect = {rect, radius, radius};
 
-    wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
-    brushData->AcquireDeviceDependentResources(m_renderTarget);
+    if (!m_brush.IsNull())
+    {
+        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        brushData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->FillRoundedRectangle(roundedRect, brushData->GetBrush());
+    }
 
-    wxD2DPenData* penData = GetD2DPenData(m_pen);
-    penData->AcquireDeviceDependentResources(m_renderTarget);
-
-    m_renderTarget->FillRoundedRectangle(roundedRect, brushData->GetBrush());
-    m_renderTarget->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+    if (!m_pen.IsNull())
+    {
+        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        penData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+    }
 }
 
 //-----------------------------------------------------------------------------
