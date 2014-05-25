@@ -624,6 +624,7 @@ public:
     void FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
 
     void DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE; 
+    void DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius) wxOVERRIDE;
 
     void StrokeLines(size_t n, const wxPoint2DDouble* points) wxOVERRIDE;
     void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE;
@@ -947,6 +948,25 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
     m_renderTarget->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
 }
+
+void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius)
+{
+    EnsureInitialized();
+    AdjustRenderTargetSize();
+
+    D2D1_RECT_F rect = {x, y, x + w, y + h};
+
+    D2D1_ROUNDED_RECT roundedRect = {rect, radius, radius};
+
+    wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+    brushData->AcquireDeviceDependentResources(m_renderTarget);
+
+    wxD2DPenData* penData = GetD2DPenData(m_pen);
+    penData->AcquireDeviceDependentResources(m_renderTarget);
+
+    m_renderTarget->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DRenderer declaration
 //-----------------------------------------------------------------------------
