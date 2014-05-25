@@ -154,6 +154,14 @@ D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
     return D2D1_ANTIALIAS_MODE_ALIASED;;
 }
 
+// Interface used by objects holding Direct2D device-dependent resources.
+class DeviceDependentResourceHolder
+{
+public:
+    virtual void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) = 0;
+    virtual void ReleaseDeviceDependentResources() = 0;
+};
+
 //-----------------------------------------------------------------------------
 // wxD2DPathData declaration
 //-----------------------------------------------------------------------------
@@ -264,21 +272,19 @@ void wxD2DPathData::CloseSubpath()
 // wxD2DPenData declaration
 //-----------------------------------------------------------------------------
 
-class wxD2DPenData : public wxGraphicsObjectRefData
+class wxD2DPenData : public wxGraphicsObjectRefData, public DeviceDependentResourceHolder
 {
 public:
-    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, ID2D1RenderTarget* renderTarget, const wxPen& pen);
+    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, const wxPen& pen);
     ~wxD2DPenData();
 
     void CreateStrokeStyle(ID2D1Factory* const direct2dfactory);
 
-    void EnsureInitialized();
+    void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
+
+    void ReleaseDeviceDependentResources() wxOVERRIDE;
 
 private:
-    // We store the Direct2D RenderTarget for later when we need to recreate
-    // the device-dependent resources.
-    ID2D1RenderTarget* const m_renderTarget;
-
     // We store the source pen for later when we need to recreate the
     // device-independent resources.
     const wxPen m_sourcePen;
@@ -301,20 +307,17 @@ private:
 wxD2DPenData::wxD2DPenData(
     wxGraphicsRenderer* renderer, 
     ID2D1Factory* direct2dFactory, 
-    ID2D1RenderTarget* renderTarget, 
     const wxPen& pen)
-
-    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_renderTarget(renderTarget),
-    m_width(pen.GetWidth()), m_solidColorStrokeBrush(NULL), m_strokeStyle(NULL)
+    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()), 
+    m_solidColorStrokeBrush(NULL), m_strokeStyle(NULL)
 {
     CreateStrokeStyle(direct2dFactory);
-    EnsureInitialized();
 }
 
 wxD2DPenData::~wxD2DPenData()
 {
     SafeRelease(&m_strokeStyle);
-    SafeRelease(&m_solidColorStrokeBrush);
+    ReleaseDeviceDependentResources();
 }
 
 void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
@@ -334,12 +337,12 @@ void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
     // TODO: Handle user-defined dashes
 }
 
-void wxD2DPenData::EnsureInitialized()
+void wxD2DPenData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
 {
     // Create the solid color stroke brush
     if (m_sourcePen.GetStyle() != wxPENSTYLE_STIPPLE && !IsAcquired(m_solidColorStrokeBrush))
     {
-        m_renderTarget->CreateSolidColorBrush(
+        renderTarget->CreateSolidColorBrush(
             ConvertColour(m_sourcePen.GetColour()),
             &m_solidColorStrokeBrush);
     }
@@ -347,11 +350,16 @@ void wxD2DPenData::EnsureInitialized()
     // TODO: Handle stipple pens
 }
 
+void wxD2DPenData::ReleaseDeviceDependentResources()
+{
+    SafeRelease(&m_solidColorStrokeBrush);
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DBrushData declaration
 //-----------------------------------------------------------------------------
 
-class wxD2DBrushData : public wxGraphicsObjectRefData
+class wxD2DBrushData : public wxGraphicsObjectRefData, public DeviceDependentResourceHolder
 {
 public:
     enum wxD2DBrushType 
@@ -395,8 +403,8 @@ public:
         {}
     };
 
-    wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget, const wxBrush &brush);
-    wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget);
+    wxD2DBrushData(wxGraphicsRenderer* renderer, const wxBrush &brush);
+    wxD2DBrushData(wxGraphicsRenderer* renderer);
 
     ~wxD2DBrushData();
 
@@ -415,16 +423,16 @@ public:
 
     ID2D1Brush* GetBrush() const;
 
+    void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
+
+    void ReleaseDeviceDependentResources() wxOVERRIDE;
+
 private:
     void CreateSolidColorBrush();
 
     void CreateBitmapBrush();
 
 private:
-    // We store the Direct2D RenderTarget for later when we need to recreate
-    // the device-dependent resources.
-    ID2D1RenderTarget* const m_renderTarget;
-
     // We store the source brush for later when we need to recreate the
     // device-independent resources.
     const wxBrush m_sourceBrush;
@@ -457,7 +465,7 @@ private:
 // wxD2DBrushData implementation
 //-----------------------------------------------------------------------------
 
-wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget, const wxBrush &brush) 
+wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, const wxBrush &brush) 
     : wxGraphicsObjectRefData(renderer), m_sourceBrush(brush),
     m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
@@ -476,8 +484,8 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* 
     }
 }
 
-wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget)
-    : wxGraphicsObjectRefData(renderer), m_renderTarget(renderTarget),
+wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer)
+    : wxGraphicsObjectRefData(renderer),
     m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
@@ -489,10 +497,7 @@ wxD2DBrushData::~wxD2DBrushData()
     delete m_linearGradientBrushInfo;
     delete m_radialGradientBrushInfo;
 
-    SafeRelease(&m_solidColorBrush);
-    SafeRelease(&m_linearGradientBrush);
-    SafeRelease(&m_radialGradientBrush);
-    SafeRelease(&m_bitmapBrush);
+    ReleaseDeviceDependentResources();
 }
 
 void wxD2DBrushData::CreateSolidColorBrush()
@@ -530,11 +535,11 @@ void wxD2DBrushData::CreateRadialGradientBrush(
     wxFAIL_MSG("not implemented");
 }
 
-void wxD2DBrushData::EnsureInitialized()
+void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
 {
     if (m_brushType == wxD2DBRUSHTYPE_SOLID && !IsAcquired(m_solidColorBrush)) 
     {
-        m_renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
+        renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
     } 
     else 
     {
@@ -542,6 +547,13 @@ void wxD2DBrushData::EnsureInitialized()
     }
 }
 
+void wxD2DBrushData::ReleaseDeviceDependentResources()
+{
+    SafeRelease(&m_solidColorBrush);
+    SafeRelease(&m_linearGradientBrush);
+    SafeRelease(&m_radialGradientBrush);
+    SafeRelease(&m_bitmapBrush);
+}
 
 ID2D1Brush* wxD2DBrushData::GetBrush() const
 {
@@ -570,8 +582,6 @@ public:
     wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd);
 
     ~wxD2DContext() wxOVERRIDE;
-
-    wxGraphicsPen CreatePen(const wxPen& pen) const wxOVERRIDE;
 
     void Clip(const wxRegion &region) wxOVERRIDE;
     void Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
@@ -627,16 +637,22 @@ public:
     void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE;
     bool ShouldOffset() const wxOVERRIDE;
 
+    void SetPen(const wxGraphicsPen& pen) wxOVERRIDE;
+
 private:
     void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
 
     void EnsureInitialized();
     HRESULT CreateRenderTarget();
 
+    void ReleaseDeviceDependentResources();
+
 private:
     HWND m_hwnd;
     ID2D1Factory* m_direct2dFactory;
     ID2D1HwndRenderTarget* m_renderTarget;
+
+    wxVector<DeviceDependentResourceHolder*> m_deviceDependentResourceHolders;
 
 private:
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
@@ -657,17 +673,6 @@ wxD2DContext::~wxD2DContext()
 {
     m_renderTarget->EndDraw();
     SafeRelease(&m_renderTarget);
-}
-
-wxGraphicsPen wxD2DContext::CreatePen(const wxPen& pen) const {
-    if (!pen.IsOk() || pen.GetStyle() == wxPENSTYLE_TRANSPARENT)
-        return wxNullGraphicsPen;
-    else
-    {
-        wxGraphicsPen p;
-        p.SetRefData(new wxD2DPenData(GetRenderer(), m_direct2dFactory, m_renderTarget, pen));
-        return p;
-    }
 }
 
 void wxD2DContext::Clip(const wxRegion& region)
@@ -863,6 +868,27 @@ HRESULT wxD2DContext::CreateRenderTarget()
         &m_renderTarget);
 }
 
+void wxD2DContext::SetPen(const wxGraphicsPen& pen)
+{
+    wxGraphicsContext::SetPen(pen);
+
+    if ( &m_pen != &wxNullGraphicsPen )
+    {
+        wxD2DPenData* penData = static_cast<wxD2DPenData*>(m_pen.GetGraphicsData());
+        penData->AcquireDeviceDependentResources(this->m_renderTarget);
+        m_deviceDependentResourceHolders.push_back(penData);
+    }
+}
+
+void wxD2DContext::ReleaseDeviceDependentResources()
+{
+    for ( unsigned int i = 0; i < m_deviceDependentResourceHolders.size(); ++i )
+    {
+        DeviceDependentResourceHolder* resourceHolder = 
+            m_deviceDependentResourceHolders[i];
+        resourceHolder->ReleaseDeviceDependentResources();
+    }
+}
 //-----------------------------------------------------------------------------
 // wxD2DRenderer declaration
 //-----------------------------------------------------------------------------
@@ -1052,8 +1078,16 @@ wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
 
 wxGraphicsPen wxD2DRenderer::CreatePen(const wxPen& pen)
 {
-    wxFAIL_MSG("The Direct2D renderer cannot create wxGraphicsPen objects. Please use a graphics context instead.");
-    return wxNullGraphicsPen;
+    if ( !pen.IsOk() || pen.GetStyle() == wxPENSTYLE_TRANSPARENT )
+    {
+        return wxNullGraphicsPen;
+    }
+    else
+    {
+        wxGraphicsPen p;
+        p.SetRefData(new wxD2DPenData(this, m_direct2dFactory, pen));
+        return p;
+    }
 }
 
 wxGraphicsBrush wxD2DRenderer::CreateBrush(const wxBrush& brush)
