@@ -903,7 +903,7 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
 {
     wxGraphicsContext::SetPen(pen);
 
-    if ( &m_pen != &wxNullGraphicsPen )
+    if ( !m_pen.IsNull() )
     {
         EnsureInitialized();
 
