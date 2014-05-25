@@ -280,6 +280,12 @@ public:
 
     void CreateStrokeStyle(ID2D1Factory* const direct2dfactory);
 
+    ID2D1Brush* GetBrush();
+
+    FLOAT GetWidth();
+
+    ID2D1StrokeStyle* GetStrokeStyle();
+
     void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
 
     void ReleaseDeviceDependentResources() wxOVERRIDE;
@@ -353,6 +359,21 @@ void wxD2DPenData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarg
 void wxD2DPenData::ReleaseDeviceDependentResources()
 {
     SafeRelease(&m_solidColorStrokeBrush);
+}
+
+ID2D1Brush* wxD2DPenData::GetBrush()
+{
+    return m_solidColorStrokeBrush;
+}
+
+FLOAT wxD2DPenData::GetWidth()
+{
+    return m_width;
+}
+
+ID2D1StrokeStyle* wxD2DPenData::GetStrokeStyle()
+{
+    return m_strokeStyle;
 }
 
 //-----------------------------------------------------------------------------
