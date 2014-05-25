@@ -757,8 +757,15 @@ void wxD2DContext::DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonF
 
 bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
 {
-    wxFAIL_MSG("not implemented");
-    return false;
+    if (m_antialias == antialias)
+    {
+        return true;
+    }
+
+    m_renderTarget->SetAntialiasMode(ConvertAntialiasMode(antialias));
+
+    m_antialias = antialias;
+    return true;
 }
 
 bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
