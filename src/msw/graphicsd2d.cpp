@@ -676,6 +676,8 @@ private:
     void EnsureInitialized();
     HRESULT CreateRenderTarget();
 
+    void AdjustRenderTargetSize();
+
     void ReleaseDeviceDependentResources();
 
 private:
@@ -908,6 +910,23 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
         wxD2DPenData* penData = static_cast<wxD2DPenData*>(m_pen.GetGraphicsData());
         penData->AcquireDeviceDependentResources(this->m_renderTarget);
         m_deviceDependentResourceHolders.push_back(penData);
+    }
+}
+
+void wxD2DContext::AdjustRenderTargetSize()
+{
+    RECT clientRect;
+    GetClientRect(m_hwnd, &clientRect);
+
+    D2D1_SIZE_U hwndSize = D2D1::SizeU(
+        clientRect.right - clientRect.left,
+        clientRect.bottom - clientRect.top);
+
+    D2D1_SIZE_U renderTargetSize = m_renderTarget->GetPixelSize();
+
+    if (hwndSize.width != renderTargetSize.width || hwndSize.height != renderTargetSize.height)
+    {
+        m_renderTarget->Resize(hwndSize);
     }
 }
 
