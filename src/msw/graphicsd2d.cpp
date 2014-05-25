@@ -878,6 +878,8 @@ void wxD2DContext::EnsureInitialized()
             wxFAIL_MSG("Could not create Direct2D render target");
         }
 
+        m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+
         m_renderTarget->BeginDraw();
     }
 }
