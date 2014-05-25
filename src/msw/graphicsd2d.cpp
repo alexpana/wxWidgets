@@ -376,6 +376,11 @@ ID2D1StrokeStyle* wxD2DPenData::GetStrokeStyle()
     return m_strokeStyle;
 }
 
+wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
+{
+    return static_cast<wxD2DPenData*>(pen.GetGraphicsData());
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DBrushData declaration
 //-----------------------------------------------------------------------------
@@ -591,6 +596,11 @@ ID2D1Brush* wxD2DBrushData::GetBrush() const
     }
 
     return m_solidColorBrush;
+}
+
+wxD2DBrushData* GetD2DBrushData(const wxGraphicsBrush& brush)
+{
+    return static_cast<wxD2DBrushData*>(brush.GetGraphicsData());
 }
 
 //-----------------------------------------------------------------------------
