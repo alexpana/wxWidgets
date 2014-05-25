@@ -739,11 +739,6 @@ void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyl
     wxFAIL_MSG("not implemented");
 }
 
-void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
-{
-    wxFAIL_MSG("not implemented");
-}
-
 void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* points)
 {
     wxFAIL_MSG("not implemented");
@@ -938,6 +933,19 @@ void wxD2DContext::ReleaseDeviceDependentResources()
             m_deviceDependentResourceHolders[i];
         resourceHolder->ReleaseDeviceDependentResources();
     }
+}
+
+void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    EnsureInitialized();
+    AdjustRenderTargetSize();
+
+    D2D1_RECT_F rect = {x, y, x + w, y + h};
+
+    wxD2DPenData* penData = GetD2DPenData(m_pen);
+    penData->AcquireDeviceDependentResources(m_renderTarget);
+
+    m_renderTarget->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
 }
 //-----------------------------------------------------------------------------
 // wxD2DRenderer declaration
