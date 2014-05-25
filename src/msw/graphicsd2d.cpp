@@ -892,7 +892,7 @@ HRESULT wxD2DContext::CreateRenderTarget()
     GetClientRect(m_hwnd, &clientRect);
 
     D2D1_SIZE_U size = D2D1::SizeU(
-        clientRect.right = clientRect.left,
+        clientRect.right - clientRect.left,
         clientRect.bottom - clientRect.top);
 
     return m_direct2dFactory->CreateHwndRenderTarget(
