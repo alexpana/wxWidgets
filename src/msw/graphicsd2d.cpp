@@ -445,7 +445,7 @@ private:
 //-----------------------------------------------------------------------------
 
 wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, ID2D1RenderTarget* renderTarget, const wxBrush &brush) 
-    : wxGraphicsObjectRefData(renderer), m_renderTarget(renderTarget), m_sourceBrush(brush),
+    : wxGraphicsObjectRefData(renderer), m_sourceBrush(brush),
     m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
