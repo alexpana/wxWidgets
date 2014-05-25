@@ -31,6 +31,7 @@
 #include "wx/private/graphics.h"
 
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsPen) wxNullGraphicsPen;
+extern WXDLLIMPEXP_DATA_CORE(wxGraphicsBrush) wxNullGraphicsBrush;
 
 template <class T> void SafeRelease(T **ppT)
 {
@@ -529,7 +530,6 @@ wxD2DBrushData::~wxD2DBrushData()
 void wxD2DBrushData::CreateSolidColorBrush()
 {
     m_brushType = wxD2DBRUSHTYPE_SOLID;
-    wxFAIL_MSG("not implemented");
 }
 
 void wxD2DBrushData::CreateBitmapBrush()
@@ -968,6 +968,7 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
     wxD2DPenData* penData = GetD2DPenData(m_pen);
     penData->AcquireDeviceDependentResources(m_renderTarget);
 
+    m_renderTarget->FillRoundedRectangle(roundedRect, brushData->GetBrush());
     m_renderTarget->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
 }
 
@@ -1174,8 +1175,16 @@ wxGraphicsPen wxD2DRenderer::CreatePen(const wxPen& pen)
 
 wxGraphicsBrush wxD2DRenderer::CreateBrush(const wxBrush& brush)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsBrush();
+    if ( !brush.IsOk() || brush.GetStyle() == wxPENSTYLE_TRANSPARENT )
+    {
+        return wxNullGraphicsBrush;
+    }
+    else
+    {
+        wxGraphicsBrush b;
+        b.SetRefData(new wxD2DBrushData(this, brush));
+        return b;
+    }
 }
 
 
