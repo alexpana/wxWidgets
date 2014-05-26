@@ -14,6 +14,11 @@
 // Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
 #define D2D1_BLEND_SUPPORTED 1
 
+// Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
+// Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
+// Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
+#define D2D1_INTERPOLATION_MODE_SUPPORTED 1
+
 #include <algorithm>
 
 // Ensure no previous defines interfere with the Direct2D API headers
@@ -216,6 +221,27 @@ D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
 }
 
 #endif // D2D1_BLEND_SUPPORTED
+
+#if D2D1_INTERPOLATION_MODE_SUPPORTED
+D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
+{
+    switch (interpolationQuality)
+    {
+    case wxINTERPOLATION_DEFAULT:
+        wxFALLTHROUGH;
+    case wxINTERPOLATION_NONE:
+        wxFALLTHROUGH;
+    case wxINTERPOLATION_FAST:
+        return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+    case wxINTERPOLATION_GOOD:
+        return D2D1_INTERPOLATION_MODE_LINEAR;
+    case wxINTERPOLATION_BEST:
+        return D2D1_INTERPOLATION_MODE_CUBIC;
+    }
+
+    return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+}
+#endif // D2D1_INTERPOLATION_MODE_SUPPORTED
 
 // Interface used by objects holding Direct2D device-dependent resources.
 class DeviceDependentResourceHolder
@@ -854,8 +880,12 @@ bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
 
 bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
 {
-    wxFAIL_MSG("not implemented");
+#if D2D1_INTERPOLATION_MODE_SUPPORTED
+    m_interpolation = interpolation;
+    return true;
+#else
     return false;
+#endif // D2D1_INTERPOLATION_MODE_SUPPORTED
 }
 
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
