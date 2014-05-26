@@ -721,6 +721,8 @@ public:
 
     void DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius) wxOVERRIDE;
 
+    void DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+
     void DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
 
     void DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
@@ -1085,6 +1087,32 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
         wxD2DPenData* penData = GetD2DPenData(m_pen);
         penData->AcquireDeviceDependentResources(m_renderTarget);
         m_renderTarget->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+    }
+}
+
+void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    EnsureInitialized();
+    AdjustRenderTargetSize();
+
+    D2D1_ELLIPSE ellipse = {
+        {(x + w / 2), (y + h / 2)}, // center point
+        w / 2,                      // radius x
+        h / 2                       // radius y
+    };
+
+    if (!m_brush.IsNull())
+    {
+        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        brushData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->FillEllipse(ellipse, brushData->GetBrush());
+    }
+
+    if (!m_pen.IsNull())
+    {
+        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        penData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->DrawEllipse(ellipse, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
 }
 
