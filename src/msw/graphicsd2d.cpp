@@ -218,6 +218,8 @@ D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
     case wxCOMPOSITION_INVALID:
         return D2D1_COMPOSITE_MODE_SOURCE_COPY;
     }
+
+    return D2D1_COMPOSITE_MODE_SOURCE_COPY;
 }
 
 #endif // D2D1_BLEND_SUPPORTED
