@@ -41,7 +41,6 @@
 #endif
 
 #include "wx/graphics.h"
-
 #include "wx/private/graphics.h"
 
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsPen) wxNullGraphicsPen;
@@ -170,7 +169,6 @@ D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
 }
 
 #if D2D1_BLEND_SUPPORTED
-
 bool CompositionModeSupported(wxCompositionMode compositionMode)
 {
     if (compositionMode == wxCOMPOSITION_DEST || compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
@@ -221,7 +219,6 @@ D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
 
     return D2D1_COMPOSITE_MODE_SOURCE_COPY;
 }
-
 #endif // D2D1_BLEND_SUPPORTED
 
 #if D2D1_INTERPOLATION_MODE_SUPPORTED
