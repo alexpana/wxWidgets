@@ -9,12 +9,19 @@
 
 #include "wx/wxprec.h"
 
+// Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
+// Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
+// Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
+#define D2D1_BLEND_SUPPORTED 1
+
 #include <algorithm>
 
 // Ensure no previous defines interfere with the Direct2D API headers
 #undef GetHwnd()
 
 #include <d2d1.h>
+
+#include <d2d1effectauthor.h>
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -156,6 +163,59 @@ D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
 
     return D2D1_ANTIALIAS_MODE_ALIASED;;
 }
+
+#if D2D1_BLEND_SUPPORTED
+
+bool CompositionModeSupported(wxCompositionMode compositionMode)
+{
+    if (compositionMode == wxCOMPOSITION_DEST || compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
+{
+    D2D1_BLEND_DESCRIPTION blendDescription;
+
+    switch (compositionMode)
+    {
+    case wxCOMPOSITION_SOURCE:
+        return D2D1_COMPOSITE_MODE_SOURCE_COPY;
+    case wxCOMPOSITION_OVER:
+        return D2D1_COMPOSITE_MODE_SOURCE_OVER;
+    case wxCOMPOSITION_IN:
+        return D2D1_COMPOSITE_MODE_SOURCE_IN;
+    case wxCOMPOSITION_OUT:
+        return D2D1_COMPOSITE_MODE_SOURCE_OUT;
+    case wxCOMPOSITION_ATOP:
+        return D2D1_COMPOSITE_MODE_SOURCE_ATOP;
+    case wxCOMPOSITION_DEST_OVER:
+        return D2D1_COMPOSITE_MODE_DESTINATION_OVER;
+    case wxCOMPOSITION_DEST_IN:
+        return D2D1_COMPOSITE_MODE_DESTINATION_IN;
+    case wxCOMPOSITION_DEST_OUT:
+        return D2D1_COMPOSITE_MODE_DESTINATION_OUT;
+    case wxCOMPOSITION_DEST_ATOP:
+        return D2D1_COMPOSITE_MODE_DESTINATION_ATOP;
+    case wxCOMPOSITION_XOR:
+        return D2D1_COMPOSITE_MODE_XOR;
+    case wxCOMPOSITION_ADD:
+        return D2D1_COMPOSITE_MODE_PLUS;
+
+    // unsupported composition modes
+    case wxCOMPOSITION_DEST:
+        wxFALLTHROUGH;
+    case wxCOMPOSITION_CLEAR:
+        wxFALLTHROUGH;
+    case wxCOMPOSITION_INVALID:
+        return D2D1_COMPOSITE_MODE_SOURCE_COPY;
+    }
+}
+
+#endif // D2D1_BLEND_SUPPORTED
 
 // Interface used by objects holding Direct2D device-dependent resources.
 class DeviceDependentResourceHolder
@@ -778,8 +838,19 @@ bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
 
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 {
-    wxFAIL_MSG("not implemented");
+#if D2D1_BLEND_SUPPORTED
+    if (CompositionModeSupported(op))
+    {
+        m_composition = op;
+        return true;
+    }
+    else 
+    {
+        return false;
+    }
+#else
     return false;
+#endif // D2D1_BLEND_SUPPORTED
 }
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
