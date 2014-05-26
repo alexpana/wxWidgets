@@ -620,6 +620,7 @@ public:
     void Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
     void ResetClip() wxOVERRIDE;
 
+    // The native context used by wxD2DContext is a Direct2D render target.
     void* GetNativeContext() wxOVERRIDE;
 
     void StrokePath(const wxGraphicsPath& p) wxOVERRIDE;
@@ -728,8 +729,7 @@ void wxD2DContext::ResetClip()
 
 void* wxD2DContext::GetNativeContext()
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return m_renderTarget;
 }
 
 void wxD2DContext::StrokePath(const wxGraphicsPath& p)
