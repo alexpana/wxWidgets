@@ -677,22 +677,13 @@ public:
     ~wxD2DContext() wxOVERRIDE;
 
     void Clip(const wxRegion &region) wxOVERRIDE;
+
     void Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+
     void ResetClip() wxOVERRIDE;
 
     // The native context used by wxD2DContext is a Direct2D render target.
     void* GetNativeContext() wxOVERRIDE;
-
-    void StrokePath(const wxGraphicsPath& p) wxOVERRIDE;
-    void FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
-
-    void DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE; 
-    void DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius) wxOVERRIDE;
-
-    void StrokeLines(size_t n, const wxPoint2DDouble* points) wxOVERRIDE;
-    void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE;
-
-    void DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
 
     bool SetAntialiasMode(wxAntialiasMode antialias) wxOVERRIDE;
 
@@ -705,7 +696,9 @@ public:
     void EndLayer() wxOVERRIDE;
 
     void Translate(wxDouble dx, wxDouble dy) wxOVERRIDE;
+
     void Scale(wxDouble xScale, wxDouble yScale) wxOVERRIDE;
+
     void Rotate(wxDouble angle) wxOVERRIDE;
 
     void ConcatTransform(const wxGraphicsMatrix& matrix) wxOVERRIDE;
@@ -714,12 +707,28 @@ public:
 
     wxGraphicsMatrix GetTransform() const wxOVERRIDE;
 
+    void StrokePath(const wxGraphicsPath& p) wxOVERRIDE;
+
+    void FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
+
+    void StrokeLines(size_t n, const wxPoint2DDouble* points) wxOVERRIDE;
+
+    void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE;
+
+    void DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
+
+    void DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE; 
+
+    void DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius) wxOVERRIDE;
+
     void DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+
     void DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
 
     void DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
 
     void PushState() wxOVERRIDE;
+
     void PopState() wxOVERRIDE;
 
     void GetTextExtent(
@@ -730,6 +739,7 @@ public:
         wxDouble* externalLeading) const wxOVERRIDE;
 
     void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE;
+
     bool ShouldOffset() const wxOVERRIDE;
 
     void SetPen(const wxGraphicsPen& pen) wxOVERRIDE;
