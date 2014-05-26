@@ -9,6 +9,8 @@
 
 #include "wx/wxprec.h"
 
+#include <algorithm>
+
 // Ensure no previous defines interfere with the Direct2D API headers
 #undef GetHwnd()
 
@@ -863,8 +865,19 @@ void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& wi
 
 bool wxD2DContext::ShouldOffset() const
 {
-    wxFAIL_MSG("not implemented");
-    return false;
+    if (!m_enableOffset)
+    {
+        return false;
+    }
+
+    int penWidth = 0;
+    if (!m_pen.IsNull())
+    {
+        penWidth = GetD2DPenData(m_pen)->GetWidth();
+        penWidth = std::max(penWidth, 1);
+    }
+
+    return (penWidth % 2) == 1;
 }
 
 void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
