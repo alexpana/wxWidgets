@@ -395,15 +395,25 @@ void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
     D2D1_LINE_JOIN lineJoin = ConvertPenJoin(m_sourcePen.GetJoin());
     D2D1_DASH_STYLE dashStyle = ConvertPenStyle(m_sourcePen.GetStyle());
 
-    direct2dfactory->CreateStrokeStyle(
-        D2D1::StrokeStyleProperties(
-            capStyle, capStyle, capStyle,
-            lineJoin, 0, dashStyle, 0.0f),
-        NULL,
-        0,
-        &m_strokeStyle);
+    int dashCount = 0;
+    FLOAT* dashes = NULL;
 
-    // TODO: Handle user-defined dashes
+    if (dashStyle == D2D1_DASH_STYLE_CUSTOM)
+    {
+        dashCount = m_sourcePen.GetDashCount();
+        dashes = new FLOAT[dashCount];
+
+        for (int i = 0; i < dashCount; ++i)
+        {
+            dashes[i] = m_sourcePen.GetDash()[i];
+        }
+
+    }
+
+    direct2dfactory->CreateStrokeStyle(
+        D2D1::StrokeStyleProperties(capStyle, capStyle, capStyle, lineJoin, 0, dashStyle, 0.0f),
+        dashes, dashCount, 
+        &m_strokeStyle);
 }
 
 void wxD2DPenData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
