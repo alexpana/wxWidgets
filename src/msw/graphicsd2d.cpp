@@ -251,6 +251,106 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+// wxD2DMatrixData declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DMatrixData : public wxGraphicsMatrixData
+{
+    void Concat(const wxGraphicsMatrixData* t) wxOVERRIDE;
+
+    void Set(wxDouble a = 1.0, wxDouble b = 0.0, wxDouble c = 0.0, wxDouble d = 1.0,
+        wxDouble tx = 0.0, wxDouble ty = 0.0) wxOVERRIDE;
+
+    void Get(wxDouble* a = NULL, wxDouble* b = NULL,  wxDouble* c = NULL,
+        wxDouble* d = NULL, wxDouble* tx = NULL, wxDouble* ty = NULL) const wxOVERRIDE;
+
+    void Invert() wxOVERRIDE;
+
+    bool IsEqual(const wxGraphicsMatrixData* t) const wxOVERRIDE;
+
+    bool IsIdentity() const wxOVERRIDE;
+
+    void Translate(wxDouble dx, wxDouble dy) wxOVERRIDE;
+
+    void Scale(wxDouble xScale, wxDouble yScale) wxOVERRIDE;
+
+    void Rotate(wxDouble angle) wxOVERRIDE;
+
+    void TransformPoint(wxDouble* x, wxDouble* y) const wxOVERRIDE;
+
+    void TransformDistance(wxDouble* dx, wxDouble* dy) const wxOVERRIDE;
+
+    void* GetNativeMatrix() const wxOVERRIDE;
+};
+
+//-----------------------------------------------------------------------------
+// wxD2DMatrixData implementation
+//-----------------------------------------------------------------------------
+
+void wxD2DMatrixData::Concat(const wxGraphicsMatrixData* t)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::Set(wxDouble a, wxDouble b, wxDouble c, wxDouble d, wxDouble tx, wxDouble ty)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::Get(wxDouble* a, wxDouble* b,  wxDouble* c, wxDouble* d, wxDouble* tx, wxDouble* ty) const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::Invert()
+{
+    wxFAIL_MSG("not implemented");
+}
+
+bool wxD2DMatrixData::IsEqual(const wxGraphicsMatrixData* t) const
+{
+    wxFAIL_MSG("not implemented");
+    return false;
+}
+
+bool wxD2DMatrixData::IsIdentity() const
+{
+    wxFAIL_MSG("not implemented");
+    return false;
+}
+
+void wxD2DMatrixData::Translate(wxDouble dx, wxDouble dy)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::Scale(wxDouble xScale, wxDouble yScale)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::Rotate(wxDouble angle)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::TransformPoint(wxDouble* x, wxDouble* y) const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DMatrixData::TransformDistance(wxDouble* dx, wxDouble* dy) const
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void* wxD2DMatrixData::GetNativeMatrix() const
+{
+    wxFAIL_MSG("not implemented");
+    return NULL;
+}
+
+//-----------------------------------------------------------------------------
 // wxD2DPathData declaration
 //-----------------------------------------------------------------------------
 
