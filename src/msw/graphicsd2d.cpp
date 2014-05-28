@@ -389,10 +389,24 @@ public :
     // closes the current sub-path
     void CloseSubpath() wxOVERRIDE;
 
-private :
-    D2D1_POINT_2F m_cursorPosition;
+    // returns the native path
+    void* GetNativePath() const wxOVERRIDE;
 
+    // give the native path returned by GetNativePath() back (there might be some deallocations necessary)
+    void UnGetNativePath(void* WXUNUSED(p)) const wxOVERRIDE {};
+
+    // transforms each point of this path by the matrix
+    void Transform(const wxGraphicsMatrixData* matrix) wxOVERRIDE;
+
+    // gets the bounding box enclosing all points (possibly including control points)
+    void GetBox(wxDouble* x, wxDouble* y, wxDouble* w, wxDouble *h) const wxOVERRIDE;
+
+    bool Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) const wxOVERRIDE;
+
+private :
     ID2D1PathGeometry* m_pathGeometry;
+
+    D2D1_POINT_2F m_currentPoint;
 };
 
 //-----------------------------------------------------------------------------
@@ -453,7 +467,39 @@ void wxD2DPathData::AddPath(const wxGraphicsPathData* path)
 // closes the current sub-path
 void wxD2DPathData::CloseSubpath()
 {
+    m_geometrySink->EndFigure(D2D1_FIGURE_END_CLOSED);
+}
+
+void* wxD2DPathData::GetNativePath() const
+{
+    return m_pathGeometry;
+}
+
+void wxD2DPathData::Transform(const wxGraphicsMatrixData* matrix)
+{
     wxFAIL_MSG("not implemented");
+}
+
+void wxD2DPathData::GetBox(wxDouble* x, wxDouble* y, wxDouble* w, wxDouble *h) const
+{
+    D2D1_RECT_F bounds;
+    m_pathGeometry->GetBounds(D2D1::Matrix3x2F::Identity(), &bounds);
+    *x = bounds.left;
+    *y = bounds.top;
+    *w = bounds.right - bounds.left;
+    *h = bounds.bottom - bounds.top;
+}
+
+bool wxD2DPathData::Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle) const
+{
+    BOOL result;
+    m_pathGeometry->FillContainsPoint(D2D1::Point2F(x, y), D2D1::Matrix3x2F::Identity(), &result);
+    return result;
+}
+
+wxD2DPathData* GetD2DPathData(const wxGraphicsPath& path)
+{
+    return static_cast<wxD2DPathData*>(path.GetGraphicsData());
 }
 
 //-----------------------------------------------------------------------------
