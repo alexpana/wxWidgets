@@ -242,6 +242,14 @@ D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality inter
 }
 #endif // D2D1_INTERPOLATION_MODE_SUPPORTED
 
+bool operator==(const D2D1::Matrix3x2F& lhs, const D2D1::Matrix3x2F& rhs)
+{
+    return 
+        lhs._11 == rhs._11 && lhs._12 == rhs._12 &&
+        lhs._21 == rhs._21 && lhs._22 == rhs._22 &&
+        lhs._31 == rhs._31 && lhs._32 == rhs._32;
+}
+
 // Interface used by objects holding Direct2D device-dependent resources.
 class DeviceDependentResourceHolder
 {
@@ -256,6 +264,9 @@ public:
 
 class wxD2DMatrixData : public wxGraphicsMatrixData
 {
+public:
+    wxD2DMatrixData(wxGraphicsRenderer* renderer);
+
     void Concat(const wxGraphicsMatrixData* t) wxOVERRIDE;
 
     void Set(wxDouble a = 1.0, wxDouble b = 0.0, wxDouble c = 0.0, wxDouble d = 1.0,
@@ -281,73 +292,107 @@ class wxD2DMatrixData : public wxGraphicsMatrixData
     void TransformDistance(wxDouble* dx, wxDouble* dy) const wxOVERRIDE;
 
     void* GetNativeMatrix() const wxOVERRIDE;
+
+    D2D1::Matrix3x2F GetMatrix3x2F();
+
+private:
+    D2D1::Matrix3x2F m_matrix;
 };
 
 //-----------------------------------------------------------------------------
 // wxD2DMatrixData implementation
 //-----------------------------------------------------------------------------
 
+wxD2DMatrixData::wxD2DMatrixData(wxGraphicsRenderer* renderer) : wxGraphicsMatrixData(renderer)
+{
+    m_matrix = D2D1::Matrix3x2F::Identity();
+}
+
 void wxD2DMatrixData::Concat(const wxGraphicsMatrixData* t)
 {
-    wxFAIL_MSG("not implemented");
+    m_matrix.SetProduct(m_matrix, static_cast<const wxD2DMatrixData*>(t)->m_matrix);
 }
 
 void wxD2DMatrixData::Set(wxDouble a, wxDouble b, wxDouble c, wxDouble d, wxDouble tx, wxDouble ty)
 {
-    wxFAIL_MSG("not implemented");
+    m_matrix._11 = a;
+    m_matrix._12 = b;
+    m_matrix._21 = c;
+    m_matrix._22 = d;
+    m_matrix._31 = tx;
+    m_matrix._32 = ty;
 }
 
 void wxD2DMatrixData::Get(wxDouble* a, wxDouble* b,  wxDouble* c, wxDouble* d, wxDouble* tx, wxDouble* ty) const
 {
-    wxFAIL_MSG("not implemented");
+    *a = m_matrix._11;
+    *b = m_matrix._12;
+    *c = m_matrix._21;
+    *d = m_matrix._22;
+    *tx = m_matrix._31;
+    *ty = m_matrix._32;
 }
 
 void wxD2DMatrixData::Invert()
 {
-    wxFAIL_MSG("not implemented");
+    m_matrix.Invert();
 }
 
 bool wxD2DMatrixData::IsEqual(const wxGraphicsMatrixData* t) const
 {
-    wxFAIL_MSG("not implemented");
-    return false;
+    return m_matrix == static_cast<const wxD2DMatrixData*>(t)->m_matrix;
 }
 
 bool wxD2DMatrixData::IsIdentity() const
 {
-    wxFAIL_MSG("not implemented");
-    return false;
+    return m_matrix.IsIdentity();
 }
 
 void wxD2DMatrixData::Translate(wxDouble dx, wxDouble dy)
 {
-    wxFAIL_MSG("not implemented");
+    m_matrix.SetProduct(D2D1::Matrix3x2F::Translation(dx, dy), m_matrix);
 }
 
 void wxD2DMatrixData::Scale(wxDouble xScale, wxDouble yScale)
 {
-    wxFAIL_MSG("not implemented");
+    m_matrix.SetProduct(D2D1::Matrix3x2F::Scale(xScale, yScale), m_matrix);
 }
 
 void wxD2DMatrixData::Rotate(wxDouble angle)
 {
-    wxFAIL_MSG("not implemented");
+    m_matrix.SetProduct(D2D1::Matrix3x2F::Rotation(wxRadToDeg(angle)), m_matrix);
 }
 
 void wxD2DMatrixData::TransformPoint(wxDouble* x, wxDouble* y) const
 {
-    wxFAIL_MSG("not implemented");
+    D2D1_POINT_2F result = m_matrix.TransformPoint(D2D1::Point2F(*x, *y));
+    *x = result.x;
+    *y = result.y;
 }
 
 void wxD2DMatrixData::TransformDistance(wxDouble* dx, wxDouble* dy) const
 {
-    wxFAIL_MSG("not implemented");
+    D2D1::Matrix3x2F noTranslationMatrix = m_matrix;
+    noTranslationMatrix._31 = 0;
+    noTranslationMatrix._32 = 0;
+    D2D1_POINT_2F result = m_matrix.TransformPoint(D2D1::Point2F(*dx, *dy));
+    *dx = result.x;
+    *dy = result.y;
 }
 
 void* wxD2DMatrixData::GetNativeMatrix() const
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return (void*)&m_matrix;
+}
+
+D2D1::Matrix3x2F wxD2DMatrixData::GetMatrix3x2F()
+{
+    return m_matrix;
+}
+
+const wxD2DMatrixData* GetD2DMatrixData(const wxGraphicsMatrix& matrix)
+{
+    return static_cast<const wxD2DMatrixData*>(matrix.GetMatrixData());
 }
 
 //-----------------------------------------------------------------------------
