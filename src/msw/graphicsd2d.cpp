@@ -403,8 +403,13 @@ public :
 
     bool Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) const wxOVERRIDE;
 
+private:
+    void EnsureSinkOpened();
+
 private :
     ID2D1PathGeometry* m_pathGeometry;
+
+    ID2D1GeometrySink* m_geometrySink;
 
     D2D1_POINT_2F m_currentPoint;
 };
@@ -413,20 +418,32 @@ private :
 // wxD2DPathData implementation
 //-----------------------------------------------------------------------------
 
-wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry) : wxGraphicsPathData(renderer)
+wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry) : 
+    wxGraphicsPathData(renderer), m_pathGeometry(d2dPathGeometry), m_geometrySink(NULL), 
+    m_figureOpened(false)
 {
-    wxFAIL_MSG("not implemented");
 }
 
 wxD2DPathData::~wxD2DPathData()
 {
-    wxFAIL_MSG("not implemented");
+    SafeRelease(&m_geometrySink);
+    SafeRelease(&m_pathGeometry);
+}
+
 }
 
 wxD2DPathData::wxGraphicsObjectRefData* wxD2DPathData::Clone() const
 {
     wxFAIL_MSG("not implemented");
     return NULL;
+}
+
+void wxD2DPathData::EnsureSinkOpened()
+{
+    if (m_geometrySink == NULL)
+    {
+        m_pathGeometry->Open(&m_geometrySink);
+    }
 }
 
 void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
