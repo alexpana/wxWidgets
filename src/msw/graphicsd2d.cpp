@@ -42,6 +42,7 @@
 
 #include "wx/graphics.h"
 #include "wx/private/graphics.h"
+#include "wx/stack.h"
 
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsPen) wxNullGraphicsPen;
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsBrush) wxNullGraphicsBrush;
@@ -1039,6 +1040,11 @@ private:
     ID2D1Factory* m_direct2dFactory;
     ID2D1HwndRenderTarget* m_renderTarget;
 
+    // A ID2D1DrawingStateBlock represents the drawing state of a render target: 
+    // the antialiasing mode, transform, tags, and text-rendering options.
+    // The context owns these pointers and is responsible for releasing them.
+    wxStack<ID2D1DrawingStateBlock*> m_stateStack;
+
     wxVector<DeviceDependentResourceHolder*> m_deviceDependentResourceHolders;
 
 private:
@@ -1059,6 +1065,14 @@ wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dF
 wxD2DContext::~wxD2DContext()
 {
     m_renderTarget->EndDraw();
+
+    // Release the objects saved on the state stack
+    while(!m_stateStack.empty())
+    {
+        SafeRelease(&m_stateStack.top());
+        m_stateStack.pop();
+    }
+
     SafeRelease(&m_renderTarget);
 }
 
@@ -1221,12 +1235,23 @@ void wxD2DContext::DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble
 
 void wxD2DContext::PushState()
 {
-    wxFAIL_MSG("not implemented");
+    ID2D1Factory* GetD2DFactory(wxGraphicsRenderer* renderer);
+
+    ID2D1DrawingStateBlock* drawStateBlock;
+    GetD2DFactory(GetRenderer())->CreateDrawingStateBlock(&drawStateBlock);
+    m_renderTarget->SaveDrawingState(drawStateBlock);
+
+    m_stateStack.push(drawStateBlock);
 }
 
 void wxD2DContext::PopState()
 {
-    wxFAIL_MSG("not implemented");
+    wxCHECK_RET(!m_stateStack.empty(), wxT("No state to pop"));
+
+    ID2D1DrawingStateBlock* drawStateBlock = m_stateStack.top();
+    m_stateStack.pop();
+
+    m_renderTarget->RestoreDrawingState(drawStateBlock);
 }
 
 void wxD2DContext::GetTextExtent(
