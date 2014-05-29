@@ -401,6 +401,35 @@ const wxD2DMatrixData* GetD2DMatrixData(const wxGraphicsMatrix& matrix)
     return static_cast<const wxD2DMatrixData*>(matrix.GetMatrixData());
 }
 
+class wxD2DOffsetHelper
+{
+public:
+    wxD2DOffsetHelper(wxGraphicsContext* g) : m_g(g)
+    {
+        if (m_g->ShouldOffset())
+        {
+            wxGraphicsMatrix offsetMatrix;
+            offsetMatrix.SetRefData(new wxD2DMatrixData(m_g->GetRenderer()));
+            offsetMatrix.Translate(0.5, 0.5);
+            m_g->ConcatTransform(offsetMatrix);
+        }
+    }
+
+    ~wxD2DOffsetHelper()
+    {
+        if (m_g->ShouldOffset())
+        {
+            wxGraphicsMatrix offsetMatrix;
+            offsetMatrix.SetRefData(new wxD2DMatrixData(m_g->GetRenderer()));
+            offsetMatrix.Translate(-0.5, -0.5);
+            m_g->ConcatTransform(offsetMatrix);
+        }
+    }
+
+private:
+    wxGraphicsContext* m_g;
+};
+
 //-----------------------------------------------------------------------------
 // wxD2DPathData declaration
 //-----------------------------------------------------------------------------
@@ -1314,6 +1343,8 @@ void wxD2DContext::ReleaseDeviceDependentResources()
 
 void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
+    wxD2DOffsetHelper helper(this);
+
     EnsureInitialized();
     AdjustRenderTargetSize();
 
@@ -1337,6 +1368,8 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
 void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius)
 {
+    wxD2DOffsetHelper helper(this);
+
     EnsureInitialized();
     AdjustRenderTargetSize();
 
@@ -1361,6 +1394,8 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
 
 void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
+    wxD2DOffsetHelper helper(this);
+
     EnsureInitialized();
     AdjustRenderTargetSize();
 
