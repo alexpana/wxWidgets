@@ -1500,6 +1500,8 @@ public :
     wxString GetName() const wxOVERRIDE;
     void GetVersion(int* major, int* minor, int* micro) const wxOVERRIDE;
 
+    ID2D1Factory* GetD2DFactory();
+
 private:
     ID2D1Factory* m_direct2dFactory;
 
@@ -1723,6 +1725,16 @@ void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro) const
         *minor = wxPlatformInfo::Get().GetOSMinorVersion();
     if ( micro )
         *micro = 0;
+}
+
+ID2D1Factory* wxD2DRenderer::GetD2DFactory()
+{
+    return m_direct2dFactory;
+}
+
+ID2D1Factory* GetD2DFactory(wxGraphicsRenderer* renderer)
+{
+    return static_cast<wxD2DRenderer*>(renderer)->GetD2DFactory();
 }
 
 #endif // wxUSE_GRAPHICS_DIRECT2D
