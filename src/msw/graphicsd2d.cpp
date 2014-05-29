@@ -1145,18 +1145,34 @@ void wxD2DContext::Rotate(wxDouble angle)
 
 void wxD2DContext::ConcatTransform(const wxGraphicsMatrix& matrix)
 {
-    wxFAIL_MSG("not implemented");
+    D2D1::Matrix3x2F localMatrix = GetD2DMatrixData(GetTransform())->GetMatrix3x2F();
+    D2D1::Matrix3x2F concatMatrix = GetD2DMatrixData(matrix)->GetMatrix3x2F();
+
+    D2D1::Matrix3x2F resultMatrix;
+    resultMatrix.SetProduct(concatMatrix, localMatrix);
+
+    wxGraphicsMatrix resultTransform;
+    resultTransform.SetRefData(new wxD2DMatrixData(GetRenderer(), resultMatrix));
+
+    SetTransform(resultTransform);
 }
 
 void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
 {
-    wxFAIL_MSG("not implemented");
+    m_renderTarget->SetTransform(GetD2DMatrixData(matrix)->GetMatrix3x2F());
 }
 
 wxGraphicsMatrix wxD2DContext::GetTransform() const
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsMatrix();
+    D2D1::Matrix3x2F transformMatrix;
+    m_renderTarget->GetTransform(&transformMatrix);
+
+    wxD2DMatrixData* matrixData = new wxD2DMatrixData(GetRenderer(), transformMatrix);
+
+    wxGraphicsMatrix matrix;
+    matrix.SetRefData(matrixData);
+
+    return matrix;
 }
 
 void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
