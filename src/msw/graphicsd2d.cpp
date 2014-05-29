@@ -1552,8 +1552,13 @@ wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
     wxDouble a, wxDouble b, wxDouble c, wxDouble d,
     wxDouble tx, wxDouble ty)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsMatrix();
+    wxD2DMatrixData* matrixData = new wxD2DMatrixData(this);
+    matrixData->Set(a, b, c, d, tx, ty);
+
+    wxGraphicsMatrix matrix;
+    matrix.SetRefData(matrixData);
+
+    return matrix;
 }
 
 wxGraphicsPen wxD2DRenderer::CreatePen(const wxPen& pen)
