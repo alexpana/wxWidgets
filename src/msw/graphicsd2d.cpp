@@ -266,6 +266,7 @@ class wxD2DMatrixData : public wxGraphicsMatrixData
 {
 public:
     wxD2DMatrixData(wxGraphicsRenderer* renderer);
+    wxD2DMatrixData(wxGraphicsRenderer* renderer, const D2D1::Matrix3x2F& matrix);
 
     void Concat(const wxGraphicsMatrixData* t) wxOVERRIDE;
 
@@ -306,6 +307,11 @@ private:
 wxD2DMatrixData::wxD2DMatrixData(wxGraphicsRenderer* renderer) : wxGraphicsMatrixData(renderer)
 {
     m_matrix = D2D1::Matrix3x2F::Identity();
+}
+
+wxD2DMatrixData::wxD2DMatrixData(wxGraphicsRenderer* renderer, const D2D1::Matrix3x2F& matrix) : 
+    wxGraphicsMatrixData(renderer), m_matrix(matrix)
+{
 }
 
 void wxD2DMatrixData::Concat(const wxGraphicsMatrixData* t)
