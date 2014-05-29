@@ -904,13 +904,16 @@ void wxD2DBrushData::CreateRadialGradientBrush(
 
 void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
 {
-    if (m_brushType == wxD2DBRUSHTYPE_SOLID && !IsAcquired(m_solidColorBrush)) 
+    if (!IsAcquired(m_solidColorBrush))
     {
-        renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
-    } 
-    else 
-    {
-        wxFAIL_MSG("not implemented");
+        if (m_brushType == wxD2DBRUSHTYPE_SOLID) 
+        {
+            renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
+        } 
+        else 
+        {
+            wxFAIL_MSG("not implemented");
+        }
     }
 }
 
