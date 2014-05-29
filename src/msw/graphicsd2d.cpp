@@ -1060,6 +1060,7 @@ wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dF
     m_hwnd = hwnd;
     m_renderTarget = NULL;
     m_direct2dFactory = direct2dFactory;
+    m_enableOffset = true;
 }
 
 wxD2DContext::~wxD2DContext()
