@@ -1045,6 +1045,8 @@ private:
     // The context owns these pointers and is responsible for releasing them.
     wxStack<ID2D1DrawingStateBlock*> m_stateStack;
 
+    // The context does not own these pointers and is not responsible for
+    // releasing them.
     wxVector<DeviceDependentResourceHolder*> m_deviceDependentResourceHolders;
 
 private:
