@@ -293,7 +293,7 @@ public:
 
     void* GetNativeMatrix() const wxOVERRIDE;
 
-    D2D1::Matrix3x2F GetMatrix3x2F();
+    D2D1::Matrix3x2F GetMatrix3x2F() const;
 
 private:
     D2D1::Matrix3x2F m_matrix;
@@ -385,7 +385,7 @@ void* wxD2DMatrixData::GetNativeMatrix() const
     return (void*)&m_matrix;
 }
 
-D2D1::Matrix3x2F wxD2DMatrixData::GetMatrix3x2F()
+D2D1::Matrix3x2F wxD2DMatrixData::GetMatrix3x2F() const
 {
     return m_matrix;
 }
