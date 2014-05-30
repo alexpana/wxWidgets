@@ -794,6 +794,14 @@ private:
 
     void CreateBitmapBrush();
 
+    void AcquireSolidColorBrush(ID2D1RenderTarget* renderTarget);
+
+    void AcquireLinearGradientBrush(ID2D1RenderTarget* renderTarget);
+
+    void AcquireRadialGradientBrush(ID2D1RenderTarget* renderTarget);
+
+    void AcquireBitmapBrush(ID2D1RenderTarget* renderTarget);
+
 private:
     // We store the source brush for later when we need to recreate the
     // device-independent resources.
@@ -851,7 +859,6 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer)
     m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
-    wxFAIL_MSG("not implemented");
 }
 
 wxD2DBrushData::~wxD2DBrushData()
@@ -880,8 +887,6 @@ void wxD2DBrushData::CreateLinearGradientBrush(
 {
     m_brushType = wxD2DBRUSHTYPE_LINEAR_GRADIENT;
     m_linearGradientBrushInfo = new LinearGradientBrushInfo(x1, y1, x2, y2, stops);
-
-    wxFAIL_MSG("not implemented");
 }
 
 void wxD2DBrushData::CreateRadialGradientBrush(
@@ -896,18 +901,73 @@ void wxD2DBrushData::CreateRadialGradientBrush(
     wxFAIL_MSG("not implemented");
 }
 
-void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
+void wxD2DBrushData::AcquireSolidColorBrush(ID2D1RenderTarget* renderTarget)
 {
     if (!IsAcquired(m_solidColorBrush))
     {
-        if (m_brushType == wxD2DBRUSHTYPE_SOLID) 
+        renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
+    }
+}
+
+void wxD2DBrushData::AcquireLinearGradientBrush(ID2D1RenderTarget* renderTarget)
+{
+    if (!IsAcquired(m_linearGradientBrush))
+    {
+        int stopCount = m_linearGradientBrushInfo->stops.GetCount();
+
+        ID2D1GradientStopCollection *gradientStopCollection = NULL;
+
+        D2D1_GRADIENT_STOP* gradientStops = new D2D1_GRADIENT_STOP[stopCount];
+
+        for (int i = 0; i < stopCount; ++i)
         {
-            renderTarget->CreateSolidColorBrush(ConvertColour(m_sourceBrush.GetColour()), &m_solidColorBrush);
-        } 
-        else 
-        {
-            wxFAIL_MSG("not implemented");
+            gradientStops[i].color = ConvertColour(m_linearGradientBrushInfo->stops.Item(i).GetColour());
+            gradientStops[i].position = m_linearGradientBrushInfo->stops.Item(i).GetPosition();
         }
+
+        renderTarget->CreateGradientStopCollection(gradientStops, stopCount, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_WRAP, &gradientStopCollection);
+
+        renderTarget->CreateLinearGradientBrush(
+            D2D1::LinearGradientBrushProperties(
+            D2D1::Point2F(m_linearGradientBrushInfo->x1, m_linearGradientBrushInfo->y1),
+            D2D1::Point2F(m_linearGradientBrushInfo->x2, m_linearGradientBrushInfo->y2)),
+            gradientStopCollection,
+            &m_linearGradientBrush);
+
+        delete[] gradientStops;
+        SafeRelease(&gradientStopCollection);
+    }
+}
+
+void wxD2DBrushData::AcquireRadialGradientBrush(ID2D1RenderTarget* renderTarget)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DBrushData::AcquireBitmapBrush(ID2D1RenderTarget* renderTarget)
+{
+    wxFAIL_MSG("not implemented");
+}
+
+void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
+{
+    switch (m_brushType)
+    {
+    case wxD2DBrushData::wxD2DBRUSHTYPE_SOLID:
+        AcquireSolidColorBrush(renderTarget);
+        break;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_LINEAR_GRADIENT:
+        AcquireLinearGradientBrush(renderTarget);
+        break;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_RADIAL_GRADIENT:
+        AcquireRadialGradientBrush(renderTarget);
+        break;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_BITMAP:
+        AcquireBitmapBrush(renderTarget);
+        break;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_UNSPECIFIED:
+        wxFAIL_MSG("cannot acquire resources for an uninitialized brush");
+        break;
     }
 }
 
@@ -1679,8 +1739,13 @@ wxGraphicsBrush wxD2DRenderer::CreateLinearGradientBrush(
     wxDouble x2, wxDouble y2,
     const wxGraphicsGradientStops& stops)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsBrush();
+    wxD2DBrushData* brushData = new wxD2DBrushData(this);
+    brushData->CreateLinearGradientBrush(x1, y1, x2, y2, stops);
+
+    wxGraphicsBrush brush;
+    brush.SetRefData(brushData);
+
+    return brush;
 }
 
 wxGraphicsBrush wxD2DRenderer::CreateRadialGradientBrush(
