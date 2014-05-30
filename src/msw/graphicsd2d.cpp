@@ -949,29 +949,15 @@ void wxD2DBrushData::AcquireLinearGradientBrush(ID2D1RenderTarget* renderTarget)
 {
     if (!IsAcquired(m_linearGradientBrush))
     {
-        int stopCount = m_linearGradientBrushInfo->stops.GetCount();
 
-        ID2D1GradientStopCollection *gradientStopCollection = NULL;
-
-        D2D1_GRADIENT_STOP* gradientStops = new D2D1_GRADIENT_STOP[stopCount];
-
-        for (int i = 0; i < stopCount; ++i)
-        {
-            gradientStops[i].color = ConvertColour(m_linearGradientBrushInfo->stops.Item(i).GetColour());
-            gradientStops[i].position = m_linearGradientBrushInfo->stops.Item(i).GetPosition();
-        }
-
-        renderTarget->CreateGradientStopCollection(gradientStops, stopCount, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_WRAP, &gradientStopCollection);
+        D2DGradientStopsHelper helper(m_linearGradientBrushInfo->stops, renderTarget);
 
         renderTarget->CreateLinearGradientBrush(
             D2D1::LinearGradientBrushProperties(
-            D2D1::Point2F(m_linearGradientBrushInfo->x1, m_linearGradientBrushInfo->y1),
-            D2D1::Point2F(m_linearGradientBrushInfo->x2, m_linearGradientBrushInfo->y2)),
-            gradientStopCollection,
+                D2D1::Point2F(m_linearGradientBrushInfo->x1, m_linearGradientBrushInfo->y1),
+                D2D1::Point2F(m_linearGradientBrushInfo->x2, m_linearGradientBrushInfo->y2)),
+            helper.GetGradientStopCollection(),
             &m_linearGradientBrush);
-
-        delete[] gradientStops;
-        SafeRelease(&gradientStopCollection);
     }
 }
 
