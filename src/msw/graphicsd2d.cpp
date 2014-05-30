@@ -717,6 +717,42 @@ wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
     return static_cast<wxD2DPenData*>(pen.GetGraphicsData());
 }
 
+// Helper class used to create and safely release a ID2D1GradientStopCollection from wxGraphicsGradientStops
+class D2DGradientStopsHelper
+{
+public:
+    D2DGradientStopsHelper(const wxGraphicsGradientStops& gradientStops, ID2D1RenderTarget* renderTarget) 
+        : m_gradientStopCollection(NULL)
+    {
+        int stopCount = gradientStops.GetCount();
+
+        m_gradientStopArray = new D2D1_GRADIENT_STOP[stopCount];
+
+        for (int i = 0; i < stopCount; ++i)
+        {
+            m_gradientStopArray[i].color = ConvertColour(gradientStops.Item(i).GetColour());
+            m_gradientStopArray[i].position = gradientStops.Item(i).GetPosition();
+        }
+
+        renderTarget->CreateGradientStopCollection(m_gradientStopArray, stopCount, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_WRAP, &m_gradientStopCollection);
+    }
+
+    ~D2DGradientStopsHelper()
+    {
+        delete[] m_gradientStopArray;
+        SafeRelease(&m_gradientStopCollection);
+    }
+
+    ID2D1GradientStopCollection* GetGradientStopCollection()
+    {
+        return m_gradientStopCollection;
+    }
+
+private:
+    D2D1_GRADIENT_STOP* m_gradientStopArray;
+    ID2D1GradientStopCollection* m_gradientStopCollection;
+};
+
 //-----------------------------------------------------------------------------
 // wxD2DBrushData declaration
 //-----------------------------------------------------------------------------
