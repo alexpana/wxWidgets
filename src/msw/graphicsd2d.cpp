@@ -243,6 +243,29 @@ D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality inter
 }
 #endif // D2D1_INTERPOLATION_MODE_SUPPORTED
 
+class wxD2DOffsetHelper
+{
+public:
+    wxD2DOffsetHelper(wxGraphicsContext* g) : m_context(g)
+    {
+        if (m_context->ShouldOffset())
+        {
+            m_context->Translate(0.5, 0.5);
+        }
+    }
+
+    ~wxD2DOffsetHelper()
+    {
+        if (m_context->ShouldOffset())
+        {
+            m_context->Translate(-0.5, -0.5);
+        }
+    }
+
+private:
+    wxGraphicsContext* m_context;
+};
+
 bool operator==(const D2D1::Matrix3x2F& lhs, const D2D1::Matrix3x2F& rhs)
 {
     return 
@@ -401,35 +424,6 @@ const wxD2DMatrixData* GetD2DMatrixData(const wxGraphicsMatrix& matrix)
 {
     return static_cast<const wxD2DMatrixData*>(matrix.GetMatrixData());
 }
-
-class wxD2DOffsetHelper
-{
-public:
-    wxD2DOffsetHelper(wxGraphicsContext* g) : m_g(g)
-    {
-        if (m_g->ShouldOffset())
-        {
-            wxGraphicsMatrix offsetMatrix;
-            offsetMatrix.SetRefData(new wxD2DMatrixData(m_g->GetRenderer()));
-            offsetMatrix.Translate(0.5, 0.5);
-            m_g->ConcatTransform(offsetMatrix);
-        }
-    }
-
-    ~wxD2DOffsetHelper()
-    {
-        if (m_g->ShouldOffset())
-        {
-            wxGraphicsMatrix offsetMatrix;
-            offsetMatrix.SetRefData(new wxD2DMatrixData(m_g->GetRenderer()));
-            offsetMatrix.Translate(-0.5, -0.5);
-            m_g->ConcatTransform(offsetMatrix);
-        }
-    }
-
-private:
-    wxGraphicsContext* m_g;
-};
 
 //-----------------------------------------------------------------------------
 // wxD2DPathData declaration
