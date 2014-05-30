@@ -1179,17 +1179,23 @@ void wxD2DContext::EndLayer()
 
 void wxD2DContext::Translate(wxDouble dx, wxDouble dy)
 {
-    wxFAIL_MSG("not implemented");
+    wxGraphicsMatrix translationMatrix = CreateMatrix();
+    translationMatrix.Translate(dx, dy);
+    ConcatTransform(translationMatrix);
 }
 
 void wxD2DContext::Scale(wxDouble xScale, wxDouble yScale)
 {
-    wxFAIL_MSG("not implemented");
+    wxGraphicsMatrix scaleMatrix = CreateMatrix();
+    scaleMatrix.Scale(xScale, yScale);
+    ConcatTransform(scaleMatrix);
 }
 
 void wxD2DContext::Rotate(wxDouble angle)
 {
-    wxFAIL_MSG("not implemented");
+    wxGraphicsMatrix rotationMatrix = CreateMatrix();
+    rotationMatrix.Rotate(angle);
+    ConcatTransform(rotationMatrix);
 }
 
 void wxD2DContext::ConcatTransform(const wxGraphicsMatrix& matrix)
