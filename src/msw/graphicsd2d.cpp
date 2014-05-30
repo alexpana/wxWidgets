@@ -963,7 +963,21 @@ void wxD2DBrushData::AcquireLinearGradientBrush(ID2D1RenderTarget* renderTarget)
 
 void wxD2DBrushData::AcquireRadialGradientBrush(ID2D1RenderTarget* renderTarget)
 {
-    wxFAIL_MSG("not implemented");
+    if (!IsAcquired(m_radialGradientBrush))
+    {
+        D2DGradientStopsHelper helper(m_radialGradientBrushInfo->stops, renderTarget);
+
+        int xo = m_radialGradientBrushInfo->x1 - m_radialGradientBrushInfo->x2;
+        int yo = m_radialGradientBrushInfo->y1 - m_radialGradientBrushInfo->y2;
+
+        renderTarget->CreateRadialGradientBrush(
+            D2D1::RadialGradientBrushProperties(
+                D2D1::Point2F(m_radialGradientBrushInfo->x2, m_radialGradientBrushInfo->y2),
+                D2D1::Point2F(xo, yo),
+                m_radialGradientBrushInfo->radius, m_radialGradientBrushInfo->radius),
+            helper.GetGradientStopCollection(),
+            &m_radialGradientBrush);
+    }
 }
 
 void wxD2DBrushData::AcquireBitmapBrush(ID2D1RenderTarget* renderTarget)
@@ -1776,7 +1790,13 @@ wxGraphicsBrush wxD2DRenderer::CreateRadialGradientBrush(
     wxDouble radius,
     const wxGraphicsGradientStops& stops)
 {
-    wxFAIL_MSG("not implemented");
+    wxD2DBrushData* brushData = new wxD2DBrushData(this);
+    brushData->CreateRadialGradientBrush(xo, yo, xc, yc, radius, stops);
+
+    wxGraphicsBrush brush;
+    brush.SetRefData(brushData);
+
+    return brush;
     return wxGraphicsBrush();
 }
 
