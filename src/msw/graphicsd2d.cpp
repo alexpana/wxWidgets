@@ -1449,7 +1449,15 @@ void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
 wxGraphicsMatrix wxD2DContext::GetTransform() const
 {
     D2D1::Matrix3x2F transformMatrix;
-    GetRenderTarget()->GetTransform(&transformMatrix);
+
+    if (GetRenderTarget() != NULL) 
+    {
+        GetRenderTarget()->GetTransform(&transformMatrix);
+    }
+    else
+    {
+        transformMatrix = D2D1::Matrix3x2F::Identity();
+    }
 
     wxD2DMatrixData* matrixData = new wxD2DMatrixData(GetRenderer(), transformMatrix);
 
