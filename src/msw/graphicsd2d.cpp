@@ -1441,6 +1441,8 @@ void wxD2DContext::ConcatTransform(const wxGraphicsMatrix& matrix)
 
 void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
 {
+    EnsureInitialized();
+
     GetRenderTarget()->SetTransform(GetD2DMatrixData(matrix)->GetMatrix3x2F());
 }
 
