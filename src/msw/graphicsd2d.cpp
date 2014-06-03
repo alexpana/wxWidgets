@@ -33,8 +33,6 @@
 #pragma hdrstop
 #endif
 
-#include "wx/dc.h"
-
 #if wxUSE_GRAPHICS_DIRECT2D
 
 #ifndef WX_PRECOMP
@@ -42,6 +40,7 @@
 #endif
 
 #include "wx/graphics.h"
+#include "wx/dc.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
 
@@ -1205,6 +1204,13 @@ public:
     void SetPen(const wxGraphicsPen& pen) wxOVERRIDE;
 
 private:
+    enum RenderTargetType
+    {
+        RTT_HWND,
+        RTT_DC
+    };
+
+private:
     void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
 
     void EnsureInitialized();
@@ -1214,10 +1220,18 @@ private:
 
     void ReleaseDeviceDependentResources();
 
+    ID2D1RenderTarget* GetRenderTarget() const;
+
 private:
+    RenderTargetType m_renderTargetType;
+
     HWND m_hwnd;
+
     ID2D1Factory* m_direct2dFactory;
-    ID2D1HwndRenderTarget* m_renderTarget;
+
+    ID2D1HwndRenderTarget* m_hwndRenderTarget;
+
+    ID2D1DCRenderTarget* m_dcRenderTarget;
 
     // A ID2D1DrawingStateBlock represents the drawing state of a render target: 
     // the antialiasing mode, transform, tags, and text-rendering options.
@@ -1236,17 +1250,16 @@ private:
 // wxD2DContext implementation
 //-----------------------------------------------------------------------------
 
-wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : wxGraphicsContext(renderer)
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : wxGraphicsContext(renderer),
+    m_renderTargetType(RTT_HWND), m_hwnd(hwnd),m_hwndRenderTarget(NULL), m_dcRenderTarget(NULL), 
+    m_direct2dFactory(direct2dFactory)
 {
-    m_hwnd = hwnd;
-    m_renderTarget = NULL;
-    m_direct2dFactory = direct2dFactory;
     m_enableOffset = true;
 }
 
 wxD2DContext::~wxD2DContext()
 {
-    HRESULT result = m_renderTarget->EndDraw();
+    HRESULT result = GetRenderTarget()->EndDraw();
 
     // Release the objects saved on the state stack
     while(!m_stateStack.empty())
@@ -1255,7 +1268,21 @@ wxD2DContext::~wxD2DContext()
         m_stateStack.pop();
     }
 
-    SafeRelease(&m_renderTarget);
+    SafeRelease(&m_hwndRenderTarget);
+    SafeRelease(&m_dcRenderTarget);
+}
+
+ID2D1RenderTarget* wxD2DContext::GetRenderTarget() const
+{
+    switch (m_renderTargetType)
+    {
+    case wxD2DContext::RTT_HWND:
+        return m_hwndRenderTarget;
+    case wxD2DContext::RTT_DC:
+        return m_dcRenderTarget;
+    }
+
+    return NULL;
 }
 
 void wxD2DContext::Clip(const wxRegion& region)
@@ -1275,7 +1302,7 @@ void wxD2DContext::ResetClip()
 
 void* wxD2DContext::GetNativeContext()
 {
-    return m_renderTarget;
+    return GetRenderTarget();
 }
 
 void wxD2DContext::StrokePath(const wxGraphicsPath& p)
@@ -1291,8 +1318,8 @@ void wxD2DContext::StrokePath(const wxGraphicsPath& p)
     if (!m_pen.IsNull()) 
     {
         wxD2DPenData* penData = GetD2DPenData(m_pen);
-        penData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->DrawGeometry(pathData->GetPathGeometry(), penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+        penData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->DrawGeometry(pathData->GetPathGeometry(), penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
 }
 
@@ -1307,8 +1334,8 @@ void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyl
     if (!m_brush.IsNull()) 
     {
         wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
-        brushData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->FillGeometry(pathData->GetPathGeometry(), brushData->GetBrush());
+        brushData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->FillGeometry(pathData->GetPathGeometry(), brushData->GetBrush());
     }
 }
 
@@ -1334,7 +1361,7 @@ bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
         return true;
     }
 
-    m_renderTarget->SetAntialiasMode(ConvertAntialiasMode(antialias));
+    GetRenderTarget()->SetAntialiasMode(ConvertAntialiasMode(antialias));
 
     m_antialias = antialias;
     return true;
@@ -1414,13 +1441,13 @@ void wxD2DContext::ConcatTransform(const wxGraphicsMatrix& matrix)
 
 void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
 {
-    m_renderTarget->SetTransform(GetD2DMatrixData(matrix)->GetMatrix3x2F());
+    GetRenderTarget()->SetTransform(GetD2DMatrixData(matrix)->GetMatrix3x2F());
 }
 
 wxGraphicsMatrix wxD2DContext::GetTransform() const
 {
     D2D1::Matrix3x2F transformMatrix;
-    m_renderTarget->GetTransform(&transformMatrix);
+    GetRenderTarget()->GetTransform(&transformMatrix);
 
     wxD2DMatrixData* matrixData = new wxD2DMatrixData(GetRenderer(), transformMatrix);
 
@@ -1451,7 +1478,7 @@ void wxD2DContext::PushState()
 
     ID2D1DrawingStateBlock* drawStateBlock;
     GetD2DFactory(GetRenderer())->CreateDrawingStateBlock(&drawStateBlock);
-    m_renderTarget->SaveDrawingState(drawStateBlock);
+    GetRenderTarget()->SaveDrawingState(drawStateBlock);
 
     m_stateStack.push(drawStateBlock);
 }
@@ -1463,7 +1490,7 @@ void wxD2DContext::PopState()
     ID2D1DrawingStateBlock* drawStateBlock = m_stateStack.top();
     m_stateStack.pop();
 
-    m_renderTarget->RestoreDrawingState(drawStateBlock);
+    GetRenderTarget()->RestoreDrawingState(drawStateBlock);
 }
 
 void wxD2DContext::GetTextExtent(
@@ -1505,7 +1532,7 @@ void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
 
 void wxD2DContext::EnsureInitialized()
 {
-    if ( !m_renderTarget ) 
+    if (GetRenderTarget() == NULL) 
     {
         HRESULT result;
 
@@ -1516,25 +1543,30 @@ void wxD2DContext::EnsureInitialized()
             wxFAIL_MSG("Could not create Direct2D render target");
         }
 
-        m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+        GetRenderTarget()->SetTransform(D2D1::Matrix3x2F::Identity());
 
-        m_renderTarget->BeginDraw();
+        GetRenderTarget()->BeginDraw();
     }
 }
 
 HRESULT wxD2DContext::CreateRenderTarget()
 {
-    RECT clientRect;
-    GetClientRect(m_hwnd, &clientRect);
+    if (m_renderTargetType == RTT_HWND) 
+    {
+        RECT clientRect;
+        GetClientRect(m_hwnd, &clientRect);
 
-    D2D1_SIZE_U size = D2D1::SizeU(
-        clientRect.right - clientRect.left,
-        clientRect.bottom - clientRect.top);
+        D2D1_SIZE_U size = D2D1::SizeU(
+            clientRect.right - clientRect.left,
+            clientRect.bottom - clientRect.top);
 
-    return m_direct2dFactory->CreateHwndRenderTarget(
-        D2D1::RenderTargetProperties(),
-        D2D1::HwndRenderTargetProperties(m_hwnd, size),
-        &m_renderTarget);
+        return m_direct2dFactory->CreateHwndRenderTarget(
+            D2D1::RenderTargetProperties(),
+            D2D1::HwndRenderTargetProperties(m_hwnd, size),
+            &m_hwndRenderTarget);
+    }
+
+    return S_FALSE;
 }
 
 void wxD2DContext::SetPen(const wxGraphicsPen& pen)
@@ -1546,25 +1578,28 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
         EnsureInitialized();
 
         wxD2DPenData* penData = GetD2DPenData(pen);
-        penData->AcquireDeviceDependentResources(this->m_renderTarget);
+        penData->AcquireDeviceDependentResources(GetRenderTarget());
         m_deviceDependentResourceHolders.push_back(penData);
     }
 }
 
 void wxD2DContext::AdjustRenderTargetSize()
 {
-    RECT clientRect;
-    GetClientRect(m_hwnd, &clientRect);
-
-    D2D1_SIZE_U hwndSize = D2D1::SizeU(
-        clientRect.right - clientRect.left,
-        clientRect.bottom - clientRect.top);
-
-    D2D1_SIZE_U renderTargetSize = m_renderTarget->GetPixelSize();
-
-    if (hwndSize.width != renderTargetSize.width || hwndSize.height != renderTargetSize.height)
+    if (m_hwndRenderTarget != NULL)
     {
-        m_renderTarget->Resize(hwndSize);
+        RECT clientRect;
+        GetClientRect(m_hwnd, &clientRect);
+
+        D2D1_SIZE_U hwndSize = D2D1::SizeU(
+            clientRect.right - clientRect.left,
+            clientRect.bottom - clientRect.top);
+
+        D2D1_SIZE_U renderTargetSize = m_hwndRenderTarget->GetPixelSize();
+
+        if (hwndSize.width != renderTargetSize.width || hwndSize.height != renderTargetSize.height)
+        {
+            m_hwndRenderTarget->Resize(hwndSize);
+        }
     }
 }
 
@@ -1591,15 +1626,15 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
     if (!m_brush.IsNull())
     {
         wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
-        brushData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->FillRectangle(rect, brushData->GetBrush());
+        brushData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->FillRectangle(rect, brushData->GetBrush());
     }
 
     if (!m_pen.IsNull()) 
     {
         wxD2DPenData* penData = GetD2DPenData(m_pen);
-        penData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+        penData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
 }
 
@@ -1617,15 +1652,15 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
     if (!m_brush.IsNull())
     {
         wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
-        brushData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->FillRoundedRectangle(roundedRect, brushData->GetBrush());
+        brushData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->FillRoundedRectangle(roundedRect, brushData->GetBrush());
     }
 
     if (!m_pen.IsNull())
     {
         wxD2DPenData* penData = GetD2DPenData(m_pen);
-        penData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+        penData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
 }
 
@@ -1645,15 +1680,15 @@ void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
     if (!m_brush.IsNull())
     {
         wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
-        brushData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->FillEllipse(ellipse, brushData->GetBrush());
+        brushData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->FillEllipse(ellipse, brushData->GetBrush());
     }
 
     if (!m_pen.IsNull())
     {
         wxD2DPenData* penData = GetD2DPenData(m_pen);
-        penData->AcquireDeviceDependentResources(m_renderTarget);
-        m_renderTarget->DrawEllipse(ellipse, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+        penData->AcquireDeviceDependentResources(GetRenderTarget());
+        GetRenderTarget()->DrawEllipse(ellipse, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
 }
 
