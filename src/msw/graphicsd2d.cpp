@@ -1912,7 +1912,6 @@ wxGraphicsBrush wxD2DRenderer::CreateRadialGradientBrush(
     brush.SetRefData(brushData);
 
     return brush;
-    return wxGraphicsBrush();
 }
 
 // create a native bitmap representation
