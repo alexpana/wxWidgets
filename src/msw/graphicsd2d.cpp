@@ -20,6 +20,7 @@
 #define D2D1_INTERPOLATION_MODE_SUPPORTED 1
 
 #include <algorithm>
+#include <cmath>
 
 // Ensure no previous defines interfere with the Direct2D API headers
 #undef GetHwnd()
@@ -441,6 +442,13 @@ public :
 
     ~wxD2DPathData();
 
+    ID2D1PathGeometry* GetPathGeometry();
+
+    // This closes the geometry sink, ensuring all the shapes are stored inside
+    // the ID2D1PathGeometry. Calling this method is required before any draw operation
+    // involving a path.
+    void Flush();
+
     wxGraphicsObjectRefData* Clone() const wxOVERRIDE;
 
     // begins a new subpath at (x,y)
@@ -481,12 +489,16 @@ public :
 private:
     void EnsureSinkOpened();
 
+    void EnsureFigureOpened(wxDouble x = 0, wxDouble y = 0);
+
 private :
     ID2D1PathGeometry* m_pathGeometry;
 
     ID2D1GeometrySink* m_geometrySink;
 
     D2D1_POINT_2F m_currentPoint;
+
+    bool m_figureOpened;
 };
 
 //-----------------------------------------------------------------------------
@@ -501,10 +513,29 @@ wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2
 
 wxD2DPathData::~wxD2DPathData()
 {
+    Flush();
     SafeRelease(&m_geometrySink);
     SafeRelease(&m_pathGeometry);
 }
 
+ID2D1PathGeometry* wxD2DPathData::GetPathGeometry()
+{
+    return m_pathGeometry;
+}
+
+void wxD2DPathData::Flush()
+{
+    if (m_geometrySink != NULL)
+    {
+        if (m_figureOpened)
+        {
+            m_geometrySink->EndFigure(D2D1_FIGURE_END_OPEN);
+        }
+
+        m_figureOpened = false;
+        m_geometrySink->Close();
+        SafeRelease(&m_geometrySink);
+    }
 }
 
 wxD2DPathData::wxGraphicsObjectRefData* wxD2DPathData::Clone() const
@@ -521,45 +552,104 @@ void wxD2DPathData::EnsureSinkOpened()
     }
 }
 
+void wxD2DPathData::EnsureFigureOpened(wxDouble x, wxDouble y)
+{
+    EnsureSinkOpened();
+
+    if (!m_figureOpened)
+    {
+        m_geometrySink->BeginFigure(D2D1::Point2F(x, y), D2D1_FIGURE_BEGIN_FILLED);
+        m_figureOpened = true;
+    }
+}
+
 void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
 {
-    wxFAIL_MSG("not implemented");
+    if (m_figureOpened)
+    {
+        CloseSubpath();
+    }
+
+    EnsureFigureOpened(x, y);
 }
 
 // adds a straight line from the current point to (x,y)
 void wxD2DPathData::AddLineToPoint(wxDouble x, wxDouble y)
 {
-    wxFAIL_MSG("not implemented");
+    EnsureFigureOpened();
+    m_geometrySink->AddLine(D2D1::Point2F(x, y));
+
+    m_currentPoint = D2D1::Point2F(x, y);
 }
 
 // adds a cubic Bezier curve from the current point, using two control points and an end point
 void wxD2DPathData::AddCurveToPoint(wxDouble cx1, wxDouble cy1, wxDouble cx2, wxDouble cy2, wxDouble x, wxDouble y)
 {
-    wxFAIL_MSG("not implemented");
+    EnsureFigureOpened();
+    D2D1_BEZIER_SEGMENT bezierSegment = {
+        {cx1, cy1},
+        {cx2, cy2},
+        m_currentPoint};
+    m_geometrySink->AddBezier(bezierSegment);
 }
 
 // adds an arc of a circle centering at (x,y) with radius (r) from startAngle to endAngle
 void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAngle, wxDouble endAngle, bool clockwise)
 {
-    wxFAIL_MSG("not implemented");
+    static wxDouble PI = std::atan(1) * 4;
+    wxPoint2DDouble center = wxPoint2DDouble(x, y);
+    wxPoint2DDouble start = wxPoint2DDouble(std::cos(startAngle) * r, std::sin(startAngle) * r);
+    wxPoint2DDouble end = wxPoint2DDouble(std::cos(endAngle) * r, std::sin(endAngle) * r);
+
+    EnsureFigureOpened();
+    AddLineToPoint(start.m_x + x, start.m_y + y);
+
+    double angle = start.GetVectorAngle() + 180 - end.GetVectorAngle();
+
+    if (!clockwise)
+    {
+        angle = 360 - angle;
+    }
+
+    D2D1_SWEEP_DIRECTION sweepDirection = clockwise ? D2D1_SWEEP_DIRECTION_CLOCKWISE : D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE;
+
+    D2D1_ARC_SIZE arcSize = angle > 180 ? D2D1_ARC_SIZE_LARGE : D2D1_ARC_SIZE_SMALL;
+
+    D2D1_ARC_SEGMENT arcSegment = {
+        {end.m_x + x, end.m_y + y},     // end point
+        {r, r},                         // size
+        0,                              // rotation
+        sweepDirection,                 // sweep direction
+        arcSize                         // arc size
+    };
+
+    m_geometrySink->AddArc(arcSegment);
+
+    m_currentPoint = D2D1::Point2F(end.m_x + x, end.m_y + y);
 }
 
 // gets the last point of the current path, (0,0) if not yet set
 void wxD2DPathData::GetCurrentPoint(wxDouble* x, wxDouble* y) const
 {
-    wxFAIL_MSG("not implemented");
+    *x = m_currentPoint.x;
+    *y = m_currentPoint.y;
 }
 
 // adds another path
 void wxD2DPathData::AddPath(const wxGraphicsPathData* path)
 {
-    wxFAIL_MSG("not implemented");
+    const wxD2DPathData* d2dPath = static_cast<const wxD2DPathData*>(path);
+
+    EnsureFigureOpened();
+
+    d2dPath->m_pathGeometry->Stream(m_geometrySink);
 }
 
 // closes the current sub-path
 void wxD2DPathData::CloseSubpath()
 {
     m_geometrySink->EndFigure(D2D1_FIGURE_END_CLOSED);
+    m_figureOpened = false;
 }
 
 void* wxD2DPathData::GetNativePath() const
@@ -817,8 +907,6 @@ public:
         wxDouble radius,
         const wxGraphicsGradientStops& stops);
 
-    void EnsureInitialized();
-
     ID2D1Brush* GetBrush() const;
 
     void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
@@ -933,8 +1021,6 @@ void wxD2DBrushData::CreateRadialGradientBrush(
 {
     m_brushType = wxD2DBRUSHTYPE_RADIAL_GRADIENT;
     m_radialGradientBrushInfo = new RadialGradientBrushInfo(xo, yo, xc, yc, radius, stops);
-
-    wxFAIL_MSG("not implemented");
 }
 
 void wxD2DBrushData::AcquireSolidColorBrush(ID2D1RenderTarget* renderTarget)
@@ -1160,7 +1246,7 @@ wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dF
 
 wxD2DContext::~wxD2DContext()
 {
-    m_renderTarget->EndDraw();
+    HRESULT result = m_renderTarget->EndDraw();
 
     // Release the objects saved on the state stack
     while(!m_stateStack.empty())
@@ -1194,12 +1280,36 @@ void* wxD2DContext::GetNativeContext()
 
 void wxD2DContext::StrokePath(const wxGraphicsPath& p)
 {
-    wxFAIL_MSG("not implemented");
+    wxD2DOffsetHelper helper(this);
+
+    EnsureInitialized();
+    AdjustRenderTargetSize();
+
+    wxD2DPathData* pathData = GetD2DPathData(p);
+    pathData->Flush();
+
+    if (!m_pen.IsNull()) 
+    {
+        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        penData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->DrawGeometry(pathData->GetPathGeometry(), penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+    }
 }
 
 void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle)
 {
-    wxFAIL_MSG("not implemented");
+    EnsureInitialized();
+    AdjustRenderTargetSize();
+
+    wxD2DPathData* pathData = GetD2DPathData(p);
+    pathData->Flush();
+
+    if (!m_brush.IsNull()) 
+    {
+        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        brushData->AcquireDeviceDependentResources(m_renderTarget);
+        m_renderTarget->FillGeometry(pathData->GetPathGeometry(), brushData->GetBrush());
+    }
 }
 
 void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* points)
@@ -1724,8 +1834,13 @@ wxGraphicsContext* wxD2DRenderer::CreateMeasuringContext()
 
 wxGraphicsPath wxD2DRenderer::CreatePath()
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsPath();
+    ID2D1PathGeometry* pathGeometry;
+    m_direct2dFactory->CreatePathGeometry(&pathGeometry);
+
+    wxGraphicsPath p;
+    p.SetRefData(new wxD2DPathData(this, pathGeometry));
+
+    return p;
 }
 
 wxGraphicsMatrix wxD2DRenderer::CreateMatrix(
