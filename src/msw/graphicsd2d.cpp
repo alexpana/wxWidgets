@@ -23,7 +23,7 @@
 #include <cmath>
 
 // Ensure no previous defines interfere with the Direct2D API headers
-#undef GetHwnd()
+#undef GetHwnd
 
 #include <d2d1.h>
 
