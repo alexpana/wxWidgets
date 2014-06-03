@@ -1854,8 +1854,7 @@ wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* context)
 
 wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeWindow(void* window)
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return new wxD2DContext(this, m_direct2dFactory, (HWND)window);
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(wxWindow* window)
