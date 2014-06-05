@@ -730,8 +730,11 @@ void wxD2DPathData::AddPath(const wxGraphicsPathData* path)
 // closes the current sub-path
 void wxD2DPathData::CloseSubpath()
 {
-    m_geometrySink->EndFigure(D2D1_FIGURE_END_CLOSED);
-    m_figureOpened = false;
+    if (m_figureOpened) 
+    {
+        m_geometrySink->EndFigure(D2D1_FIGURE_END_CLOSED);
+        m_figureOpened = false;
+    }
 }
 
 void* wxD2DPathData::GetNativePath() const
