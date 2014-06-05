@@ -437,13 +437,13 @@ public :
     // from a ID2D1Factory. This means we can safely create the resource outside
     // (the wxD2DRenderer handles this) and store it here since it never gets 
     // thrown away by the GPU.
-    wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry);
+    wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFactory);
 
     ~wxD2DPathData();
 
     ID2D1PathGeometry* GetPathGeometry();
 
-    // This closes the geometry sink, ensuring all the shapes are stored inside
+    // This closes the geometry sink, ensuring all the figures are stored inside
     // the ID2D1PathGeometry. Calling this method is required before any draw operation
     // involving a path.
     void Flush();
@@ -486,28 +486,38 @@ public :
     bool Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) const wxOVERRIDE;
 
 private:
-    void EnsureSinkOpened();
+    void EnsureGeometryOpen();
 
-    void EnsureFigureOpened(wxDouble x = 0, wxDouble y = 0);
+    void EnsureSinkOpen();
+
+    void EnsureFigureOpen(wxDouble x = 0, wxDouble y = 0);
 
 private :
     ID2D1PathGeometry* m_pathGeometry;
 
     ID2D1GeometrySink* m_geometrySink;
 
+    ID2D1Factory* m_direct2dfactory;
+
     D2D1_POINT_2F m_currentPoint;
 
+    D2D1_MATRIX_3X2_F m_transformMatrix;
+
     bool m_figureOpened;
+
+    bool m_geometryWritable;
 };
 
 //-----------------------------------------------------------------------------
 // wxD2DPathData implementation
 //-----------------------------------------------------------------------------
 
-wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1PathGeometry* d2dPathGeometry) : 
-    wxGraphicsPathData(renderer), m_pathGeometry(d2dPathGeometry), m_geometrySink(NULL), 
-    m_figureOpened(false)
+wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFactory) : 
+    wxGraphicsPathData(renderer), m_geometrySink(NULL), m_direct2dfactory(d2dFactory),
+    m_pathGeometry(NULL), m_figureOpened(false), m_geometryWritable(false),
+    m_transformMatrix(D2D1::Matrix3x2F::Identity())
 {
+    m_direct2dfactory->CreatePathGeometry(&m_pathGeometry);
 }
 
 wxD2DPathData::~wxD2DPathData()
@@ -522,6 +532,12 @@ ID2D1PathGeometry* wxD2DPathData::GetPathGeometry()
     return m_pathGeometry;
 }
 
+wxD2DPathData::wxGraphicsObjectRefData* wxD2DPathData::Clone() const
+{
+    wxFAIL_MSG("not implemented");
+    return NULL;
+}
+
 void wxD2DPathData::Flush()
 {
     if (m_geometrySink != NULL)
@@ -534,26 +550,43 @@ void wxD2DPathData::Flush()
         m_figureOpened = false;
         m_geometrySink->Close();
         SafeRelease(&m_geometrySink);
+
+        m_geometryWritable = false;
     }
 }
 
-wxD2DPathData::wxGraphicsObjectRefData* wxD2DPathData::Clone() const
+void wxD2DPathData::EnsureGeometryOpen()
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    if (!m_geometryWritable) {
+        ID2D1PathGeometry* newPathGeometry;
+        m_direct2dfactory->CreatePathGeometry(&newPathGeometry);
+
+        newPathGeometry->Open(&m_geometrySink);
+
+        if (m_pathGeometry != NULL)
+        {
+            m_pathGeometry->Stream(m_geometrySink);
+            SafeRelease(&m_pathGeometry);
+        }
+
+        m_pathGeometry = newPathGeometry;
+        m_geometryWritable = true;
+    }
 }
 
-void wxD2DPathData::EnsureSinkOpened()
+void wxD2DPathData::EnsureSinkOpen()
 {
+    EnsureGeometryOpen();
+
     if (m_geometrySink == NULL)
     {
         m_pathGeometry->Open(&m_geometrySink);
     }
 }
 
-void wxD2DPathData::EnsureFigureOpened(wxDouble x, wxDouble y)
+void wxD2DPathData::EnsureFigureOpen(wxDouble x, wxDouble y)
 {
-    EnsureSinkOpened();
+    EnsureSinkOpen();
 
     if (!m_figureOpened)
     {
@@ -569,13 +602,13 @@ void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
         CloseSubpath();
     }
 
-    EnsureFigureOpened(x, y);
+    EnsureFigureOpen(x, y);
 }
 
 // adds a straight line from the current point to (x,y)
 void wxD2DPathData::AddLineToPoint(wxDouble x, wxDouble y)
 {
-    EnsureFigureOpened();
+    EnsureFigureOpen();
     m_geometrySink->AddLine(D2D1::Point2F(x, y));
 
     m_currentPoint = D2D1::Point2F(x, y);
@@ -584,7 +617,7 @@ void wxD2DPathData::AddLineToPoint(wxDouble x, wxDouble y)
 // adds a cubic Bezier curve from the current point, using two control points and an end point
 void wxD2DPathData::AddCurveToPoint(wxDouble cx1, wxDouble cy1, wxDouble cx2, wxDouble cy2, wxDouble x, wxDouble y)
 {
-    EnsureFigureOpened();
+    EnsureFigureOpen();
     D2D1_BEZIER_SEGMENT bezierSegment = {
         {cx1, cy1},
         {cx2, cy2},
@@ -600,7 +633,7 @@ void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAng
     wxPoint2DDouble start = wxPoint2DDouble(std::cos(startAngle) * r, std::sin(startAngle) * r);
     wxPoint2DDouble end = wxPoint2DDouble(std::cos(endAngle) * r, std::sin(endAngle) * r);
 
-    EnsureFigureOpened();
+    EnsureFigureOpen();
     AddLineToPoint(start.m_x + x, start.m_y + y);
 
     double angle = start.GetVectorAngle() + 180 - end.GetVectorAngle();
@@ -639,7 +672,7 @@ void wxD2DPathData::AddPath(const wxGraphicsPathData* path)
 {
     const wxD2DPathData* d2dPath = static_cast<const wxD2DPathData*>(path);
 
-    EnsureFigureOpened();
+    EnsureFigureOpen();
 
     d2dPath->m_pathGeometry->Stream(m_geometrySink);
 }
@@ -1878,11 +1911,8 @@ wxGraphicsContext* wxD2DRenderer::CreateMeasuringContext()
 
 wxGraphicsPath wxD2DRenderer::CreatePath()
 {
-    ID2D1PathGeometry* pathGeometry;
-    m_direct2dFactory->CreatePathGeometry(&pathGeometry);
-
     wxGraphicsPath p;
-    p.SetRefData(new wxD2DPathData(this, pathGeometry));
+    p.SetRefData(new wxD2DPathData(this, m_direct2dFactory));
 
     return p;
 }
