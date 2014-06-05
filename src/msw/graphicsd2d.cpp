@@ -648,16 +648,16 @@ void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAng
     EnsureFigureOpen();
     AddLineToPoint(start.m_x + x, start.m_y + y);
 
-    double angle = (start.GetVectorAngle() + 180 - end.GetVectorAngle());
-
-    while (abs(angle) > 360)
-    {
-        angle -= (angle / abs(angle)) * 360;
-    }
+    double angle = (end.GetVectorAngle() - start.GetVectorAngle());
 
     if (!clockwise)
     {
         angle = 360 - angle;
+    }
+
+    while (abs(angle) > 360)
+    {
+        angle -= (angle / abs(angle)) * 360;
     }
 
     D2D1_SWEEP_DIRECTION sweepDirection = clockwise ? D2D1_SWEEP_DIRECTION_CLOCKWISE : D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE;
