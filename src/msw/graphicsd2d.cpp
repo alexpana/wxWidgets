@@ -691,7 +691,7 @@ void* wxD2DPathData::GetNativePath() const
 
 void wxD2DPathData::Transform(const wxGraphicsMatrixData* matrix)
 {
-    wxFAIL_MSG("not implemented");
+    m_transformMatrix = *((D2D1_MATRIX_3X2_F*)(matrix->GetNativeMatrix()));
 }
 
 void wxD2DPathData::GetBox(wxDouble* x, wxDouble* y, wxDouble* w, wxDouble *h) const
