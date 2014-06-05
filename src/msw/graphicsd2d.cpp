@@ -593,6 +593,8 @@ void wxD2DPathData::EnsureFigureOpen(wxDouble x, wxDouble y)
         m_geometrySink->BeginFigure(D2D1::Point2F(x, y), D2D1_FIGURE_BEGIN_FILLED);
         m_figureOpened = true;
     }
+
+    m_currentPoint = D2D1::Point2F(x, y);
 }
 
 void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
@@ -603,6 +605,8 @@ void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
     }
 
     EnsureFigureOpen(x, y);
+
+    m_currentPoint = D2D1::Point2F(x, y);
 }
 
 // adds a straight line from the current point to (x,y)
@@ -623,6 +627,8 @@ void wxD2DPathData::AddCurveToPoint(wxDouble cx1, wxDouble cy1, wxDouble cx2, wx
         {cx2, cy2},
         m_currentPoint};
     m_geometrySink->AddBezier(bezierSegment);
+
+    m_currentPoint = D2D1::Point2F(x, y);
 }
 
 // adds an arc of a circle centering at (x,y) with radius (r) from startAngle to endAngle
@@ -663,8 +669,10 @@ void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAng
 // gets the last point of the current path, (0,0) if not yet set
 void wxD2DPathData::GetCurrentPoint(wxDouble* x, wxDouble* y) const
 {
-    *x = m_currentPoint.x;
-    *y = m_currentPoint.y;
+    D2D1_POINT_2F transformedPoint = D2D1::Matrix3x2F::ReinterpretBaseType(&m_transformMatrix)->TransformPoint(m_currentPoint);
+
+    *x = transformedPoint.x;
+    *y = transformedPoint.y;
 }
 
 // adds another path
