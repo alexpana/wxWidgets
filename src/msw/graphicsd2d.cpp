@@ -485,6 +485,12 @@ public :
 
     bool Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) const wxOVERRIDE;
 
+    // appends an ellipsis as a new closed subpath fitting the passed rectangle
+    void AddCircle(wxDouble x, wxDouble y, wxDouble r) wxOVERRIDE;
+
+    // appends an ellipse
+    void AddEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
+
 private:
     void EnsureGeometryOpen();
 
@@ -669,6 +675,37 @@ void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAng
     m_geometrySink->AddArc(arcSegment);
 
     m_currentPoint = D2D1::Point2F(end.m_x + x, end.m_y + y);
+}
+
+// appends an ellipsis as a new closed subpath fitting the passed rectangle
+void wxD2DPathData::AddCircle(wxDouble x, wxDouble y, wxDouble r) 
+{
+    AddEllipse(x - r, y - r, r * 2, r * 2);
+}
+
+// appends an ellipse
+void wxD2DPathData::AddEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
+{
+    Flush();
+
+    ID2D1EllipseGeometry* ellipseGeometry;
+    ID2D1PathGeometry* newPathGeometry;
+
+    D2D1_ELLIPSE ellipse = { {x + w / 2, y + h / 2}, w / 2, h / 2 };
+
+    m_direct2dfactory->CreateEllipseGeometry(ellipse, &ellipseGeometry);
+
+    m_direct2dfactory->CreatePathGeometry(&newPathGeometry);
+
+    newPathGeometry->Open(&m_geometrySink);
+    m_geometryWritable = true;
+
+    ellipseGeometry->CombineWithGeometry(m_pathGeometry, D2D1_COMBINE_MODE_UNION, NULL, m_geometrySink);
+
+    SafeRelease(&m_pathGeometry);
+    SafeRelease(&ellipseGeometry);
+
+    m_pathGeometry = newPathGeometry;
 }
 
 // gets the last point of the current path, (0,0) if not yet set
