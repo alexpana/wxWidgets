@@ -1258,12 +1258,6 @@ public:
 
     void FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
 
-    void StrokeLines(size_t n, const wxPoint2DDouble* points) wxOVERRIDE;
-
-    void StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints) wxOVERRIDE;
-
-    void DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE) wxOVERRIDE;
-
     void DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE; 
 
     void DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius) wxOVERRIDE;
@@ -1427,21 +1421,6 @@ void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyl
         brushData->AcquireDeviceDependentResources(GetRenderTarget());
         GetRenderTarget()->FillGeometry(pathData->GetPathGeometry(), brushData->GetBrush());
     }
-}
-
-void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* points)
-{
-    wxFAIL_MSG("not implemented");
-}
-
-void wxD2DContext::StrokeLines(size_t n, const wxPoint2DDouble* beginPoints, const wxPoint2DDouble* endPoints)
-{
-    wxGraphicsContext::StrokeLines(n, beginPoints, endPoints);
-}
-
-void wxD2DContext::DrawLines(size_t n, const wxPoint2DDouble* points, wxPolygonFillMode fillStyle)
-{
-    wxFAIL_MSG("not implemented");
 }
 
 bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
