@@ -818,6 +818,10 @@ wxD2DPenData::wxD2DPenData(
     : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()), 
     m_solidColorStrokeBrush(NULL), m_strokeStyle(NULL)
 {
+    if (m_width <= 0) {
+        m_width = 1;
+    }
+
     CreateStrokeStyle(direct2dFactory);
 }
 
