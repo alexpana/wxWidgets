@@ -909,7 +909,7 @@ public:
             m_gradientStopArray[i].position = gradientStops.Item(i).GetPosition();
         }
 
-        renderTarget->CreateGradientStopCollection(m_gradientStopArray, stopCount, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_WRAP, &m_gradientStopCollection);
+        renderTarget->CreateGradientStopCollection(m_gradientStopArray, stopCount, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP, &m_gradientStopCollection);
     }
 
     ~D2DGradientStopsHelper()
