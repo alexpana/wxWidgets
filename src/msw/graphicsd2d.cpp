@@ -1407,7 +1407,7 @@ void wxD2DContext::StrokePath(const wxGraphicsPath& p)
     }
 }
 
-void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode fillStyle)
+void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode WXUNUSED(fillStyle))
 {
     EnsureInitialized();
     AdjustRenderTargetSize();
