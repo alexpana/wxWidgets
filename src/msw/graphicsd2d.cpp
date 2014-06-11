@@ -750,7 +750,9 @@ void wxD2DPathData::CloseSubpath()
 
 void* wxD2DPathData::GetNativePath() const
 {
-    return m_pathGeometry;
+    ID2D1TransformedGeometry* transformedGeometry;
+    m_direct2dfactory->CreateTransformedGeometry(m_pathGeometry, m_transformMatrix, &transformedGeometry);
+    return transformedGeometry;
 }
 
 void wxD2DPathData::Transform(const wxGraphicsMatrixData* matrix)
