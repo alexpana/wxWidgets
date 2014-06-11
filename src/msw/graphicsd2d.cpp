@@ -1416,7 +1416,7 @@ void wxD2DContext::StrokePath(const wxGraphicsPath& p)
     {
         wxD2DPenData* penData = GetD2DPenData(m_pen);
         penData->AcquireDeviceDependentResources(GetRenderTarget());
-        GetRenderTarget()->DrawGeometry(pathData->GetPathGeometry(), penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+        GetRenderTarget()->DrawGeometry((ID2D1Geometry*)pathData->GetNativePath(), penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
 }
 
@@ -1432,7 +1432,7 @@ void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode WXUNUSED
     {
         wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
         brushData->AcquireDeviceDependentResources(GetRenderTarget());
-        GetRenderTarget()->FillGeometry(pathData->GetPathGeometry(), brushData->GetBrush());
+        GetRenderTarget()->FillGeometry((ID2D1Geometry*)pathData->GetNativePath(), brushData->GetBrush());
     }
 }
 
