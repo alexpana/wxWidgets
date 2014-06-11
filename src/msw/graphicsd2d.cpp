@@ -598,9 +598,8 @@ void wxD2DPathData::EnsureFigureOpen(wxDouble x, wxDouble y)
     {
         m_geometrySink->BeginFigure(D2D1::Point2F(x, y), D2D1_FIGURE_BEGIN_FILLED);
         m_figureOpened = true;
+        m_currentPoint = D2D1::Point2F(x, y);
     }
-
-    m_currentPoint = D2D1::Point2F(x, y);
 }
 
 void wxD2DPathData::MoveToPoint(wxDouble x, wxDouble y)
@@ -631,7 +630,7 @@ void wxD2DPathData::AddCurveToPoint(wxDouble cx1, wxDouble cy1, wxDouble cx2, wx
     D2D1_BEZIER_SEGMENT bezierSegment = {
         {cx1, cy1},
         {cx2, cy2},
-        m_currentPoint};
+        {x, y}};
     m_geometrySink->AddBezier(bezierSegment);
 
     m_currentPoint = D2D1::Point2F(x, y);
@@ -645,8 +644,14 @@ void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAng
     wxPoint2DDouble start = wxPoint2DDouble(std::cos(startAngle) * r, std::sin(startAngle) * r);
     wxPoint2DDouble end = wxPoint2DDouble(std::cos(endAngle) * r, std::sin(endAngle) * r);
 
-    EnsureFigureOpen();
-    AddLineToPoint(start.m_x + x, start.m_y + y);
+    if (m_figureOpened) 
+    {
+        AddLineToPoint(start.m_x + x, start.m_y + y);
+    }
+    else
+    {
+        MoveToPoint(start.m_x + x, start.m_y + y);
+    }
 
     double angle = (end.GetVectorAngle() - start.GetVectorAngle());
 
@@ -658,6 +663,12 @@ void wxD2DPathData::AddArc(wxDouble x, wxDouble y, wxDouble r, wxDouble startAng
     while (abs(angle) > 360)
     {
         angle -= (angle / abs(angle)) * 360;
+    }
+
+    if (angle == 360) 
+    {
+        AddCircle(center.m_x, center.m_y, start.GetVectorLength());
+        return;
     }
 
     D2D1_SWEEP_DIRECTION sweepDirection = clockwise ? D2D1_SWEEP_DIRECTION_CLOCKWISE : D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE;
