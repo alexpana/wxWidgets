@@ -993,10 +993,10 @@ private:
     // Describes the caps, miter limit, line join, and dash information.
     ID2D1StrokeStyle* m_strokeStyle;
 
-    // A brush is a device-dependent resource.
     // Drawing outlines with Direct2D requires a brush for the color or stipple.
-    ID2D1SolidColorBrush* m_solidColorStrokeBrush;
+    wxD2DBrushData* m_stippleBrush;
 
+    // The width of the stroke
     FLOAT m_width;
 };
 
@@ -1009,19 +1009,31 @@ wxD2DPenData::wxD2DPenData(
     ID2D1Factory* direct2dFactory, 
     const wxPen& pen)
     : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()), 
-    m_solidColorStrokeBrush(NULL), m_strokeStyle(NULL)
+    m_strokeStyle(NULL), m_stippleBrush(NULL)
 {
-    if (m_width <= 0) {
-        m_width = 1;
+    CreateStrokeStyle(direct2dFactory);
+
+    wxBrush strokeBrush;
+
+    if (m_sourcePen.GetStyle() == wxPENSTYLE_STIPPLE)
+    {
+        strokeBrush.SetStipple(*(m_sourcePen.GetStipple()));
+        strokeBrush.SetStyle(wxBRUSHSTYLE_STIPPLE);
+    }
+    else
+    {
+        strokeBrush.SetColour(m_sourcePen.GetColour());
+        strokeBrush.SetStyle(wxBRUSHSTYLE_SOLID);
     }
 
-    CreateStrokeStyle(direct2dFactory);
+    m_stippleBrush = new wxD2DBrushData(renderer, strokeBrush);
 }
 
 wxD2DPenData::~wxD2DPenData()
 {
     SafeRelease(&m_strokeStyle);
     ReleaseDeviceDependentResources();
+    delete m_stippleBrush;
 }
 
 void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
@@ -1053,25 +1065,17 @@ void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
 
 void wxD2DPenData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
 {
-    // Create the solid color stroke brush
-    if (m_sourcePen.GetStyle() != wxPENSTYLE_STIPPLE && !IsAcquired(m_solidColorStrokeBrush))
-    {
-        renderTarget->CreateSolidColorBrush(
-            ConvertColour(m_sourcePen.GetColour()),
-            &m_solidColorStrokeBrush);
-    }
-
-    // TODO: Handle stipple pens
+    m_stippleBrush->AcquireDeviceDependentResources(renderTarget);
 }
 
 void wxD2DPenData::ReleaseDeviceDependentResources()
 {
-    SafeRelease(&m_solidColorStrokeBrush);
+    m_stippleBrush->ReleaseDeviceDependentResources();
 }
 
 ID2D1Brush* wxD2DPenData::GetBrush()
 {
-    return m_solidColorStrokeBrush;
+    return m_stippleBrush->GetBrush();
 }
 
 FLOAT wxD2DPenData::GetWidth()
@@ -1252,7 +1256,8 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, const wxBrush &brus
     } 
     else if (brush.IsHatch())
     {
-        wxFAIL_MSG("hatch brushes are not implemented");
+        // TODO: Find a way of handling hatch brushes
+        CreateSolidColorBrush();
     }
     else
     {
