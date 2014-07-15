@@ -198,8 +198,6 @@ bool CompositionModeSupported(wxCompositionMode compositionMode)
 
 D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
 {
-    D2D1_BLEND_DESCRIPTION blendDescription;
-
     switch (compositionMode)
     {
     case wxCOMPOSITION_SOURCE:
