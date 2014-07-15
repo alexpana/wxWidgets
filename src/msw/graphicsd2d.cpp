@@ -26,7 +26,6 @@
 #undef GetHwnd
 
 #include <d2d1.h>
-
 #include <d2d1effectauthor.h>
 
 #include <wincodec.h>
@@ -1499,6 +1498,7 @@ private:
     void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
 
     void EnsureInitialized();
+
     HRESULT CreateRenderTarget();
 
     void AdjustRenderTargetSize();
@@ -2214,7 +2214,6 @@ wxGraphicsBrush wxD2DRenderer::CreateBrush(const wxBrush& brush)
         return b;
     }
 }
-
 
 wxGraphicsBrush wxD2DRenderer::CreateLinearGradientBrush(
     wxDouble x1, wxDouble y1,
