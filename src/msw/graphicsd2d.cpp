@@ -816,6 +816,154 @@ wxD2DPathData* GetD2DPathData(const wxGraphicsPath& path)
 }
 
 //-----------------------------------------------------------------------------
+// wxD2DBitmapData declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DBitmapData : public wxGraphicsBitmapData, public DeviceDependentResourceHolder
+{
+public:
+
+    // Structure containing both the source bitmap and the native bitmap.
+    // This is required by the GetNativeBitmap method and the constructor
+    // from a native bitmap pointer. The reason is: for device-dependent
+    // resources we must make sure to keep the source object in case we
+    // need to re-acquire the resource later.
+    typedef struct  
+    {
+        wxBitmap m_sourceBitmap;
+        ID2D1Bitmap* m_nativeBitmap;
+    } PseudoNativeBitmap;
+
+    wxD2DBitmapData(wxGraphicsRenderer* renderer, const wxBitmap& bitmap);
+    wxD2DBitmapData(wxGraphicsRenderer* renderer, const void* pseudoNativeBitmap);
+    ~wxD2DBitmapData();
+
+    // returns the native representation
+    void* GetNativeBitmap() const wxOVERRIDE;
+
+    void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
+
+    void ReleaseDeviceDependentResources() wxOVERRIDE;
+
+    ID2D1Bitmap* GetD2DBitmap() { return m_impl.m_nativeBitmap; }
+
+private:
+    wxBitmap& SourceBitmap() { return m_impl.m_sourceBitmap; }
+
+    ID2D1Bitmap*& NativeBitmap() { return m_impl.m_nativeBitmap; }
+
+private:
+    PseudoNativeBitmap m_impl;
+};
+
+// RAII class hosting a WIC bitmap lock used for writing pixel data
+class BitmapPixelWriteLock
+{
+public:
+    BitmapPixelWriteLock(IWICBitmap* bitmap) : m_pixelLock(NULL)
+    {
+        // Retrieve the size of the bitmap
+        UINT w, h;
+        bitmap->GetSize(&w, &h);
+        WICRect lockSize = {0, 0, w, h};
+
+        // Obtain a bitmap lock for exclusive write.
+        bitmap->Lock(&lockSize, WICBitmapLockWrite, &m_pixelLock);
+    }
+
+    ~BitmapPixelWriteLock()
+    {
+        m_pixelLock->Release();
+    }
+
+private:
+    IWICBitmapLock *m_pixelLock;
+};
+
+//-----------------------------------------------------------------------------
+// wxD2DBitmapData implementation
+//-----------------------------------------------------------------------------
+
+wxD2DBitmapData::wxD2DBitmapData(wxGraphicsRenderer* renderer, const wxBitmap& bitmap) : 
+    wxGraphicsBitmapData(renderer)
+{
+    m_impl.m_sourceBitmap = bitmap;
+}
+
+wxD2DBitmapData::wxD2DBitmapData(wxGraphicsRenderer* renderer, const void* pseudoNativeBitmap) : 
+    wxGraphicsBitmapData(renderer)
+{
+    wxASSERT_MSG(pseudoNativeBitmap == NULL, "Cannot create a bitmap data from a null native bitmap");
+    m_impl = *static_cast<const PseudoNativeBitmap*>(pseudoNativeBitmap);
+}
+
+wxD2DBitmapData::~wxD2DBitmapData()
+{
+    ReleaseDeviceDependentResources();
+}
+
+void* wxD2DBitmapData::GetNativeBitmap() const 
+{
+    return (void*)&m_impl;
+}
+
+IWICBitmapSource* CreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = false)
+{
+    HRESULT hr;
+
+    IWICBitmap* wicBitmap;
+    WICImagingFactory()->CreateBitmapFromHBITMAP(sourceBitmap, NULL, WICBitmapUseAlpha, &wicBitmap);
+
+    IWICFormatConverter* converter;
+    hr = WICImagingFactory()->CreateFormatConverter(&converter);
+
+    WICPixelFormatGUID pixelFormat = hasAlpha ? GUID_WICPixelFormat32bppPBGRA : GUID_WICPixelFormat32bppBGR;
+
+    hr = converter->Initialize(
+        wicBitmap,
+        pixelFormat,
+        WICBitmapDitherTypeNone,NULL,0.f, 
+        WICBitmapPaletteTypeMedianCut);
+
+    wicBitmap->Release();
+
+    return converter;
+}
+
+IWICBitmapSource* CreateWICBitmap(const wxBitmap& sourceBitmap, bool hasAlpha = false)
+{
+    return CreateWICBitmap(sourceBitmap.GetHBITMAP());
+}
+
+bool HasAlpha(const wxBitmap& bitmap)
+{
+    return bitmap.HasAlpha() || bitmap.GetMask();
+}
+
+void wxD2DBitmapData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
+{
+    HRESULT hr;
+
+    IWICBitmapSource* wicBitmap = CreateWICBitmap(SourceBitmap(), HasAlpha(SourceBitmap()));
+
+    hr = renderTarget->CreateBitmapFromWicBitmap(wicBitmap, 0, &NativeBitmap());
+
+    wicBitmap->Release();
+
+    return;
+}
+
+void wxD2DBitmapData::ReleaseDeviceDependentResources()
+{
+    SafeRelease(&NativeBitmap());
+}
+
+wxD2DBitmapData* GetD2DBitmapData(const wxGraphicsBitmap& bitmap)
+{
+    return static_cast<wxD2DBitmapData*>(bitmap.GetRefData());
+}
+
+//-----------------------------------------------------------------------------
 // wxD2DPenData declaration
 //-----------------------------------------------------------------------------
 
