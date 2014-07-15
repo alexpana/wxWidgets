@@ -1744,12 +1744,20 @@ wxGraphicsMatrix wxD2DContext::GetTransform() const
 
 void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
-    wxFAIL_MSG("not implemented");
+    wxD2DBitmapData* bitmapData = GetD2DBitmapData(bmp);
+    bitmapData->AcquireDeviceDependentResources(GetRenderTarget());
+
+    GetRenderTarget()->DrawBitmap(
+        bitmapData->GetD2DBitmap(), 
+        D2D1::RectF(x, y, x + w, y + h), 
+        1.0f, 
+        ConvertBitmapInterpolationMode(GetInterpolationQuality()));
 }
 
 void wxD2DContext::DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
-    wxFAIL_MSG("not implemented");
+    wxGraphicsBitmap graphicsBitmap = CreateBitmap(bmp);
+    DrawBitmap(graphicsBitmap, x, y, w, h);
 }
 
 void wxD2DContext::DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
