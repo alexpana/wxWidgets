@@ -29,6 +29,8 @@
 
 #include <d2d1effectauthor.h>
 
+#include <wincodec.h>
+
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
@@ -43,6 +45,20 @@
 #include "wx/dc.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
+
+static IWICImagingFactory* gs_WICImagingFactory = NULL;
+
+IWICImagingFactory* WICImagingFactory() {
+    if (gs_WICImagingFactory == NULL) {
+        CoCreateInstance(
+            CLSID_WICImagingFactory,
+            NULL,
+            CLSCTX_INPROC_SERVER,
+            IID_IWICImagingFactory,
+            (LPVOID*)&gs_WICImagingFactory);
+    }
+    return gs_WICImagingFactory;
+}
 
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsPen) wxNullGraphicsPen;
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsBrush) wxNullGraphicsBrush;
