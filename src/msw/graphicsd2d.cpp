@@ -2233,8 +2233,12 @@ wxGraphicsBrush wxD2DRenderer::CreateRadialGradientBrush(
 // create a native bitmap representation
 wxGraphicsBitmap wxD2DRenderer::CreateBitmap(const wxBitmap& bitmap)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsBitmap();
+    wxD2DBitmapData* bitmapData = new wxD2DBitmapData(this, bitmap);
+
+    wxGraphicsBitmap graphicsBitmap;
+    graphicsBitmap.SetRefData(bitmapData);
+
+    return graphicsBitmap;
 }
 
 #if wxUSE_IMAGE
