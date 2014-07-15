@@ -1372,6 +1372,8 @@ private:
     // releasing them.
     wxVector<DeviceDependentResourceHolder*> m_deviceDependentResourceHolders;
 
+    bool m_isClipped;
+
 private:
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
 };
@@ -1422,12 +1424,22 @@ void wxD2DContext::Clip(const wxRegion& region)
 
 void wxD2DContext::Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
-    wxFAIL_MSG("not implemented");
+    ResetClip();
+
+    GetRenderTarget()->PushAxisAlignedClip(
+        D2D1::RectF(x, y, x + w, y + h),
+        D2D1_ANTIALIAS_MODE_ALIASED);
+
+    m_isClipped = true;
 }
 
 void wxD2DContext::ResetClip()
 {
-    wxFAIL_MSG("not implemented");
+    if (m_isClipped)
+    {
+        GetRenderTarget()->PopAxisAlignedClip();
+        m_isClipped = false;
+    }
 }
 
 void* wxD2DContext::GetNativeContext()
