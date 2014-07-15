@@ -1284,7 +1284,6 @@ void wxD2DBrushData::CreateSolidColorBrush()
 void wxD2DBrushData::CreateBitmapBrush()
 {
     m_brushType = wxD2DBRUSHTYPE_BITMAP;
-    wxFAIL_MSG("not implemented");
 }
 
 void wxD2DBrushData::CreateLinearGradientBrush(
@@ -1351,7 +1350,15 @@ void wxD2DBrushData::AcquireRadialGradientBrush(ID2D1RenderTarget* renderTarget)
 
 void wxD2DBrushData::AcquireBitmapBrush(ID2D1RenderTarget* renderTarget)
 {
-    wxFAIL_MSG("not implemented");
+    wxD2DBitmapData bitmapData(GetRenderer(), *(m_sourceBrush.GetStipple()));
+    bitmapData.AcquireDeviceDependentResources(renderTarget);
+
+    HRESULT result = renderTarget->CreateBitmapBrush(
+        bitmapData.GetD2DBitmap(), 
+        D2D1::BitmapBrushProperties(
+        D2D1_EXTEND_MODE_WRAP, 
+        D2D1_EXTEND_MODE_WRAP), 
+        &m_bitmapBrush);
 }
 
 void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
