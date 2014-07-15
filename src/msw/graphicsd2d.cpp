@@ -807,7 +807,7 @@ bool wxD2DPathData::Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle
 {
     BOOL result;
     m_pathGeometry->FillContainsPoint(D2D1::Point2F(x, y), D2D1::Matrix3x2F::Identity(), &result);
-    return result;
+    return result != 0;
 }
 
 wxD2DPathData* GetD2DPathData(const wxGraphicsPath& path)
