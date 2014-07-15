@@ -259,6 +259,25 @@ D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality inter
 }
 #endif // D2D1_INTERPOLATION_MODE_SUPPORTED
 
+D2D1_BITMAP_INTERPOLATION_MODE ConvertBitmapInterpolationMode(wxInterpolationQuality interpolationQuality)
+{
+    switch (interpolationQuality)
+    {
+    case wxINTERPOLATION_DEFAULT:
+        wxFALLTHROUGH;
+    case wxINTERPOLATION_NONE:
+        wxFALLTHROUGH;
+    case wxINTERPOLATION_FAST:
+        wxFALLTHROUGH;
+    case wxINTERPOLATION_GOOD:
+        return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+    case wxINTERPOLATION_BEST:
+        return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+    }
+
+    return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+}
+
 class wxD2DOffsetHelper
 {
 public:
