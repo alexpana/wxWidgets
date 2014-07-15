@@ -839,7 +839,7 @@ public:
 
 private:
     // We store the source pen for later when we need to recreate the
-    // device-independent resources.
+    // device-dependent resources.
     const wxPen m_sourcePen;
 
     // A stroke style is a device-independent resource.
@@ -1063,7 +1063,7 @@ private:
 
 private:
     // We store the source brush for later when we need to recreate the
-    // device-independent resources.
+    // device-dependent resources.
     const wxBrush m_sourceBrush;
 
     // We store the information required to create a linear gradient brush for
