@@ -962,137 +962,6 @@ wxD2DBitmapData* GetD2DBitmapData(const wxGraphicsBitmap& bitmap)
     return static_cast<wxD2DBitmapData*>(bitmap.GetRefData());
 }
 
-//-----------------------------------------------------------------------------
-// wxD2DPenData declaration
-//-----------------------------------------------------------------------------
-
-class wxD2DPenData : public wxGraphicsObjectRefData, public DeviceDependentResourceHolder
-{
-public:
-    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, const wxPen& pen);
-    ~wxD2DPenData();
-
-    void CreateStrokeStyle(ID2D1Factory* const direct2dfactory);
-
-    ID2D1Brush* GetBrush();
-
-    FLOAT GetWidth();
-
-    ID2D1StrokeStyle* GetStrokeStyle();
-
-    void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
-
-    void ReleaseDeviceDependentResources() wxOVERRIDE;
-
-private:
-    // We store the source pen for later when we need to recreate the
-    // device-dependent resources.
-    const wxPen m_sourcePen;
-
-    // A stroke style is a device-independent resource.
-    // Describes the caps, miter limit, line join, and dash information.
-    ID2D1StrokeStyle* m_strokeStyle;
-
-    // Drawing outlines with Direct2D requires a brush for the color or stipple.
-    wxD2DBrushData* m_stippleBrush;
-
-    // The width of the stroke
-    FLOAT m_width;
-};
-
-//-----------------------------------------------------------------------------
-// wxD2DPenData implementation
-//-----------------------------------------------------------------------------
-
-wxD2DPenData::wxD2DPenData(
-    wxGraphicsRenderer* renderer, 
-    ID2D1Factory* direct2dFactory, 
-    const wxPen& pen)
-    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()), 
-    m_strokeStyle(NULL), m_stippleBrush(NULL)
-{
-    CreateStrokeStyle(direct2dFactory);
-
-    wxBrush strokeBrush;
-
-    if (m_sourcePen.GetStyle() == wxPENSTYLE_STIPPLE)
-    {
-        strokeBrush.SetStipple(*(m_sourcePen.GetStipple()));
-        strokeBrush.SetStyle(wxBRUSHSTYLE_STIPPLE);
-    }
-    else
-    {
-        strokeBrush.SetColour(m_sourcePen.GetColour());
-        strokeBrush.SetStyle(wxBRUSHSTYLE_SOLID);
-    }
-
-    m_stippleBrush = new wxD2DBrushData(renderer, strokeBrush);
-}
-
-wxD2DPenData::~wxD2DPenData()
-{
-    SafeRelease(&m_strokeStyle);
-    ReleaseDeviceDependentResources();
-    delete m_stippleBrush;
-}
-
-void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
-{
-    D2D1_CAP_STYLE capStyle = ConvertPenCap(m_sourcePen.GetCap());
-    D2D1_LINE_JOIN lineJoin = ConvertPenJoin(m_sourcePen.GetJoin());
-    D2D1_DASH_STYLE dashStyle = ConvertPenStyle(m_sourcePen.GetStyle());
-
-    int dashCount = 0;
-    FLOAT* dashes = NULL;
-
-    if (dashStyle == D2D1_DASH_STYLE_CUSTOM)
-    {
-        dashCount = m_sourcePen.GetDashCount();
-        dashes = new FLOAT[dashCount];
-
-        for (int i = 0; i < dashCount; ++i)
-        {
-            dashes[i] = m_sourcePen.GetDash()[i];
-        }
-
-    }
-
-    direct2dfactory->CreateStrokeStyle(
-        D2D1::StrokeStyleProperties(capStyle, capStyle, capStyle, lineJoin, 0, dashStyle, 0.0f),
-        dashes, dashCount, 
-        &m_strokeStyle);
-}
-
-void wxD2DPenData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
-{
-    m_stippleBrush->AcquireDeviceDependentResources(renderTarget);
-}
-
-void wxD2DPenData::ReleaseDeviceDependentResources()
-{
-    m_stippleBrush->ReleaseDeviceDependentResources();
-}
-
-ID2D1Brush* wxD2DPenData::GetBrush()
-{
-    return m_stippleBrush->GetBrush();
-}
-
-FLOAT wxD2DPenData::GetWidth()
-{
-    return m_width;
-}
-
-ID2D1StrokeStyle* wxD2DPenData::GetStrokeStyle()
-{
-    return m_strokeStyle;
-}
-
-wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
-{
-    return static_cast<wxD2DPenData*>(pen.GetGraphicsData());
-}
-
 // Helper class used to create and safely release a ID2D1GradientStopCollection from wxGraphicsGradientStops
 class D2DGradientStopsHelper
 {
@@ -1415,6 +1284,137 @@ ID2D1Brush* wxD2DBrushData::GetBrush() const
 wxD2DBrushData* GetD2DBrushData(const wxGraphicsBrush& brush)
 {
     return static_cast<wxD2DBrushData*>(brush.GetGraphicsData());
+}
+
+//-----------------------------------------------------------------------------
+// wxD2DPenData declaration
+//-----------------------------------------------------------------------------
+
+class wxD2DPenData : public wxGraphicsObjectRefData, public DeviceDependentResourceHolder
+{
+public:
+    wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, const wxPen& pen);
+    ~wxD2DPenData();
+
+    void CreateStrokeStyle(ID2D1Factory* const direct2dfactory);
+
+    ID2D1Brush* GetBrush();
+
+    FLOAT GetWidth();
+
+    ID2D1StrokeStyle* GetStrokeStyle();
+
+    void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) wxOVERRIDE;
+
+    void ReleaseDeviceDependentResources() wxOVERRIDE;
+
+private:
+    // We store the source pen for later when we need to recreate the
+    // device-dependent resources.
+    const wxPen m_sourcePen;
+
+    // A stroke style is a device-independent resource.
+    // Describes the caps, miter limit, line join, and dash information.
+    ID2D1StrokeStyle* m_strokeStyle;
+
+    // Drawing outlines with Direct2D requires a brush for the color or stipple.
+    wxD2DBrushData* m_stippleBrush;
+
+    // The width of the stroke
+    FLOAT m_width;
+};
+
+//-----------------------------------------------------------------------------
+// wxD2DPenData implementation
+//-----------------------------------------------------------------------------
+
+wxD2DPenData::wxD2DPenData(
+    wxGraphicsRenderer* renderer, 
+    ID2D1Factory* direct2dFactory, 
+    const wxPen& pen)
+    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()), 
+    m_strokeStyle(NULL), m_stippleBrush(NULL)
+{
+    CreateStrokeStyle(direct2dFactory);
+
+    wxBrush strokeBrush;
+
+    if (m_sourcePen.GetStyle() == wxPENSTYLE_STIPPLE)
+    {
+        strokeBrush.SetStipple(*(m_sourcePen.GetStipple()));
+        strokeBrush.SetStyle(wxBRUSHSTYLE_STIPPLE);
+    }
+    else
+    {
+        strokeBrush.SetColour(m_sourcePen.GetColour());
+        strokeBrush.SetStyle(wxBRUSHSTYLE_SOLID);
+    }
+
+    m_stippleBrush = new wxD2DBrushData(renderer, strokeBrush);
+}
+
+wxD2DPenData::~wxD2DPenData()
+{
+    SafeRelease(&m_strokeStyle);
+    ReleaseDeviceDependentResources();
+    delete m_stippleBrush;
+}
+
+void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
+{
+    D2D1_CAP_STYLE capStyle = ConvertPenCap(m_sourcePen.GetCap());
+    D2D1_LINE_JOIN lineJoin = ConvertPenJoin(m_sourcePen.GetJoin());
+    D2D1_DASH_STYLE dashStyle = ConvertPenStyle(m_sourcePen.GetStyle());
+
+    int dashCount = 0;
+    FLOAT* dashes = NULL;
+
+    if (dashStyle == D2D1_DASH_STYLE_CUSTOM)
+    {
+        dashCount = m_sourcePen.GetDashCount();
+        dashes = new FLOAT[dashCount];
+
+        for (int i = 0; i < dashCount; ++i)
+        {
+            dashes[i] = m_sourcePen.GetDash()[i];
+        }
+
+    }
+
+    direct2dfactory->CreateStrokeStyle(
+        D2D1::StrokeStyleProperties(capStyle, capStyle, capStyle, lineJoin, 0, dashStyle, 0.0f),
+        dashes, dashCount, 
+        &m_strokeStyle);
+}
+
+void wxD2DPenData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
+{
+    m_stippleBrush->AcquireDeviceDependentResources(renderTarget);
+}
+
+void wxD2DPenData::ReleaseDeviceDependentResources()
+{
+    m_stippleBrush->ReleaseDeviceDependentResources();
+}
+
+ID2D1Brush* wxD2DPenData::GetBrush()
+{
+    return m_stippleBrush->GetBrush();
+}
+
+FLOAT wxD2DPenData::GetWidth()
+{
+    return m_width;
+}
+
+ID2D1StrokeStyle* wxD2DPenData::GetStrokeStyle()
+{
+    return m_strokeStyle;
+}
+
+wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
+{
+    return static_cast<wxD2DPenData*>(pen.GetGraphicsData());
 }
 
 //-----------------------------------------------------------------------------
