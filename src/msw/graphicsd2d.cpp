@@ -2050,7 +2050,18 @@ bool wxD2DContext::ShouldOffset() const
 
 void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
 {
-    wxFAIL_MSG("not implemented");
+    wxD2DFontData* fontData = GetD2DFontData(m_font);
+    fontData->GetBrushData().AcquireDeviceDependentResources(GetRenderTarget());
+
+    IDWriteTextLayout* textLayout = fontData->CreateTextLayout(str);
+
+    // Render the text
+    GetRenderTarget()->DrawTextLayout(
+        D2D1::Point2F(x, y), 
+        textLayout, 
+        fontData->GetBrushData().GetBrush());
+
+    SafeRelease(&textLayout);
 }
 
 void wxD2DContext::EnsureInitialized()
