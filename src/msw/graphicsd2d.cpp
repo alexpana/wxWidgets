@@ -1581,6 +1581,11 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
         (FLOAT)(font.GetPointSize()) / (dpiY / 96.0),
         L"en-us",
         &m_textFormat);
+
+    delete[] name;
+    SafeRelease(&familyNames);
+    SafeRelease(&fontFamily);
+    SafeRelease(&gdiInterop);
 }
 
 IDWriteTextLayout* wxD2DFontData::CreateTextLayout(const wxString& text) const
