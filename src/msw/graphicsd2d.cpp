@@ -28,6 +28,8 @@
 #include <d2d1.h>
 #include <d2d1effectauthor.h>
 
+#include <dwrite.h>
+
 #include <wincodec.h>
 
 #ifdef __BORLANDC__
@@ -57,6 +59,19 @@ IWICImagingFactory* WICImagingFactory() {
             (LPVOID*)&gs_WICImagingFactory);
     }
     return gs_WICImagingFactory;
+}
+
+static IDWriteFactory* gs_IDWriteFactory = NULL;
+
+IDWriteFactory* DWriteFactory() {
+    if (gs_IDWriteFactory == NULL) {
+        DWriteCreateFactory(
+            DWRITE_FACTORY_TYPE_SHARED,
+            __uuidof(IDWriteFactory),
+            reinterpret_cast<IUnknown**>(&gs_IDWriteFactory)
+            );
+    }
+    return gs_IDWriteFactory;
 }
 
 extern WXDLLIMPEXP_DATA_CORE(wxGraphicsPen) wxNullGraphicsPen;
