@@ -1515,6 +1515,115 @@ wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
     return static_cast<wxD2DPenData*>(pen.GetGraphicsData());
 }
 
+class wxD2DFontData : public wxGraphicsObjectRefData
+{
+public:
+    wxD2DFontData(wxGraphicsRenderer *renderer, const wxFont& font, const wxColor& color);
+
+    IDWriteTextLayout* CreateTextLayout(const wxString& text) const;
+
+    ~wxD2DFontData();
+
+    wxD2DBrushData& GetBrushData() { return m_brushData; }
+
+    IDWriteTextFormat* GetTextFormat() const { return m_textFormat; }
+
+private:
+    // The native, device-independent font object
+    IDWriteFont* m_font;
+
+    // The native, device-independent font object
+    IDWriteTextFormat* m_textFormat;
+
+    // We use a color brush to render the font
+    wxD2DBrushData m_brushData;
+    
+    bool m_underlined;
+
+    bool m_strikethrough;
+};
+
+wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, const wxFont& font, const wxColor& color) : 
+    wxGraphicsObjectRefData(renderer), m_font(NULL), m_brushData(renderer, wxBrush(color)),
+    m_underlined(font.GetUnderlined()), m_strikethrough(font.GetStrikethrough())
+{
+    HRESULT hr;
+
+    IDWriteGdiInterop* gdiInterop;
+    hr = DWriteFactory()->GetGdiInterop(&gdiInterop);
+
+    LOGFONT logfont;
+    int bytesStored = GetObject(font.GetHFONT(), sizeof(logfont), &logfont);
+
+    gdiInterop->CreateFontFromLOGFONT(&logfont, &m_font);
+
+    IDWriteFontFamily* fontFamily = NULL;
+    m_font->GetFontFamily(&fontFamily);
+
+    IDWriteLocalizedStrings* familyNames = NULL;
+    fontFamily->GetFamilyNames(&familyNames);
+
+    UINT32 length;
+    familyNames->GetStringLength(0, &length);
+
+    wchar_t* name = new (std::nothrow) wchar_t[length+1];
+    familyNames->GetString(0, name, length+1);
+
+    hr = DWriteFactory()->CreateTextFormat(
+        name,
+        NULL,                        
+        m_font->GetWeight(),
+        m_font->GetStyle(),
+        m_font->GetStretch(),
+        font.GetPointSize(),
+        L"en-us",
+        &m_textFormat);
+}
+
+IDWriteTextLayout* wxD2DFontData::CreateTextLayout(const wxString& text) const
+{
+    // TODO: Find relevant values for MAX_WIDTH and MAX_HEIGHT parameters
+    static const FLOAT MAX_WIDTH = 4096.0f;
+    static const FLOAT MAX_HEIGHT = 1024.0f;
+
+    HRESULT hr;
+
+    IDWriteTextLayout* textLayout;
+
+    hr = DWriteFactory()->CreateTextLayout(
+        text.c_str(),
+        text.length(),
+        m_textFormat,
+        MAX_WIDTH,
+        MAX_HEIGHT,
+        &textLayout);
+
+    DWRITE_TEXT_RANGE textRange = { 0, text.length() };
+
+    if (m_underlined)
+    {
+        textLayout->SetUnderline(true, textRange);
+    }
+
+    if (m_strikethrough)
+    {
+        textLayout->SetStrikethrough(true, textRange);
+    }
+
+    return textLayout;
+}
+
+wxD2DFontData::~wxD2DFontData()
+{
+    SafeRelease(&m_textFormat);
+    SafeRelease(&m_font);
+}
+
+wxD2DFontData* GetD2DFontData(const wxGraphicsFont& font)
+{
+    return static_cast<wxD2DFontData*>(font.GetGraphicsData());
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DContext declaration
 //-----------------------------------------------------------------------------
