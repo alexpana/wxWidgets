@@ -1518,7 +1518,7 @@ wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
 class wxD2DFontData : public wxGraphicsObjectRefData
 {
 public:
-    wxD2DFontData(wxGraphicsRenderer *renderer, const wxFont& font, const wxColor& color);
+    wxD2DFontData(wxGraphicsRenderer *renderer, ID2D1Factory* d2d1Factory, const wxFont& font, const wxColor& color);
 
     IDWriteTextLayout* CreateTextLayout(const wxString& text) const;
 
@@ -1543,7 +1543,7 @@ private:
     bool m_strikethrough;
 };
 
-wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, const wxFont& font, const wxColor& color) : 
+wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFactory, const wxFont& font, const wxColor& color) : 
     wxGraphicsObjectRefData(renderer), m_font(NULL), m_brushData(renderer, wxBrush(color)),
     m_underlined(font.GetUnderlined()), m_strikethrough(font.GetStrikethrough())
 {
@@ -1569,13 +1569,16 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, const wxFont& font, c
     wchar_t* name = new (std::nothrow) wchar_t[length+1];
     familyNames->GetString(0, name, length+1);
 
+    FLOAT dpiX, dpiY;
+    d2dFactory->GetDesktopDpi(&dpiX, &dpiY);
+
     hr = DWriteFactory()->CreateTextFormat(
         name,
         NULL,                        
         m_font->GetWeight(),
         m_font->GetStyle(),
         m_font->GetStretch(),
-        font.GetPointSize(),
+        (FLOAT)(font.GetPointSize()) / (dpiY / 96.0),
         L"en-us",
         &m_textFormat);
 }
@@ -2505,7 +2508,7 @@ wxImage wxD2DRenderer::CreateImageFromBitmap(const wxGraphicsBitmap& bmp)
 
 wxGraphicsFont wxD2DRenderer::CreateFont(const wxFont& font, const wxColour& col)
 {
-    wxD2DFontData* fontData = new wxD2DFontData(this, font, col);
+    wxD2DFontData* fontData = new wxD2DFontData(this, GetD2DFactory(), font, col);
 
     wxGraphicsFont graphicsFont;
     graphicsFont.SetRefData(fontData);
