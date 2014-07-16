@@ -2012,7 +2012,18 @@ void wxD2DContext::GetTextExtent(
     wxDouble* descent,
     wxDouble* externalLeading) const
 {
-    wxFAIL_MSG("not implemented");
+    wxD2DFontData* fontData = GetD2DFontData(m_font);
+    IDWriteTextLayout* textLayout = fontData->CreateTextLayout(str);
+
+    DWRITE_TEXT_METRICS textMetrics;
+    textLayout->GetMetrics(&textMetrics);
+
+    *width = textMetrics.width;
+    *height = textMetrics.height;
+
+    // TODO: Find a way of extracting this information
+    *descent = 0;
+    *externalLeading = 0;
 }
 
 void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
