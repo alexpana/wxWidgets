@@ -2483,8 +2483,12 @@ wxImage wxD2DRenderer::CreateImageFromBitmap(const wxGraphicsBitmap& bmp)
 
 wxGraphicsFont wxD2DRenderer::CreateFont(const wxFont& font, const wxColour& col)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsFont();
+    wxD2DFontData* fontData = new wxD2DFontData(this, font, col);
+
+    wxGraphicsFont graphicsFont;
+    graphicsFont.SetRefData(fontData);
+
+    return graphicsFont;
 }
 
 wxGraphicsFont wxD2DRenderer::CreateFont(
