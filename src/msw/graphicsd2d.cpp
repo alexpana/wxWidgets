@@ -870,13 +870,15 @@ public:
         bitmap->Lock(&lockSize, WICBitmapLockWrite, &m_pixelLock);
     }
 
+    IWICBitmapLock* GetLock() { return m_pixelLock; }
+
     ~BitmapPixelWriteLock()
     {
-        m_pixelLock->Release();
+        SafeRelease(&m_pixelLock);
     }
 
 private:
-    IWICBitmapLock *m_pixelLock;
+    IWICBitmapLock* m_pixelLock;
 };
 
 //-----------------------------------------------------------------------------
@@ -931,7 +933,7 @@ IWICBitmapSource* CreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = 
 
 IWICBitmapSource* CreateWICBitmap(const wxBitmap& sourceBitmap, bool hasAlpha = false)
 {
-    return CreateWICBitmap(sourceBitmap.GetHBITMAP());
+    return CreateWICBitmap(sourceBitmap.GetHBITMAP(), hasAlpha);
 }
 
 bool HasAlpha(const wxBitmap& bitmap)
@@ -939,15 +941,96 @@ bool HasAlpha(const wxBitmap& bitmap)
     return bitmap.HasAlpha() || bitmap.GetMask();
 }
 
+struct PBGRAColor
+{
+    PBGRAColor(BYTE* offset) : 
+        b(*offset), g(*(offset + 1)), r(*(offset + 2)), a(*(offset + 3))
+    {}
+
+    PBGRAColor(const wxColor& color) : 
+        a(color.Alpha()), r(color.Red()), g(color.Green()), b(color.Blue())
+    {}
+
+    bool IsBlack() const { return r == 0 && g == 0 && b == 0; }
+
+    void Write(BYTE* offset) const
+    {
+        *(offset + 0) = b;
+        *(offset + 1) = g;
+        *(offset + 2) = r;
+        *(offset + 3) = a;
+    }
+
+    BYTE a, r, g, b;
+};
+
 void wxD2DBitmapData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
 {
     HRESULT hr;
 
-    IWICBitmapSource* wicBitmap = CreateWICBitmap(SourceBitmap(), HasAlpha(SourceBitmap()));
-
-    hr = renderTarget->CreateBitmapFromWicBitmap(wicBitmap, 0, &NativeBitmap());
-
-    wicBitmap->Release();
+    if(SourceBitmap().GetMask())
+    {
+          int w = SourceBitmap().GetWidth();
+          int h = SourceBitmap().GetHeight();
+  
+          IWICBitmapSource* colorBitmap = CreateWICBitmap(SourceBitmap());
+          IWICBitmapSource* maskBitmap = CreateWICBitmap(SourceBitmap().GetMask()->GetMaskBitmap());
+          IWICBitmap* resultBitmap;
+  
+          WICImagingFactory()->CreateBitmap(
+              SourceBitmap().GetWidth(), 
+              SourceBitmap().GetHeight(), 
+              GUID_WICPixelFormat32bppPBGRA,
+              WICBitmapCreateCacheOption::WICBitmapCacheOnLoad,
+              &resultBitmap);
+  
+          BYTE* colorBuffer = new BYTE[4 * w * h];
+          BYTE* maskBuffer = new BYTE[4 * w * h];
+          BYTE* resultBuffer;
+  
+          hr = colorBitmap->CopyPixels(NULL, w * 4, 32 * w * h, colorBuffer);
+          hr = maskBitmap->CopyPixels(NULL, w * 4, 32 * w * h, maskBuffer);
+  
+          {
+              BitmapPixelWriteLock lock(resultBitmap);
+  
+              UINT bufferSize = 0;
+              hr = lock.GetLock()->GetDataPointer(&bufferSize, &resultBuffer);
+  
+              static const PBGRAColor transparentColor(wxTransparentColour);
+  
+              // Create the result bitmap
+              for (int i = 0; i < w * h * 4; i += 4)
+              {
+                  PBGRAColor color(colorBuffer + i);
+                  PBGRAColor mask(maskBuffer + i);
+  
+                  if (mask.IsBlack())
+                  {
+                      transparentColor.Write(resultBuffer + i);
+                  }
+                  else
+                  {
+                      color.Write(resultBuffer + i);
+                  }
+              }
+          }
+  
+          hr = renderTarget->CreateBitmapFromWicBitmap(resultBitmap, 0, &NativeBitmap());
+  
+          delete[] colorBuffer;
+          delete[] maskBuffer;
+  
+          SafeRelease(&colorBitmap);
+          SafeRelease(&maskBitmap);
+          SafeRelease(&resultBitmap);
+    }
+    else
+    {
+        IWICBitmapSource* bitmapSource = CreateWICBitmap(SourceBitmap(), SourceBitmap().HasAlpha());
+        hr = renderTarget->CreateBitmapFromWicBitmap(bitmapSource, 0, &NativeBitmap());
+        SafeRelease(&bitmapSource);
+    }
 
     return;
 }
