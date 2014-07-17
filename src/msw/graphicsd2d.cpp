@@ -1559,7 +1559,16 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
     LOGFONT logfont;
     int bytesStored = GetObject(font.GetHFONT(), sizeof(logfont), &logfont);
 
-    gdiInterop->CreateFontFromLOGFONT(&logfont, &m_font);
+    // Ensure the LOGFONT object contains the correct font face name
+    if (logfont.lfFaceName[0] == '\0')
+    {
+        for (int i = 0; i < font.GetFaceName().Length(); ++i)
+        {
+            logfont.lfFaceName[i] = font.GetFaceName().GetChar(i);
+        }
+    }
+
+    hr = gdiInterop->CreateFontFromLOGFONT(&logfont, &m_font);
 
     IDWriteFontFamily* fontFamily = NULL;
     m_font->GetFontFamily(&fontFamily);
