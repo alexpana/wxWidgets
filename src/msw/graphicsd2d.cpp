@@ -2541,8 +2541,9 @@ wxGraphicsFont wxD2DRenderer::CreateFont(
     int flags, 
     const wxColour& col)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsFont();
+    return CreateFont(
+        wxFontInfo(size).AllFlags(flags).FaceName(facename),
+        col);
 }
 
 // create a sub-image from a native image representation
