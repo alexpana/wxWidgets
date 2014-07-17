@@ -427,17 +427,17 @@ bool wxD2DMatrixData::IsIdentity() const
 
 void wxD2DMatrixData::Translate(wxDouble dx, wxDouble dy)
 {
-    m_matrix.SetProduct(D2D1::Matrix3x2F::Translation(dx, dy), m_matrix);
+    m_matrix = D2D1::Matrix3x2F::Translation(dx, dy) * m_matrix;
 }
 
 void wxD2DMatrixData::Scale(wxDouble xScale, wxDouble yScale)
 {
-    m_matrix.SetProduct(D2D1::Matrix3x2F::Scale(xScale, yScale), m_matrix);
+    m_matrix = D2D1::Matrix3x2F::Scale(xScale, yScale) * m_matrix;
 }
 
 void wxD2DMatrixData::Rotate(wxDouble angle)
 {
-    m_matrix.SetProduct(D2D1::Matrix3x2F::Rotation(wxRadToDeg(angle)), m_matrix);
+    m_matrix = D2D1::Matrix3x2F::Rotation(wxRadToDeg(angle)) * m_matrix;
 }
 
 void wxD2DMatrixData::TransformPoint(wxDouble* x, wxDouble* y) const
