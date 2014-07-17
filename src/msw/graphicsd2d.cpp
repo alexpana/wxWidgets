@@ -956,6 +956,10 @@ bool HasAlpha(const wxBitmap& bitmap)
     return bitmap.HasAlpha() || bitmap.GetMask();
 }
 
+// This utility class is used to read a color value with the format
+// PBGRA from a byte stream and to write a color back to the stream.
+// It's used in conjunction with the IWICBitmapSource or IWICBitmap
+// pixel data to easily read and write color values.
 struct PBGRAColor
 {
     PBGRAColor(BYTE* offset) : 
