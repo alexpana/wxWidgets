@@ -962,8 +962,8 @@ bool HasAlpha(const wxBitmap& bitmap)
 // pixel data to easily read and write color values.
 struct PBGRAColor
 {
-    PBGRAColor(BYTE* offset) : 
-        b(*offset), g(*(offset + 1)), r(*(offset + 2)), a(*(offset + 3))
+    PBGRAColor(BYTE* stream) : 
+        b(*stream), g(*(stream + 1)), r(*(stream + 2)), a(*(stream + 3))
     {}
 
     PBGRAColor(const wxColor& color) : 
@@ -972,12 +972,12 @@ struct PBGRAColor
 
     bool IsBlack() const { return r == 0 && g == 0 && b == 0; }
 
-    void Write(BYTE* offset) const
+    void Write(BYTE* stream) const
     {
-        *(offset + 0) = b;
-        *(offset + 1) = g;
-        *(offset + 2) = r;
-        *(offset + 3) = a;
+        *(stream + 0) = b;
+        *(stream + 1) = g;
+        *(stream + 2) = r;
+        *(stream + 3) = a;
     }
 
     BYTE a, r, g, b;
