@@ -2039,12 +2039,12 @@ void wxD2DContext::GetTextExtent(
     DWRITE_TEXT_METRICS textMetrics;
     textLayout->GetMetrics(&textMetrics);
 
-    *width = textMetrics.width;
-    *height = textMetrics.height;
+    if (width != NULL) *width = textMetrics.width;
+    if (height != NULL) *height = textMetrics.height;
 
     // TODO: Find a way of extracting this information
-    *descent = 0;
-    *externalLeading = 0;
+    if (descent != NULL) *descent = 0;
+    if (externalLeading != NULL) *externalLeading = 0;
 }
 
 void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
