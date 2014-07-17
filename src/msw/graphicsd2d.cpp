@@ -2515,8 +2515,7 @@ wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromNativeBitmap(void* bitmap)
 #if wxUSE_IMAGE
 wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromImage(const wxImage& image)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsBitmap();
+    return CreateBitmap(wxBitmap(image));
 }
 
 wxImage wxD2DRenderer::CreateImageFromBitmap(const wxGraphicsBitmap& bmp)
