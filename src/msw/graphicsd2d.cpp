@@ -2520,8 +2520,9 @@ wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromImage(const wxImage& image)
 
 wxImage wxD2DRenderer::CreateImageFromBitmap(const wxGraphicsBitmap& bmp)
 {
-    wxFAIL_MSG("not implemented");
-    return wxImage();
+    return static_cast<wxD2DBitmapData::PseudoNativeBitmap*>(bmp.GetNativeBitmap())
+        ->m_sourceBitmap
+        .ConvertToImage();
 }
 #endif
 
