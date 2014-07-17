@@ -2501,6 +2501,17 @@ wxGraphicsBitmap wxD2DRenderer::CreateBitmap(const wxBitmap& bitmap)
     return graphicsBitmap;
 }
 
+// create a graphics bitmap from a native bitmap
+wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromNativeBitmap(void* bitmap)
+{
+    wxD2DBitmapData* bitmapData = new wxD2DBitmapData(this, bitmap);
+
+    wxGraphicsBitmap graphicsBitmap;
+    graphicsBitmap.SetRefData(bitmapData);
+
+    return graphicsBitmap;
+}
+
 #if wxUSE_IMAGE
 wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromImage(const wxImage& image)
 {
@@ -2532,13 +2543,6 @@ wxGraphicsFont wxD2DRenderer::CreateFont(
 {
     wxFAIL_MSG("not implemented");
     return wxGraphicsFont();
-}
-
-// create a graphics bitmap from a native bitmap
-wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromNativeBitmap(void* bitmap)
-{
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsBitmap();
 }
 
 // create a sub-image from a native image representation
