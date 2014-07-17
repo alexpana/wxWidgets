@@ -1993,7 +1993,7 @@ void wxD2DContext::DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDou
 
 void wxD2DContext::DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
-    wxFAIL_MSG("not implemented");
+    DrawBitmap(wxBitmap(icon), x, y, w, h);
 }
 
 void wxD2DContext::PushState()
