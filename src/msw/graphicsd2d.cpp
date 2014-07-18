@@ -1591,7 +1591,7 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
         m_font->GetWeight(),
         m_font->GetStyle(),
         m_font->GetStretch(),
-        (FLOAT)(font.GetPointSize()) / (dpiY / 96.0),
+        (FLOAT)(font.GetPixelSize().GetHeight()) / (dpiY / 96.0),
         L"en-us",
         &m_textFormat);
 
