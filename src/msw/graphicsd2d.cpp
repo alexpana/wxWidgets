@@ -829,6 +829,163 @@ wxD2DPathData* GetD2DPathData(const wxGraphicsPath& path)
     return static_cast<wxD2DPathData*>(path.GetGraphicsData());
 }
 
+// This utility class is used to read a color value with the format
+// PBGRA from a byte stream and to write a color back to the stream.
+// It's used in conjunction with the IWICBitmapSource or IWICBitmap
+// pixel data to easily read and write color values.
+struct PBGRAColor
+{
+    PBGRAColor(BYTE* stream) : 
+        b(*stream), g(*(stream + 1)), r(*(stream + 2)), a(*(stream + 3))
+    {}
+
+    PBGRAColor(const wxColor& color) : 
+        a(color.Alpha()), r(color.Red()), g(color.Green()), b(color.Blue())
+    {}
+
+    bool IsBlack() const { return r == 0 && g == 0 && b == 0; }
+
+    void Write(BYTE* stream) const
+    {
+        *(stream + 0) = b;
+        *(stream + 1) = g;
+        *(stream + 2) = r;
+        *(stream + 3) = a;
+    }
+
+    BYTE b, g, r, a;
+};
+
+class HatchBitmapSource : public IWICBitmapSource
+{
+public:
+    HatchBitmapSource(wxBrushStyle brushStyle, const wxColor& color) : 
+        m_brushStyle(brushStyle), m_color(color), m_refCount(1)
+    {
+    }
+
+    HRESULT STDMETHODCALLTYPE GetSize(__RPC__out UINT *width, __RPC__out UINT *height) wxOVERRIDE
+    {
+        if (width != NULL) *width = 8;
+        if (height != NULL) *height = 8;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE GetPixelFormat(__RPC__out WICPixelFormatGUID *pixelFormat) wxOVERRIDE
+    {
+        if (pixelFormat != NULL) *pixelFormat = GUID_WICPixelFormat32bppPBGRA;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE GetResolution(__RPC__out double *dpiX, __RPC__out double *dpiY) wxOVERRIDE
+    {
+        if (dpiX != NULL) *dpiX = 96.0;
+        if (dpiY != NULL) *dpiY = 96.0;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE CopyPalette(__RPC__in_opt IWICPalette *palette) wxOVERRIDE
+    {
+        palette = NULL;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE CopyPixels(
+        __RPC__in_opt const WICRect *prc, 
+        UINT stride,
+        UINT bufferSize,
+        __RPC__out_ecount_full(bufferSize) BYTE *buffer) wxOVERRIDE
+    {
+        // patterns are encoded in a bit map of size 8 x 8
+        static const char BDIAGONAL_PATTERN[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+        static const char CROSSDIAG_PATTERN[8] = { 0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81 };
+        static const char FDIAGONAL_PATTERN[8] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+        static const char CROSS_PATTERN[8] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0xFF };
+        static const char HORIZONTAL_PATTERN[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF };
+        static const char VERTICAL_PATTERN[8] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+
+        switch (m_brushStyle)
+        {
+            case wxBRUSHSTYLE_BDIAGONAL_HATCH: CopyPattern(buffer, BDIAGONAL_PATTERN); break;
+            case wxBRUSHSTYLE_CROSSDIAG_HATCH: CopyPattern(buffer, CROSSDIAG_PATTERN); break;
+            case wxBRUSHSTYLE_FDIAGONAL_HATCH: CopyPattern(buffer, FDIAGONAL_PATTERN); break;
+            case wxBRUSHSTYLE_CROSS_HATCH: CopyPattern(buffer, CROSS_PATTERN); break;
+            case wxBRUSHSTYLE_HORIZONTAL_HATCH: CopyPattern(buffer, HORIZONTAL_PATTERN); break;
+            case wxBRUSHSTYLE_VERTICAL_HATCH: CopyPattern(buffer, VERTICAL_PATTERN); break;
+        }
+
+        return S_OK;
+    }
+
+    // Implementations adapted from: "Implementing IUnknown in C++"
+    // http://msdn.microsoft.com/en-us/library/office/cc839627%28v=office.15%29.aspx
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID referenceId, void **object) wxOVERRIDE 
+    {
+        if (!object)
+        {
+            return E_INVALIDARG;
+        }
+
+        *object = NULL;
+
+        if (referenceId == IID_IUnknown || referenceId == IID_IWICBitmapSource)
+        {
+            *object = (LPVOID)this;
+            AddRef();
+            return NOERROR;
+        }
+
+        return E_NOINTERFACE;
+    }
+
+    ULONG STDMETHODCALLTYPE AddRef(void) wxOVERRIDE 
+    {
+        InterlockedIncrement(&m_refCount);
+        return m_refCount;
+    }
+
+    ULONG STDMETHODCALLTYPE Release(void) wxOVERRIDE 
+    {
+        ULONG refCount = InterlockedDecrement(&m_refCount);
+        if (m_refCount == 0)
+        {
+            delete this;
+        }
+        return refCount;
+    }
+
+private:
+
+    // Copies an 8x8 bit pattern to a PBGRA byte buffer
+    void CopyPattern(BYTE *buffer, const char* pattern) const
+    {
+        static const PBGRAColor transparent(wxTransparentColour);
+
+        int k = 0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            for (int j = 7; j >= 0; --j)
+            {
+                bool isColorBit = (pattern[i] & (1 << j)) > 0;
+                (isColorBit ? m_color : transparent).Write(buffer + k);
+                k += 4;
+            }
+        }
+    }
+
+private:
+    // The hatch style produced by this bitmap source
+    const wxBrushStyle m_brushStyle;
+
+    // The colour of the hatch
+    const PBGRAColor m_color;
+
+    // Internally used to implement IUnknown's reference counting
+    ULONG m_refCount;
+};
+
 //-----------------------------------------------------------------------------
 // wxD2DBitmapData declaration
 //-----------------------------------------------------------------------------
@@ -955,33 +1112,6 @@ bool HasAlpha(const wxBitmap& bitmap)
 {
     return bitmap.HasAlpha() || bitmap.GetMask();
 }
-
-// This utility class is used to read a color value with the format
-// PBGRA from a byte stream and to write a color back to the stream.
-// It's used in conjunction with the IWICBitmapSource or IWICBitmap
-// pixel data to easily read and write color values.
-struct PBGRAColor
-{
-    PBGRAColor(BYTE* stream) : 
-        b(*stream), g(*(stream + 1)), r(*(stream + 2)), a(*(stream + 3))
-    {}
-
-    PBGRAColor(const wxColor& color) : 
-        a(color.Alpha()), r(color.Red()), g(color.Green()), b(color.Blue())
-    {}
-
-    bool IsBlack() const { return r == 0 && g == 0 && b == 0; }
-
-    void Write(BYTE* stream) const
-    {
-        *(stream + 0) = b;
-        *(stream + 1) = g;
-        *(stream + 2) = r;
-        *(stream + 3) = a;
-    }
-
-    BYTE a, r, g, b;
-};
 
 void wxD2DBitmapData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
 {
@@ -1113,6 +1243,7 @@ public:
         wxD2DBRUSHTYPE_LINEAR_GRADIENT,
         wxD2DBRUSHTYPE_RADIAL_GRADIENT,
         wxD2DBRUSHTYPE_BITMAP,
+        wxD2DBRUSHTYPE_HATCH,
         wxD2DBRUSHTYPE_UNSPECIFIED
     };
 
@@ -1175,11 +1306,15 @@ private:
 
     void CreateBitmapBrush();
 
+    void CreateHatchBrush();
+
     void AcquireSolidColorBrush(ID2D1RenderTarget* renderTarget);
 
     void AcquireLinearGradientBrush(ID2D1RenderTarget* renderTarget);
 
     void AcquireRadialGradientBrush(ID2D1RenderTarget* renderTarget);
+
+    void AcquireHatchBrush(ID2D1RenderTarget* renderTarget);
 
     void AcquireBitmapBrush(ID2D1RenderTarget* renderTarget);
 
@@ -1227,8 +1362,7 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, const wxBrush &brus
     } 
     else if (brush.IsHatch())
     {
-        // TODO: Find a way of handling hatch brushes
-        CreateSolidColorBrush();
+        CreateHatchBrush();
     }
     else
     {
@@ -1254,6 +1388,11 @@ wxD2DBrushData::~wxD2DBrushData()
 void wxD2DBrushData::CreateSolidColorBrush()
 {
     m_brushType = wxD2DBRUSHTYPE_SOLID;
+}
+
+void wxD2DBrushData::CreateHatchBrush()
+{
+    m_brushType = wxD2DBRUSHTYPE_HATCH;
 }
 
 void wxD2DBrushData::CreateBitmapBrush()
@@ -1323,6 +1462,32 @@ void wxD2DBrushData::AcquireRadialGradientBrush(ID2D1RenderTarget* renderTarget)
     }
 }
 
+void wxD2DBrushData::AcquireHatchBrush(ID2D1RenderTarget* renderTarget)
+{
+    if (!IsAcquired(m_bitmapBrush))
+    {
+        HatchBitmapSource* hatchBitmapSource = new HatchBitmapSource(m_sourceBrush.GetStyle(), m_sourceBrush.GetColour());
+
+        ID2D1Bitmap* bitmap = NULL;
+
+        HRESULT hr = renderTarget->CreateBitmapFromWicBitmap(hatchBitmapSource, &bitmap);
+
+        D2D1_SIZE_U size = bitmap->GetPixelSize();
+        D2D1_PIXEL_FORMAT pixelFormat = bitmap->GetPixelFormat();
+
+        hr = renderTarget->CreateBitmapBrush(
+            bitmap, 
+            D2D1::BitmapBrushProperties(
+            D2D1_EXTEND_MODE_WRAP, 
+            D2D1_EXTEND_MODE_WRAP,
+            D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR), 
+            &m_bitmapBrush);
+
+        SafeRelease(&bitmap);
+        SafeRelease(&hatchBitmapSource);
+    }
+}
+
 void wxD2DBrushData::AcquireBitmapBrush(ID2D1RenderTarget* renderTarget)
 {
     wxD2DBitmapData bitmapData(GetRenderer(), *(m_sourceBrush.GetStipple()));
@@ -1348,6 +1513,9 @@ void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTa
         break;
     case wxD2DBrushData::wxD2DBRUSHTYPE_RADIAL_GRADIENT:
         AcquireRadialGradientBrush(renderTarget);
+        break;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_HATCH:
+        AcquireHatchBrush(renderTarget);
         break;
     case wxD2DBrushData::wxD2DBRUSHTYPE_BITMAP:
         AcquireBitmapBrush(renderTarget);
@@ -1376,6 +1544,8 @@ ID2D1Brush* wxD2DBrushData::GetBrush() const
         return m_linearGradientBrush;
     case wxD2DBrushData::wxD2DBRUSHTYPE_RADIAL_GRADIENT:
         return m_radialGradientBrush;
+    case wxD2DBrushData::wxD2DBRUSHTYPE_HATCH:
+        wxFALLTHROUGH;
     case wxD2DBrushData::wxD2DBRUSHTYPE_BITMAP:
         return m_bitmapBrush;
     }
