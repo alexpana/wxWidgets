@@ -771,8 +771,8 @@ void wxD2DPathData::GetCurrentPoint(wxDouble* x, wxDouble* y) const
 {
     D2D1_POINT_2F transformedPoint = D2D1::Matrix3x2F::ReinterpretBaseType(&m_transformMatrix)->TransformPoint(m_currentPoint);
 
-    *x = transformedPoint.x;
-    *y = transformedPoint.y;
+    if (x != NULL) *x = transformedPoint.x;
+    if (y != NULL) *y = transformedPoint.y;
 }
 
 // adds another path
@@ -811,10 +811,10 @@ void wxD2DPathData::GetBox(wxDouble* x, wxDouble* y, wxDouble* w, wxDouble *h) c
 {
     D2D1_RECT_F bounds;
     m_pathGeometry->GetBounds(D2D1::Matrix3x2F::Identity(), &bounds);
-    *x = bounds.left;
-    *y = bounds.top;
-    *w = bounds.right - bounds.left;
-    *h = bounds.bottom - bounds.top;
+    if (x != NULL) *x = bounds.left;
+    if (y != NULL) *y = bounds.top;
+    if (w != NULL) *w = bounds.right - bounds.left;
+    if (h != NULL) *h = bounds.bottom - bounds.top;
 }
 
 bool wxD2DPathData::Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle) const
