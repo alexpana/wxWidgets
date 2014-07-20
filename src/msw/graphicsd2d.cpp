@@ -1356,7 +1356,7 @@ wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, const wxBrush &brus
     m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
     m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
 {
-    if ( brush.GetStyle() == wxBRUSHSTYLE_SOLID)
+    if (brush.GetStyle() == wxBRUSHSTYLE_SOLID)
     {
         CreateSolidColorBrush();
     } 
