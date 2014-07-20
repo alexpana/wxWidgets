@@ -1493,12 +1493,13 @@ void wxD2DBrushData::AcquireBitmapBrush(ID2D1RenderTarget* renderTarget)
     wxD2DBitmapData bitmapData(GetRenderer(), *(m_sourceBrush.GetStipple()));
     bitmapData.AcquireDeviceDependentResources(renderTarget);
 
-    HRESULT result = renderTarget->CreateBitmapBrush(
-        bitmapData.GetD2DBitmap(), 
-        D2D1::BitmapBrushProperties(
-        D2D1_EXTEND_MODE_WRAP, 
-        D2D1_EXTEND_MODE_WRAP), 
-        &m_bitmapBrush);
+        HRESULT result = renderTarget->CreateBitmapBrush(
+            bitmapData.GetD2DBitmap(), 
+            D2D1::BitmapBrushProperties(
+            D2D1_EXTEND_MODE_WRAP, 
+            D2D1_EXTEND_MODE_WRAP,
+            D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR), 
+            &m_bitmapBrush);
 }
 
 void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget)
