@@ -1145,7 +1145,7 @@ IWICBitmapSource* CreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = 
     hr = converter->Initialize(
         wicBitmap,
         pixelFormat,
-        WICBitmapDitherTypeNone,NULL,0.f, 
+        WICBitmapDitherTypeNone, NULL, 0.f, 
         WICBitmapPaletteTypeMedianCut);
 
     wicBitmap->Release();
