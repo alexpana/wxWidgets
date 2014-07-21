@@ -2822,8 +2822,9 @@ wxGraphicsFont wxD2DRenderer::CreateFont(
 // create a sub-image from a native image representation
 wxGraphicsBitmap wxD2DRenderer::CreateSubBitmap(const wxGraphicsBitmap& bitmap, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
-    wxFAIL_MSG("not implemented");
-    return wxGraphicsBitmap();
+    typedef wxD2DBitmapData::PseudoNativeBitmap* PseudoNativeBitmap;
+    wxBitmap sourceBitmap = static_cast<PseudoNativeBitmap>(bitmap.GetNativeBitmap())->m_sourceBitmap;
+    return CreateBitmap(sourceBitmap.GetSubBitmap(wxRect(x, y, w, h)));
 }
 
 wxString wxD2DRenderer::GetName() const
