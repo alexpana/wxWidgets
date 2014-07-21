@@ -290,6 +290,55 @@ D2D1_BITMAP_INTERPOLATION_MODE ConvertBitmapInterpolationMode(wxInterpolationQua
     return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
 }
 
+D2D1_RECT_F ConvertRectToRectF(const wxRect& rect)
+{
+    return D2D1::RectF(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
+}
+
+ID2D1Geometry* ConvertRegionToGeometry(ID2D1Factory* direct2dFactory, const wxRegion& region)
+{
+    wxRegionIterator regionIterator(region);
+
+    // Count the number of rectangles which compose the region
+    int rectCount = 0;
+    while(regionIterator++) rectCount++;
+
+    // Build the array of geometries
+    ID2D1Geometry** geometries = new ID2D1Geometry*[rectCount];
+    regionIterator.Reset(region);
+
+    int i = 0;
+    while(regionIterator)
+    {
+        wxRect rect = regionIterator.GetRect();
+        rect.SetWidth(rect.GetWidth() + 1);
+        rect.SetHeight(rect.GetHeight() + 1);
+
+        direct2dFactory->CreateRectangleGeometry(
+            ConvertRectToRectF(rect), 
+            (ID2D1RectangleGeometry**)(&geometries[i]));
+
+        i++; regionIterator++;
+    }
+
+    // Create a geometry group to hold all the rectangles
+    ID2D1GeometryGroup* resultGeometry = NULL;
+    direct2dFactory->CreateGeometryGroup(
+        D2D1_FILL_MODE_WINDING, 
+        geometries, 
+        rectCount, 
+        &resultGeometry);
+
+    // Cleanup temporaries
+    for (int i = 0; i < rectCount; ++i)
+    {
+        SafeRelease(&geometries[i]);
+    }
+    delete[] geometries;
+
+    return resultGeometry;
+}
+
 class wxD2DOffsetHelper
 {
 public:
@@ -1915,6 +1964,14 @@ private:
     ID2D1RenderTarget* GetRenderTarget() const;
 
 private:
+    enum ClipMode
+    {
+        CLIP_MODE_NONE,
+        CLIP_MODE_AXIS_ALIGNED_RECTANGLE,
+        CLIP_MODE_GEOMETRY
+    };
+
+private:
     RenderTargetType m_renderTargetType;
 
     HWND m_hwnd;
@@ -1934,7 +1991,11 @@ private:
     // releasing them.
     wxVector<DeviceDependentResourceHolder*> m_deviceDependentResourceHolders;
 
-    bool m_isClipped;
+    ClipMode m_clipMode;
+
+    bool m_clipLayerAcquired;
+
+    ID2D1Layer* m_clipLayer;
 
 private:
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
@@ -1946,13 +2007,16 @@ private:
 
 wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : wxGraphicsContext(renderer),
     m_renderTargetType(RTT_HWND), m_hwnd(hwnd),m_hwndRenderTarget(NULL), m_dcRenderTarget(NULL), 
-    m_direct2dFactory(direct2dFactory)
+    m_direct2dFactory(direct2dFactory), m_clipMode(CLIP_MODE_NONE), m_clipLayerAcquired(false),
+    m_clipLayer(NULL)
 {
     m_enableOffset = true;
 }
 
 wxD2DContext::~wxD2DContext()
 {
+    ResetClip();
+
     HRESULT result = GetRenderTarget()->EndDraw();
 
     // Release the objects saved on the state stack
@@ -1962,6 +2026,7 @@ wxD2DContext::~wxD2DContext()
         m_stateStack.pop();
     }
 
+    SafeRelease(&m_clipLayer);
     SafeRelease(&m_hwndRenderTarget);
     SafeRelease(&m_dcRenderTarget);
 }
@@ -1981,27 +2046,48 @@ ID2D1RenderTarget* wxD2DContext::GetRenderTarget() const
 
 void wxD2DContext::Clip(const wxRegion& region)
 {
-    wxFAIL_MSG("not implemented");
+    GetRenderTarget()->Flush();
+    ResetClip();
+
+    ID2D1Geometry* clipGeometry = ConvertRegionToGeometry(m_direct2dFactory, region);
+
+    if (!m_clipLayerAcquired)
+    {
+        GetRenderTarget()->CreateLayer(&m_clipLayer);
+        m_clipLayerAcquired = true;
+    }
+
+    GetRenderTarget()->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), clipGeometry), m_clipLayer);
+
+    SafeRelease(&clipGeometry);
+    m_clipMode = CLIP_MODE_GEOMETRY;
 }
 
 void wxD2DContext::Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
+    GetRenderTarget()->Flush();
     ResetClip();
 
     GetRenderTarget()->PushAxisAlignedClip(
         D2D1::RectF(x, y, x + w, y + h),
         D2D1_ANTIALIAS_MODE_ALIASED);
 
-    m_isClipped = true;
+    m_clipMode = CLIP_MODE_AXIS_ALIGNED_RECTANGLE;
 }
 
 void wxD2DContext::ResetClip()
 {
-    if (m_isClipped)
+    if (m_clipMode == CLIP_MODE_AXIS_ALIGNED_RECTANGLE)
     {
         GetRenderTarget()->PopAxisAlignedClip();
-        m_isClipped = false;
     }
+
+    if (m_clipMode == CLIP_MODE_GEOMETRY)
+    {
+        GetRenderTarget()->PopLayer();
+    }
+    
+    m_clipMode = CLIP_MODE_NONE;
 }
 
 void* wxD2DContext::GetNativeContext()
@@ -2340,6 +2426,9 @@ void wxD2DContext::ReleaseDeviceDependentResources()
             m_deviceDependentResourceHolders[i];
         resourceHolder->ReleaseDeviceDependentResources();
     }
+
+    SafeRelease(&m_clipLayer);
+    m_clipLayerAcquired = false;
 }
 
 void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
