@@ -2328,7 +2328,7 @@ void wxD2DContext::GetTextExtent(
     DWRITE_TEXT_METRICS textMetrics;
     textLayout->GetMetrics(&textMetrics);
 
-    if (width != NULL) *width = textMetrics.width;
+    if (width != NULL) *width = textMetrics.widthIncludingTrailingWhitespace;
     if (height != NULL) *height = textMetrics.height;
 
     // TODO: Find a way of extracting this information
