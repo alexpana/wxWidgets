@@ -1110,6 +1110,7 @@ wxD2DBitmapData::wxD2DBitmapData(wxGraphicsRenderer* renderer, const wxBitmap& b
     wxGraphicsBitmapData(renderer)
 {
     m_impl.m_sourceBitmap = bitmap;
+    m_impl.m_nativeBitmap = NULL;
 }
 
 wxD2DBitmapData::wxD2DBitmapData(wxGraphicsRenderer* renderer, const void* pseudoNativeBitmap) : 
