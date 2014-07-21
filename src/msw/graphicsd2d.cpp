@@ -2338,7 +2338,12 @@ void wxD2DContext::GetTextExtent(
 
 void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
 {
-    wxFAIL_MSG("not implemented");
+    for (int i = 0; i < text.Length(); ++i)
+    {
+        wxDouble width;
+        GetTextExtent(text.SubString(0, i), &width, NULL, NULL, NULL);
+        widths.push_back(width);
+    }
 }
 
 bool wxD2DContext::ShouldOffset() const
