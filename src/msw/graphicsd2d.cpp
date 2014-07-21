@@ -202,7 +202,7 @@ D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
 #if D2D1_BLEND_SUPPORTED
 bool CompositionModeSupported(wxCompositionMode compositionMode)
 {
-    if (compositionMode == wxCOMPOSITION_DEST || compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
+    if (compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
     {
         return false;
     }
@@ -2107,6 +2107,9 @@ void* wxD2DContext::GetNativeContext()
 
 void wxD2DContext::StrokePath(const wxGraphicsPath& p)
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     wxD2DOffsetHelper helper(this);
 
     EnsureInitialized();
@@ -2125,6 +2128,9 @@ void wxD2DContext::StrokePath(const wxGraphicsPath& p)
 
 void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode WXUNUSED(fillStyle))
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     EnsureInitialized();
     AdjustRenderTargetSize();
 
@@ -2273,6 +2279,9 @@ wxGraphicsMatrix wxD2DContext::GetTransform() const
 
 void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     wxD2DBitmapData* bitmapData = GetD2DBitmapData(bmp);
     bitmapData->AcquireDeviceDependentResources(GetRenderTarget());
 
@@ -2365,6 +2374,9 @@ bool wxD2DContext::ShouldOffset() const
 
 void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     wxD2DFontData* fontData = GetD2DFontData(m_font);
     fontData->GetBrushData().AcquireDeviceDependentResources(GetRenderTarget());
 
@@ -2467,6 +2479,9 @@ void wxD2DContext::ReleaseDeviceDependentResources()
 
 void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     wxD2DOffsetHelper helper(this);
 
     EnsureInitialized();
@@ -2492,6 +2507,9 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
 void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius)
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     wxD2DOffsetHelper helper(this);
 
     EnsureInitialized();
@@ -2518,6 +2536,9 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
 
 void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
+    if (m_composition == wxCOMPOSITION_DEST) 
+        return;
+
     wxD2DOffsetHelper helper(this);
 
     EnsureInitialized();
