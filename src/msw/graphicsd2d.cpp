@@ -1996,7 +1996,10 @@ private:
 
     bool m_clipLayerAcquired;
 
+    // A direct2d layer is a device-dependent resource.
     ID2D1Layer* m_clipLayer;
+
+    wxStack<ID2D1Layer*> m_layers;
 
 private:
     wxDECLARE_NO_COPY_CLASS(wxD2DContext);
@@ -2017,6 +2020,12 @@ wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dF
 wxD2DContext::~wxD2DContext()
 {
     ResetClip();
+
+    // Ensure all the layers are popped and released
+    while (!m_layers.empty())
+    {
+        EndLayer();
+    }
 
     HRESULT result = GetRenderTarget()->EndDraw();
 
@@ -2172,12 +2181,31 @@ bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
 {
-    wxFAIL_MSG("not implemented");
+    ID2D1Layer* layer = NULL;
+    GetRenderTarget()->CreateLayer(&layer);
+    m_layers.push(layer);
+
+    GetRenderTarget()->PushLayer(
+        D2D1::LayerParameters(D2D1::InfiniteRect(), 
+            NULL, 
+            D2D1_ANTIALIAS_MODE_PER_PRIMITIVE, 
+            D2D1::IdentityMatrix(), opacity),
+        layer);
 }
 
 void wxD2DContext::EndLayer()
 {
-    wxFAIL_MSG("not implemented");
+    if (!m_layers.empty())
+    {
+        ID2D1Layer* topLayer = m_layers.top();
+
+        GetRenderTarget()->PopLayer();
+        SafeRelease(&topLayer);
+
+        HRESULT hr = GetRenderTarget()->Flush();
+
+        m_layers.pop();
+    }
 }
 
 void wxD2DContext::Translate(wxDouble dx, wxDouble dy)
