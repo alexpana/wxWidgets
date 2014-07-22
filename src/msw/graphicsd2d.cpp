@@ -2460,6 +2460,8 @@ void wxD2DContext::AdjustRenderTargetSize()
         if (hwndSize.width != renderTargetSize.width || hwndSize.height != renderTargetSize.height)
         {
             m_hwndRenderTarget->Resize(hwndSize);
+            m_width = hwndSize.width;
+            m_height = hwndSize.height;
         }
     }
 }
