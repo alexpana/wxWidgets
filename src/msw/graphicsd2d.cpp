@@ -1944,6 +1944,8 @@ public:
 
     void SetPen(const wxGraphicsPen& pen) wxOVERRIDE;
 
+    void Flush() wxOVERRIDE;
+
 private:
     enum RenderTargetType
     {
@@ -2565,6 +2567,11 @@ void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
         penData->AcquireDeviceDependentResources(GetRenderTarget());
         GetRenderTarget()->DrawEllipse(ellipse, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
+}
+
+void wxD2DContext::Flush()
+{
+    GetRenderTarget()->Flush();
 }
 
 //-----------------------------------------------------------------------------
