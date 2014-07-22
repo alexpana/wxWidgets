@@ -1946,6 +1946,8 @@ public:
 
     void Flush() wxOVERRIDE;
 
+    void GetDPI(wxDouble* dpiX, wxDouble* dpiY) wxOVERRIDE;
+
 private:
     enum RenderTargetType
     {
@@ -2572,6 +2574,14 @@ void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 void wxD2DContext::Flush()
 {
     GetRenderTarget()->Flush();
+}
+
+void wxD2DContext::GetDPI(wxDouble* dpiX, wxDouble* dpiY)
+{
+    FLOAT x, y;
+    GetRenderTarget()->GetDpi(&x, &y);
+    if (dpiX != NULL) *dpiX = x;
+    if (dpiY != NULL) *dpiY = y;
 }
 
 //-----------------------------------------------------------------------------
