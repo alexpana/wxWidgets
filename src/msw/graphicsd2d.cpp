@@ -12,12 +12,7 @@
 // Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
 // Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
 // Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
-#define D2D1_BLEND_SUPPORTED 1
-
-// Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
-// Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
-// Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
-#define D2D1_INTERPOLATION_MODE_SUPPORTED 1
+#define D2D1_DEVICE_CONTEXT_SUPPORTED 1
 
 #include <algorithm>
 #include <cmath>
@@ -199,7 +194,7 @@ D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
     return D2D1_ANTIALIAS_MODE_ALIASED;;
 }
 
-#if D2D1_BLEND_SUPPORTED
+#if D2D1_DEVICE_CONTEXT_SUPPORTED
 bool CompositionModeSupported(wxCompositionMode compositionMode)
 {
     if (compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
@@ -250,7 +245,7 @@ D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
 }
 #endif // D2D1_BLEND_SUPPORTED
 
-#if D2D1_INTERPOLATION_MODE_SUPPORTED
+#if D2D1_DEVICE_CONTEXT_SUPPORTED
 D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
 {
     switch (interpolationQuality)
