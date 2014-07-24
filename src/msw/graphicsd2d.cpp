@@ -27,6 +27,9 @@
 
 #include <wincodec.h>
 
+// Used for the CComPtr smart pointer
+#include <atlbase.h>
+
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
@@ -41,6 +44,8 @@
 #include "wx/dc.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
+
+#define wxCHECK_HRESULT(result) if (FAILED((result))) wxFAIL_MSG(wxString::Format("Direct2D failed with HRESULT %d", (result)));
 
 static IWICImagingFactory* gs_WICImagingFactory = NULL;
 
@@ -82,6 +87,11 @@ template <class T> void SafeRelease(T **ppT)
 }
 
 template <class T> bool IsAcquired(T *ppT)
+{
+    return ppT != NULL;
+}
+
+template <class T> bool IsAcquired(CComPtr<T> ppT)
 {
     return ppT != NULL;
 }
@@ -590,11 +600,13 @@ private:
     void EnsureFigureOpen(wxDouble x = 0, wxDouble y = 0);
 
 private :
-    ID2D1PathGeometry* m_pathGeometry;
+    CComPtr<ID2D1PathGeometry> m_pathGeometry;
 
-    ID2D1GeometrySink* m_geometrySink;
+    CComPtr<ID2D1GeometrySink> m_geometrySink;
 
-    ID2D1Factory* m_direct2dfactory;
+    CComPtr<ID2D1Factory> m_direct2dfactory;
+
+    mutable CComPtr<ID2D1TransformedGeometry> m_transformedGeometry;
 
     D2D1_POINT_2F m_currentPoint;
 
@@ -610,8 +622,8 @@ private :
 //-----------------------------------------------------------------------------
 
 wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFactory) : 
-    wxGraphicsPathData(renderer), m_geometrySink(NULL), m_direct2dfactory(d2dFactory),
-    m_pathGeometry(NULL), m_figureOpened(false), m_geometryWritable(false),
+    wxGraphicsPathData(renderer), m_direct2dfactory(d2dFactory),
+    m_figureOpened(false), m_geometryWritable(false),
     m_transformMatrix(D2D1::Matrix3x2F::Identity())
 {
     m_direct2dfactory->CreatePathGeometry(&m_pathGeometry);
@@ -620,8 +632,6 @@ wxD2DPathData::wxD2DPathData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
 wxD2DPathData::~wxD2DPathData()
 {
     Flush();
-    SafeRelease(&m_geometrySink);
-    SafeRelease(&m_pathGeometry);
 }
 
 ID2D1PathGeometry* wxD2DPathData::GetPathGeometry()
@@ -646,7 +656,6 @@ void wxD2DPathData::Flush()
 
         m_figureOpened = false;
         m_geometrySink->Close();
-        SafeRelease(&m_geometrySink);
 
         m_geometryWritable = false;
     }
@@ -655,15 +664,15 @@ void wxD2DPathData::Flush()
 void wxD2DPathData::EnsureGeometryOpen()
 {
     if (!m_geometryWritable) {
-        ID2D1PathGeometry* newPathGeometry;
+        CComPtr<ID2D1PathGeometry> newPathGeometry;
         m_direct2dfactory->CreatePathGeometry(&newPathGeometry);
 
+        m_geometrySink.Release();
         newPathGeometry->Open(&m_geometrySink);
 
         if (m_pathGeometry != NULL)
         {
             m_pathGeometry->Stream(m_geometrySink);
-            SafeRelease(&m_pathGeometry);
         }
 
         m_pathGeometry = newPathGeometry;
@@ -677,6 +686,7 @@ void wxD2DPathData::EnsureSinkOpen()
 
     if (m_geometrySink == NULL)
     {
+        m_geometrySink = NULL;
         m_pathGeometry->Open(&m_geometrySink);
     }
 }
@@ -790,8 +800,8 @@ void wxD2DPathData::AddEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
     Flush();
 
-    ID2D1EllipseGeometry* ellipseGeometry;
-    ID2D1PathGeometry* newPathGeometry;
+    CComPtr<ID2D1EllipseGeometry> ellipseGeometry;
+    CComPtr<ID2D1PathGeometry> newPathGeometry;
 
     D2D1_ELLIPSE ellipse = { {x + w / 2, y + h / 2}, w / 2, h / 2 };
 
@@ -799,13 +809,12 @@ void wxD2DPathData::AddEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
     m_direct2dfactory->CreatePathGeometry(&newPathGeometry);
 
+    m_geometrySink = NULL;
     newPathGeometry->Open(&m_geometrySink);
+
     m_geometryWritable = true;
 
     ellipseGeometry->CombineWithGeometry(m_pathGeometry, D2D1_COMBINE_MODE_UNION, NULL, m_geometrySink);
-
-    SafeRelease(&m_pathGeometry);
-    SafeRelease(&ellipseGeometry);
 
     m_pathGeometry = newPathGeometry;
 }
@@ -841,9 +850,9 @@ void wxD2DPathData::CloseSubpath()
 
 void* wxD2DPathData::GetNativePath() const
 {
-    ID2D1TransformedGeometry* transformedGeometry;
-    m_direct2dfactory->CreateTransformedGeometry(m_pathGeometry, m_transformMatrix, &transformedGeometry);
-    return transformedGeometry;
+    m_transformedGeometry.Release();
+    m_direct2dfactory->CreateTransformedGeometry(m_pathGeometry, m_transformMatrix, &m_transformedGeometry);
+    return m_transformedGeometry;
 }
 
 void wxD2DPathData::Transform(const wxGraphicsMatrixData* matrix)
@@ -1046,7 +1055,7 @@ public:
     typedef struct  
     {
         wxBitmap m_sourceBitmap;
-        ID2D1Bitmap* m_nativeBitmap;
+        CComPtr<ID2D1Bitmap> m_nativeBitmap;
     } PseudoNativeBitmap;
 
     wxD2DBitmapData(wxGraphicsRenderer* renderer, const wxBitmap& bitmap);
@@ -1060,12 +1069,12 @@ public:
 
     void ReleaseDeviceDependentResources() wxOVERRIDE;
 
-    ID2D1Bitmap* GetD2DBitmap() { return m_impl.m_nativeBitmap; }
+    CComPtr<ID2D1Bitmap> GetD2DBitmap() { return m_impl.m_nativeBitmap; }
 
 private:
     wxBitmap& SourceBitmap() { return m_impl.m_sourceBitmap; }
 
-    ID2D1Bitmap*& NativeBitmap() { return m_impl.m_nativeBitmap; }
+    CComPtr<ID2D1Bitmap>& NativeBitmap() { return m_impl.m_nativeBitmap; }
 
 private:
     PseudoNativeBitmap m_impl;
@@ -1075,7 +1084,7 @@ private:
 class BitmapPixelWriteLock
 {
 public:
-    BitmapPixelWriteLock(IWICBitmap* bitmap) : m_pixelLock(NULL)
+    BitmapPixelWriteLock(IWICBitmap* bitmap)
     {
         // Retrieve the size of the bitmap
         UINT w, h;
@@ -1088,13 +1097,8 @@ public:
 
     IWICBitmapLock* GetLock() { return m_pixelLock; }
 
-    ~BitmapPixelWriteLock()
-    {
-        SafeRelease(&m_pixelLock);
-    }
-
 private:
-    IWICBitmapLock* m_pixelLock;
+    CComPtr<IWICBitmapLock> m_pixelLock;
 };
 
 //-----------------------------------------------------------------------------
@@ -1105,7 +1109,6 @@ wxD2DBitmapData::wxD2DBitmapData(wxGraphicsRenderer* renderer, const wxBitmap& b
     wxGraphicsBitmapData(renderer)
 {
     m_impl.m_sourceBitmap = bitmap;
-    m_impl.m_nativeBitmap = NULL;
 }
 
 wxD2DBitmapData::wxD2DBitmapData(wxGraphicsRenderer* renderer, const void* pseudoNativeBitmap) : 
@@ -1129,7 +1132,7 @@ IWICBitmapSource* CreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = 
 {
     HRESULT hr;
 
-    IWICBitmap* wicBitmap;
+    CComPtr<IWICBitmap> wicBitmap;
     WICImagingFactory()->CreateBitmapFromHBITMAP(sourceBitmap, NULL, WICBitmapUseAlpha, &wicBitmap);
 
     IWICFormatConverter* converter;
@@ -1142,8 +1145,6 @@ IWICBitmapSource* CreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = 
         pixelFormat,
         WICBitmapDitherTypeNone, NULL, 0.f, 
         WICBitmapPaletteTypeMedianCut);
-
-    wicBitmap->Release();
 
     return converter;
 }
@@ -1167,9 +1168,9 @@ void wxD2DBitmapData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderT
           int w = SourceBitmap().GetWidth();
           int h = SourceBitmap().GetHeight();
   
-          IWICBitmapSource* colorBitmap = CreateWICBitmap(SourceBitmap());
-          IWICBitmapSource* maskBitmap = CreateWICBitmap(SourceBitmap().GetMask()->GetMaskBitmap());
-          IWICBitmap* resultBitmap;
+          CComPtr<IWICBitmapSource> colorBitmap = CreateWICBitmap(SourceBitmap());
+          CComPtr<IWICBitmapSource> maskBitmap = CreateWICBitmap(SourceBitmap().GetMask()->GetMaskBitmap());
+          CComPtr<IWICBitmap> resultBitmap;
   
           WICImagingFactory()->CreateBitmap(
               SourceBitmap().GetWidth(), 
@@ -1214,16 +1215,11 @@ void wxD2DBitmapData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderT
   
           delete[] colorBuffer;
           delete[] maskBuffer;
-  
-          SafeRelease(&colorBitmap);
-          SafeRelease(&maskBitmap);
-          SafeRelease(&resultBitmap);
     }
     else
     {
-        IWICBitmapSource* bitmapSource = CreateWICBitmap(SourceBitmap(), SourceBitmap().HasAlpha());
+        CComPtr<IWICBitmapSource> bitmapSource = CreateWICBitmap(SourceBitmap(), SourceBitmap().HasAlpha());
         hr = renderTarget->CreateBitmapFromWicBitmap(bitmapSource, 0, &NativeBitmap());
-        SafeRelease(&bitmapSource);
     }
 
     return;
@@ -1231,7 +1227,7 @@ void wxD2DBitmapData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderT
 
 void wxD2DBitmapData::ReleaseDeviceDependentResources()
 {
-    SafeRelease(&NativeBitmap());
+    NativeBitmap().Release();
 }
 
 wxD2DBitmapData* GetD2DBitmapData(const wxGraphicsBitmap& bitmap)
@@ -1368,6 +1364,9 @@ private:
     // device-dependent resources.
     const wxBrush m_sourceBrush;
 
+    // Used to identify which brush resource represents this brush.
+    wxD2DBrushType m_brushType;
+
     // We store the information required to create a linear gradient brush for
     // later when we need to recreate the device-dependent resources.
     LinearGradientBrushInfo* m_linearGradientBrushInfo;
@@ -1376,20 +1375,17 @@ private:
     // later when we need to recreate the device-dependent resources.
     RadialGradientBrushInfo* m_radialGradientBrushInfo;
 
-    // Used to identify which brush resource represents this brush.
-    wxD2DBrushType m_brushType;
-
     // A ID2D1SolidColorBrush is a device-dependent resource.
-    ID2D1SolidColorBrush* m_solidColorBrush;
+    CComPtr<ID2D1SolidColorBrush> m_solidColorBrush;
 
     // A ID2D1LinearGradientBrush is a device-dependent resource.
-    ID2D1LinearGradientBrush* m_linearGradientBrush;
+    CComPtr<ID2D1LinearGradientBrush> m_linearGradientBrush;
 
     // A ID2D1RadialGradientBrush is a device-dependent resource.
-    ID2D1RadialGradientBrush* m_radialGradientBrush;
+    CComPtr<ID2D1RadialGradientBrush> m_radialGradientBrush;
 
     // A ID2D1BitmapBrush is a device-dependent resource.
-    ID2D1BitmapBrush* m_bitmapBrush;
+    CComPtr<ID2D1BitmapBrush> m_bitmapBrush;
 };
 
 //-----------------------------------------------------------------------------
@@ -1398,8 +1394,8 @@ private:
 
 wxD2DBrushData::wxD2DBrushData(wxGraphicsRenderer* renderer, const wxBrush &brush) 
     : wxGraphicsObjectRefData(renderer), m_sourceBrush(brush),
-    m_linearGradientBrushInfo(NULL), m_radialGradientBrushInfo(NULL), m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED),
-    m_solidColorBrush(NULL), m_linearGradientBrush(NULL), m_radialGradientBrush(NULL), m_bitmapBrush(NULL)
+    m_brushType(wxD2DBRUSHTYPE_UNSPECIFIED), m_linearGradientBrushInfo(NULL),
+    m_radialGradientBrushInfo(NULL)
 {
     if (brush.GetStyle() == wxBRUSHSTYLE_SOLID)
     {
@@ -1426,8 +1422,6 @@ wxD2DBrushData::~wxD2DBrushData()
 {
     delete m_linearGradientBrushInfo;
     delete m_radialGradientBrushInfo;
-
-    ReleaseDeviceDependentResources();
 }
 
 void wxD2DBrushData::CreateSolidColorBrush()
@@ -1511,9 +1505,9 @@ void wxD2DBrushData::AcquireHatchBrush(ID2D1RenderTarget* renderTarget)
 {
     if (!IsAcquired(m_bitmapBrush))
     {
-        HatchBitmapSource* hatchBitmapSource = new HatchBitmapSource(m_sourceBrush.GetStyle(), m_sourceBrush.GetColour());
+        CComPtr<HatchBitmapSource> hatchBitmapSource = new HatchBitmapSource(m_sourceBrush.GetStyle(), m_sourceBrush.GetColour());
 
-        ID2D1Bitmap* bitmap = NULL;
+        CComPtr<ID2D1Bitmap> bitmap;
 
         HRESULT hr = renderTarget->CreateBitmapFromWicBitmap(hatchBitmapSource, &bitmap);
 
@@ -1527,9 +1521,6 @@ void wxD2DBrushData::AcquireHatchBrush(ID2D1RenderTarget* renderTarget)
             D2D1_EXTEND_MODE_WRAP,
             D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR), 
             &m_bitmapBrush);
-
-        SafeRelease(&bitmap);
-        SafeRelease(&hatchBitmapSource);
     }
 }
 
@@ -1577,10 +1568,10 @@ void wxD2DBrushData::AcquireDeviceDependentResources(ID2D1RenderTarget* renderTa
 
 void wxD2DBrushData::ReleaseDeviceDependentResources()
 {
-    SafeRelease(&m_solidColorBrush);
-    SafeRelease(&m_linearGradientBrush);
-    SafeRelease(&m_radialGradientBrush);
-    SafeRelease(&m_bitmapBrush);
+    m_solidColorBrush.Release();
+    m_linearGradientBrush.Release();
+    m_radialGradientBrush.Release();
+    m_bitmapBrush.Release();
 }
 
 ID2D1Brush* wxD2DBrushData::GetBrush() const
@@ -1636,7 +1627,7 @@ private:
 
     // A stroke style is a device-independent resource.
     // Describes the caps, miter limit, line join, and dash information.
-    ID2D1StrokeStyle* m_strokeStyle;
+    CComPtr<ID2D1StrokeStyle> m_strokeStyle;
 
     // Drawing outlines with Direct2D requires a brush for the color or stipple.
     wxD2DBrushData* m_stippleBrush;
@@ -1653,8 +1644,8 @@ wxD2DPenData::wxD2DPenData(
     wxGraphicsRenderer* renderer, 
     ID2D1Factory* direct2dFactory, 
     const wxPen& pen)
-    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()), 
-    m_strokeStyle(NULL), m_stippleBrush(NULL)
+    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()),
+    m_stippleBrush(NULL)
 {
     CreateStrokeStyle(direct2dFactory);
 
@@ -1676,7 +1667,6 @@ wxD2DPenData::wxD2DPenData(
 
 wxD2DPenData::~wxD2DPenData()
 {
-    SafeRelease(&m_strokeStyle);
     ReleaseDeviceDependentResources();
     delete m_stippleBrush;
 }
@@ -1745,18 +1735,16 @@ public:
 
     IDWriteTextLayout* CreateTextLayout(const wxString& text) const;
 
-    ~wxD2DFontData();
-
     wxD2DBrushData& GetBrushData() { return m_brushData; }
 
     IDWriteTextFormat* GetTextFormat() const { return m_textFormat; }
 
 private:
     // The native, device-independent font object
-    IDWriteFont* m_font;
+    CComPtr<IDWriteFont> m_font;
 
     // The native, device-independent font object
-    IDWriteTextFormat* m_textFormat;
+    CComPtr<IDWriteTextFormat> m_textFormat;
 
     // We use a color brush to render the font
     wxD2DBrushData m_brushData;
@@ -1767,7 +1755,7 @@ private:
 };
 
 wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFactory, const wxFont& font, const wxColor& color) : 
-    wxGraphicsObjectRefData(renderer), m_font(NULL), m_brushData(renderer, wxBrush(color)),
+    wxGraphicsObjectRefData(renderer), m_brushData(renderer, wxBrush(color)),
     m_underlined(font.GetUnderlined()), m_strikethrough(font.GetStrikethrough())
 {
     HRESULT hr;
@@ -1851,12 +1839,6 @@ IDWriteTextLayout* wxD2DFontData::CreateTextLayout(const wxString& text) const
     }
 
     return textLayout;
-}
-
-wxD2DFontData::~wxD2DFontData()
-{
-    SafeRelease(&m_textFormat);
-    SafeRelease(&m_font);
 }
 
 wxD2DFontData* GetD2DFontData(const wxGraphicsFont& font)
@@ -1985,7 +1967,7 @@ private:
     // A ID2D1DrawingStateBlock represents the drawing state of a render target: 
     // the antialiasing mode, transform, tags, and text-rendering options.
     // The context owns these pointers and is responsible for releasing them.
-    wxStack<ID2D1DrawingStateBlock*> m_stateStack;
+    wxStack<CComPtr<ID2D1DrawingStateBlock>> m_stateStack;
 
     // The context does not own these pointers and is not responsible for
     // releasing them.
@@ -2027,13 +2009,7 @@ wxD2DContext::~wxD2DContext()
     }
 
     HRESULT result = GetRenderTarget()->EndDraw();
-
-    // Release the objects saved on the state stack
-    while(!m_stateStack.empty())
-    {
-        SafeRelease(&m_stateStack.top());
-        m_stateStack.pop();
-    }
+    wxCHECK_HRESULT(result);
 
     SafeRelease(&m_clipLayer);
     SafeRelease(&m_hwndRenderTarget);
@@ -2306,7 +2282,7 @@ void wxD2DContext::PushState()
 {
     ID2D1Factory* GetD2DFactory(wxGraphicsRenderer* renderer);
 
-    ID2D1DrawingStateBlock* drawStateBlock;
+    CComPtr<ID2D1DrawingStateBlock> drawStateBlock;
     GetD2DFactory(GetRenderer())->CreateDrawingStateBlock(&drawStateBlock);
     GetRenderTarget()->SaveDrawingState(drawStateBlock);
 
@@ -2317,7 +2293,7 @@ void wxD2DContext::PopState()
 {
     wxCHECK_RET(!m_stateStack.empty(), wxT("No state to pop"));
 
-    ID2D1DrawingStateBlock* drawStateBlock = m_stateStack.top();
+    CComPtr<ID2D1DrawingStateBlock> drawStateBlock = m_stateStack.top();
     m_stateStack.pop();
 
     GetRenderTarget()->RestoreDrawingState(drawStateBlock);
@@ -2497,13 +2473,13 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
         brushData->AcquireDeviceDependentResources(GetRenderTarget());
         GetRenderTarget()->FillRectangle(rect, brushData->GetBrush());
     }
-
-    if (!m_pen.IsNull()) 
-    {
-        wxD2DPenData* penData = GetD2DPenData(m_pen);
-        penData->AcquireDeviceDependentResources(GetRenderTarget());
-        GetRenderTarget()->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
-    }
+// 
+//     if (!m_pen.IsNull()) 
+//     {
+//         wxD2DPenData* penData = GetD2DPenData(m_pen);
+//         penData->AcquireDeviceDependentResources(GetRenderTarget());
+//         GetRenderTarget()->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
+//     }
 }
 
 void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h, wxDouble radius)
@@ -2568,7 +2544,7 @@ void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
 void wxD2DContext::Flush()
 {
-    GetRenderTarget()->Flush();
+    wxCHECK_HRESULT(GetRenderTarget()->Flush());
 }
 
 void wxD2DContext::GetDPI(wxDouble* dpiX, wxDouble* dpiY)
