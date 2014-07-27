@@ -76,7 +76,8 @@
 
 static IWICImagingFactory* gs_WICImagingFactory = NULL;
 
-IWICImagingFactory* WICImagingFactory() {
+IWICImagingFactory* wxWICImagingFactory() 
+{
     if (gs_WICImagingFactory == NULL) {
         CoCreateInstance(
             CLSID_WICImagingFactory,
@@ -90,7 +91,8 @@ IWICImagingFactory* WICImagingFactory() {
 
 static IDWriteFactory* gs_IDWriteFactory = NULL;
 
-IDWriteFactory* DWriteFactory() {
+IDWriteFactory* wxDWriteFactory() 
+{
     if (gs_IDWriteFactory == NULL) {
         DWriteCreateFactory(
             DWRITE_FACTORY_TYPE_SHARED,
@@ -334,7 +336,7 @@ public:
     ~wxD2DManagedGraphicsData() {};
 };
 
-D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
+D2D1_CAP_STYLE wxD2DConvertPenCap(wxPenCap cap)
 {
     switch (cap)
     {
@@ -354,7 +356,7 @@ D2D1_CAP_STYLE ConvertPenCap(wxPenCap cap)
     return D2D1_CAP_STYLE_FLAT;
 }
 
-D2D1_LINE_JOIN ConvertPenJoin(wxPenJoin join)
+D2D1_LINE_JOIN wxD2DConvertPenJoin(wxPenJoin join)
 {
     switch (join)
     {
@@ -374,7 +376,7 @@ D2D1_LINE_JOIN ConvertPenJoin(wxPenJoin join)
     return D2D1_LINE_JOIN_MITER;
 }
 
-D2D1_DASH_STYLE ConvertPenStyle(wxPenStyle dashStyle)
+D2D1_DASH_STYLE wxD2DConvertPenStyle(wxPenStyle dashStyle)
 {
     switch (dashStyle)
     {
@@ -420,7 +422,7 @@ D2D1_DASH_STYLE ConvertPenStyle(wxPenStyle dashStyle)
     return D2D1_DASH_STYLE_SOLID;
 }
 
-D2D1_COLOR_F ConvertColour(wxColour colour)
+D2D1_COLOR_F wxD2DConvertColour(wxColour colour)
 {
     return D2D1::ColorF(
         colour.Red() / 255.0f, 
@@ -429,7 +431,7 @@ D2D1_COLOR_F ConvertColour(wxColour colour)
         colour.Alpha() / 255.0f);
 }
 
-D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
+D2D1_ANTIALIAS_MODE wxD2DConvertAntialiasMode(wxAntialiasMode antialiasMode)
 {
     switch (antialiasMode)
     {
@@ -443,7 +445,7 @@ D2D1_ANTIALIAS_MODE ConvertAntialiasMode(wxAntialiasMode antialiasMode)
 }
 
 #if D2D1_DEVICE_CONTEXT_SUPPORTED
-bool CompositionModeSupported(wxCompositionMode compositionMode)
+bool wxD2DCompositionModeSupported(wxCompositionMode compositionMode)
 {
     if (compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
     {
@@ -453,7 +455,7 @@ bool CompositionModeSupported(wxCompositionMode compositionMode)
     return true;
 }
 
-D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
+D2D1_COMPOSITE_MODE wxD2DConvertCompositionMode(wxCompositionMode compositionMode)
 {
     switch (compositionMode)
     {
@@ -494,7 +496,7 @@ D2D1_COMPOSITE_MODE ConvertCompositionMode(wxCompositionMode compositionMode)
 #endif // D2D1_BLEND_SUPPORTED
 
 #if D2D1_DEVICE_CONTEXT_SUPPORTED
-D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
+D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
 {
     switch (interpolationQuality)
     {
@@ -514,7 +516,7 @@ D2D1_INTERPOLATION_MODE ConvertInterpolationQuality(wxInterpolationQuality inter
 }
 #endif // D2D1_INTERPOLATION_MODE_SUPPORTED
 
-D2D1_BITMAP_INTERPOLATION_MODE ConvertBitmapInterpolationMode(wxInterpolationQuality interpolationQuality)
+D2D1_BITMAP_INTERPOLATION_MODE wxD2DConvertBitmapInterpolationMode(wxInterpolationQuality interpolationQuality)
 {
     switch (interpolationQuality)
     {
@@ -533,12 +535,12 @@ D2D1_BITMAP_INTERPOLATION_MODE ConvertBitmapInterpolationMode(wxInterpolationQua
     return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
 }
 
-D2D1_RECT_F ConvertRectToRectF(const wxRect& rect)
+D2D1_RECT_F wxD2DConvertRect(const wxRect& rect)
 {
     return D2D1::RectF(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
 }
 
-CComPtr<ID2D1Geometry> ConvertRegionToGeometry(ID2D1Factory* direct2dFactory, const wxRegion& region)
+CComPtr<ID2D1Geometry> wxD2DConvertRegionToGeometry(ID2D1Factory* direct2dFactory, const wxRegion& region)
 {
     wxRegionIterator regionIterator(region);
 
@@ -560,7 +562,7 @@ CComPtr<ID2D1Geometry> ConvertRegionToGeometry(ID2D1Factory* direct2dFactory, co
         rect.SetHeight(rect.GetHeight() + 1);
 
         direct2dFactory->CreateRectangleGeometry(
-            ConvertRectToRectF(rect), 
+            wxD2DConvertRect(rect), 
             (ID2D1RectangleGeometry**)(&geometries[i]));
 
         i++; regionIterator++;
@@ -754,7 +756,7 @@ D2D1::Matrix3x2F wxD2DMatrixData::GetMatrix3x2F() const
     return m_matrix;
 }
 
-const wxD2DMatrixData* GetD2DMatrixData(const wxGraphicsMatrix& matrix)
+const wxD2DMatrixData* wxGetD2DMatrixData(const wxGraphicsMatrix& matrix)
 {
     return static_cast<const wxD2DMatrixData*>(matrix.GetMatrixData());
 }
@@ -1110,7 +1112,7 @@ bool wxD2DPathData::Contains(wxDouble x, wxDouble y, wxPolygonFillMode WXUNUSED(
     return result != 0;
 }
 
-wxD2DPathData* GetD2DPathData(const wxGraphicsPath& path)
+wxD2DPathData* wxGetD2DPathData(const wxGraphicsPath& path)
 {
     return static_cast<wxD2DPathData*>(path.GetGraphicsData());
 }
@@ -1147,11 +1149,11 @@ CComPtr<IWICBitmapSource> wxCreateWICBitmap(const WXHBITMAP sourceBitmap, bool h
     HRESULT hr;
 
     CComPtr<IWICBitmap> wicBitmap;
-    hr = WICImagingFactory()->CreateBitmapFromHBITMAP(sourceBitmap, NULL, WICBitmapUseAlpha, &wicBitmap);
+    hr = wxWICImagingFactory()->CreateBitmapFromHBITMAP(sourceBitmap, NULL, WICBitmapUseAlpha, &wicBitmap);
     wxCHECK_HRESULT_RET_PTR(hr);
 
     CComPtr<IWICFormatConverter> converter;
-    hr = WICImagingFactory()->CreateFormatConverter(&converter);
+    hr = wxWICImagingFactory()->CreateFormatConverter(&converter);
     wxCHECK_HRESULT_RET_PTR(hr);
 
     WICPixelFormatGUID pixelFormat = hasAlpha ? GUID_WICPixelFormat32bppPBGRA : GUID_WICPixelFormat32bppBGR;
@@ -1350,7 +1352,7 @@ protected:
             CComPtr<IWICBitmapSource> maskBitmap = wxCreateWICBitmap(m_sourceBitmap.GetMask()->GetMaskBitmap());
             CComPtr<IWICBitmap> resultBitmap;
 
-            WICImagingFactory()->CreateBitmap(
+            wxWICImagingFactory()->CreateBitmap(
                 w, h, 
                 GUID_WICPixelFormat32bppPBGRA,
                 WICBitmapCreateCacheOption::WICBitmapCacheOnLoad,
@@ -1448,16 +1450,16 @@ CComPtr<ID2D1Bitmap> wxD2DBitmapData::GetD2DBitmap()
     return m_bitmapHolder.GetD2DResource();
 }
 
-wxD2DBitmapData* GetD2DBitmapData(const wxGraphicsBitmap& bitmap)
+wxD2DBitmapData* wxGetD2DBitmapData(const wxGraphicsBitmap& bitmap)
 {
     return static_cast<wxD2DBitmapData*>(bitmap.GetRefData());
 }
 
 // Helper class used to create and safely release a ID2D1GradientStopCollection from wxGraphicsGradientStops
-class D2DGradientStopsHelper
+class wxD2DGradientStopsHelper
 {
 public:
-    D2DGradientStopsHelper(const wxGraphicsGradientStops& gradientStops, ID2D1RenderTarget* renderTarget)
+    wxD2DGradientStopsHelper(const wxGraphicsGradientStops& gradientStops, ID2D1RenderTarget* renderTarget)
     {
         int stopCount = gradientStops.GetCount();
 
@@ -1465,7 +1467,7 @@ public:
 
         for (int i = 0; i < stopCount; ++i)
         {
-            gradientStopArray[i].color = ConvertColour(gradientStops.Item(i).GetColour());
+            gradientStopArray[i].color = wxD2DConvertColour(gradientStops.Item(i).GetColour());
             gradientStopArray[i].position = gradientStops.Item(i).GetPosition();
         }
 
@@ -1502,7 +1504,7 @@ protected:
     void DoAcquireResource() wxOVERRIDE
     {
         wxColour colour = m_sourceBrush.GetColour();
-        GetContext()->CreateSolidColorBrush(ConvertColour(colour), &m_nativeResource);
+        GetContext()->CreateSolidColorBrush(wxD2DConvertColour(colour), &m_nativeResource);
     }
 };
 
@@ -1570,7 +1572,7 @@ public:
 protected:
     void DoAcquireResource() wxOVERRIDE
     {
-        D2DGradientStopsHelper helper(m_linearGradientInfo.stops, GetContext());
+        wxD2DGradientStopsHelper helper(m_linearGradientInfo.stops, GetContext());
 
         GetContext()->CreateLinearGradientBrush(
             D2D1::LinearGradientBrushProperties(
@@ -1601,7 +1603,7 @@ public:
 protected:
     void DoAcquireResource() wxOVERRIDE
     {
-        D2DGradientStopsHelper helper(m_radialGradientInfo.stops, GetContext());
+        wxD2DGradientStopsHelper helper(m_radialGradientInfo.stops, GetContext());
 
         int xo = m_radialGradientInfo.direction.GetLeft() - m_radialGradientInfo.direction.GetWidth();
         int yo = m_radialGradientInfo.direction.GetTop() - m_radialGradientInfo.direction.GetHeight();
@@ -1696,7 +1698,7 @@ void wxD2DBrushData::CreateRadialGradientBrush(
     m_brushResourceHolder = new wxD2DRadialGradientBrushResourceHolder(xo, yo, xc, yc, radius, stops);
 }
 
-wxD2DBrushData* GetD2DBrushData(const wxGraphicsBrush& brush)
+wxD2DBrushData* wxGetD2DBrushData(const wxGraphicsBrush& brush)
 {
     return static_cast<wxD2DBrushData*>(brush.GetGraphicsData());
 }
@@ -1776,9 +1778,9 @@ wxD2DPenData::~wxD2DPenData()
 
 void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
 {
-    D2D1_CAP_STYLE capStyle = ConvertPenCap(m_sourcePen.GetCap());
-    D2D1_LINE_JOIN lineJoin = ConvertPenJoin(m_sourcePen.GetJoin());
-    D2D1_DASH_STYLE dashStyle = ConvertPenStyle(m_sourcePen.GetStyle());
+    D2D1_CAP_STYLE capStyle = wxD2DConvertPenCap(m_sourcePen.GetCap());
+    D2D1_LINE_JOIN lineJoin = wxD2DConvertPenJoin(m_sourcePen.GetJoin());
+    D2D1_DASH_STYLE dashStyle = wxD2DConvertPenStyle(m_sourcePen.GetStyle());
 
     int dashCount = 0;
     FLOAT* dashes = NULL;
@@ -1816,7 +1818,7 @@ ID2D1StrokeStyle* wxD2DPenData::GetStrokeStyle()
     return m_strokeStyle;
 }
 
-wxD2DPenData* GetD2DPenData(const wxGraphicsPen& pen)
+wxD2DPenData* wxGetD2DPenData(const wxGraphicsPen& pen)
 {
     return static_cast<wxD2DPenData*>(pen.GetGraphicsData());
 }
@@ -1854,7 +1856,7 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
     HRESULT hr;
 
     CComPtr<IDWriteGdiInterop> gdiInterop;
-    hr = DWriteFactory()->GetGdiInterop(&gdiInterop);
+    hr = wxDWriteFactory()->GetGdiInterop(&gdiInterop);
 
     LOGFONT logfont;
     GetObject(font.GetHFONT(), sizeof(logfont), &logfont);
@@ -1885,7 +1887,7 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
     FLOAT dpiX, dpiY;
     d2dFactory->GetDesktopDpi(&dpiX, &dpiY);
 
-    hr = DWriteFactory()->CreateTextFormat(
+    hr = wxDWriteFactory()->CreateTextFormat(
         name,
         NULL,                        
         m_font->GetWeight(),
@@ -1908,7 +1910,7 @@ CComPtr<IDWriteTextLayout> wxD2DFontData::CreateTextLayout(const wxString& text)
 
     CComPtr<IDWriteTextLayout> textLayout;
 
-    hr = DWriteFactory()->CreateTextLayout(
+    hr = wxDWriteFactory()->CreateTextLayout(
         text.c_str(),
         text.length(),
         m_textFormat,
@@ -1931,7 +1933,7 @@ CComPtr<IDWriteTextLayout> wxD2DFontData::CreateTextLayout(const wxString& text)
     return textLayout;
 }
 
-wxD2DFontData* GetD2DFontData(const wxGraphicsFont& font)
+wxD2DFontData* wxGetD2DFontData(const wxGraphicsFont& font)
 {
     return static_cast<wxD2DFontData*>(font.GetGraphicsData());
 }
@@ -2184,7 +2186,7 @@ void wxD2DContext::Clip(const wxRegion& region)
     GetRenderTarget()->Flush();
     ResetClip();
 
-    CComPtr<ID2D1Geometry> clipGeometry = ConvertRegionToGeometry(m_direct2dFactory, region);
+    CComPtr<ID2D1Geometry> clipGeometry = wxD2DConvertRegionToGeometry(m_direct2dFactory, region);
 
     if (!m_clipLayerAcquired)
     {
@@ -2239,12 +2241,12 @@ void wxD2DContext::StrokePath(const wxGraphicsPath& p)
     EnsureInitialized();
     AdjustRenderTargetSize();
 
-    wxD2DPathData* pathData = GetD2DPathData(p);
+    wxD2DPathData* pathData = wxGetD2DPathData(p);
     pathData->Flush();
 
     if (!m_pen.IsNull()) 
     {
-        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        wxD2DPenData* penData = wxGetD2DPenData(m_pen);
         penData->Bind(this);
         ID2D1Brush* nativeBrush = penData->GetBrush();
         GetRenderTarget()->DrawGeometry((ID2D1Geometry*)pathData->GetNativePath(), nativeBrush, penData->GetWidth(), penData->GetStrokeStyle());
@@ -2259,12 +2261,12 @@ void wxD2DContext::FillPath(const wxGraphicsPath& p , wxPolygonFillMode WXUNUSED
     EnsureInitialized();
     AdjustRenderTargetSize();
 
-    wxD2DPathData* pathData = GetD2DPathData(p);
+    wxD2DPathData* pathData = wxGetD2DPathData(p);
     pathData->Flush();
 
     if (!m_brush.IsNull()) 
     {
-        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        wxD2DBrushData* brushData = wxGetD2DBrushData(m_brush);
         brushData->Bind(this);
         GetRenderTarget()->FillGeometry((ID2D1Geometry*)pathData->GetNativePath(), brushData->GetBrush());
     }
@@ -2277,7 +2279,7 @@ bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
         return true;
     }
 
-    GetRenderTarget()->SetAntialiasMode(ConvertAntialiasMode(antialias));
+    GetRenderTarget()->SetAntialiasMode(wxD2DConvertAntialiasMode(antialias));
 
     m_antialias = antialias;
     return true;
@@ -2296,7 +2298,7 @@ bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 {
 #if D2D1_DEVICE_CONTEXT_SUPPORTED
-    if (CompositionModeSupported(op))
+    if (wxD2DCompositionModeSupported(op))
     {
         m_composition = op;
         return true;
@@ -2362,8 +2364,8 @@ void wxD2DContext::Rotate(wxDouble angle)
 
 void wxD2DContext::ConcatTransform(const wxGraphicsMatrix& matrix)
 {
-    D2D1::Matrix3x2F localMatrix = GetD2DMatrixData(GetTransform())->GetMatrix3x2F();
-    D2D1::Matrix3x2F concatMatrix = GetD2DMatrixData(matrix)->GetMatrix3x2F();
+    D2D1::Matrix3x2F localMatrix = wxGetD2DMatrixData(GetTransform())->GetMatrix3x2F();
+    D2D1::Matrix3x2F concatMatrix = wxGetD2DMatrixData(matrix)->GetMatrix3x2F();
 
     D2D1::Matrix3x2F resultMatrix;
     resultMatrix.SetProduct(concatMatrix, localMatrix);
@@ -2378,7 +2380,7 @@ void wxD2DContext::SetTransform(const wxGraphicsMatrix& matrix)
 {
     EnsureInitialized();
 
-    GetRenderTarget()->SetTransform(GetD2DMatrixData(matrix)->GetMatrix3x2F());
+    GetRenderTarget()->SetTransform(wxGetD2DMatrixData(matrix)->GetMatrix3x2F());
 }
 
 wxGraphicsMatrix wxD2DContext::GetTransform() const
@@ -2407,14 +2409,14 @@ void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble 
     if (m_composition == wxCOMPOSITION_DEST) 
         return;
 
-    wxD2DBitmapData* bitmapData = GetD2DBitmapData(bmp);
+    wxD2DBitmapData* bitmapData = wxGetD2DBitmapData(bmp);
     bitmapData->Bind(this);
 
     GetRenderTarget()->DrawBitmap(
         bitmapData->GetD2DBitmap(), 
         D2D1::RectF(x, y, x + w, y + h), 
         1.0f, 
-        ConvertBitmapInterpolationMode(GetInterpolationQuality()));
+        wxD2DConvertBitmapInterpolationMode(GetInterpolationQuality()));
 }
 
 void wxD2DContext::DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
@@ -2430,10 +2432,10 @@ void wxD2DContext::DrawIcon(const wxIcon& icon, wxDouble x, wxDouble y, wxDouble
 
 void wxD2DContext::PushState()
 {
-    ID2D1Factory* GetD2DFactory(wxGraphicsRenderer* renderer);
+    ID2D1Factory* wxGetD2DFactory(wxGraphicsRenderer* renderer);
 
     CComPtr<ID2D1DrawingStateBlock> drawStateBlock;
-    GetD2DFactory(GetRenderer())->CreateDrawingStateBlock(&drawStateBlock);
+    wxGetD2DFactory(GetRenderer())->CreateDrawingStateBlock(&drawStateBlock);
     GetRenderTarget()->SaveDrawingState(drawStateBlock);
 
     m_stateStack.push(drawStateBlock);
@@ -2456,7 +2458,7 @@ void wxD2DContext::GetTextExtent(
     wxDouble* descent,
     wxDouble* externalLeading) const
 {
-    wxD2DFontData* fontData = GetD2DFontData(m_font);
+    wxD2DFontData* fontData = wxGetD2DFontData(m_font);
     CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
 
     DWRITE_TEXT_METRICS textMetrics;
@@ -2490,7 +2492,7 @@ bool wxD2DContext::ShouldOffset() const
     int penWidth = 0;
     if (!m_pen.IsNull())
     {
-        penWidth = GetD2DPenData(m_pen)->GetWidth();
+        penWidth = wxGetD2DPenData(m_pen)->GetWidth();
         penWidth = std::max(penWidth, 1);
     }
 
@@ -2505,7 +2507,7 @@ void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
     if (m_composition == wxCOMPOSITION_DEST) 
         return;
 
-    wxD2DFontData* fontData = GetD2DFontData(m_font);
+    wxD2DFontData* fontData = wxGetD2DFontData(m_font);
     fontData->GetBrushData().Bind(this);
 
     CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
@@ -2535,7 +2537,7 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
     {
         EnsureInitialized();
 
-        wxD2DPenData* penData = GetD2DPenData(pen);
+        wxD2DPenData* penData = wxGetD2DPenData(pen);
         penData->Bind(this);
         penData->GetBrush();
     }
@@ -2571,14 +2573,14 @@ void wxD2DContext::DrawRectangle(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
     if (!m_brush.IsNull())
     {
-        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        wxD2DBrushData* brushData = wxGetD2DBrushData(m_brush);
         brushData->Bind(this);
         GetRenderTarget()->FillRectangle(rect, brushData->GetBrush());
     }
  
     if (!m_pen.IsNull()) 
     {
-        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        wxD2DPenData* penData = wxGetD2DPenData(m_pen);
         penData->Bind(this);
         GetRenderTarget()->DrawRectangle(rect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
@@ -2600,14 +2602,14 @@ void wxD2DContext::DrawRoundedRectangle(wxDouble x, wxDouble y, wxDouble w, wxDo
 
     if (!m_brush.IsNull())
     {
-        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        wxD2DBrushData* brushData = wxGetD2DBrushData(m_brush);
         brushData->Bind(this);
         GetRenderTarget()->FillRoundedRectangle(roundedRect, brushData->GetBrush());
     }
 
     if (!m_pen.IsNull())
     {
-        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        wxD2DPenData* penData = wxGetD2DPenData(m_pen);
         penData->Bind(this);
         GetRenderTarget()->DrawRoundedRectangle(roundedRect, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
@@ -2631,14 +2633,14 @@ void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
     if (!m_brush.IsNull())
     {
-        wxD2DBrushData* brushData = GetD2DBrushData(m_brush);
+        wxD2DBrushData* brushData = wxGetD2DBrushData(m_brush);
         brushData->Bind(this);
         GetRenderTarget()->FillEllipse(ellipse, brushData->GetBrush());
     }
 
     if (!m_pen.IsNull())
     {
-        wxD2DPenData* penData = GetD2DPenData(m_pen);
+        wxD2DPenData* penData = wxGetD2DPenData(m_pen);
         penData->Bind(this);
         GetRenderTarget()->DrawEllipse(ellipse, penData->GetBrush(), penData->GetWidth(), penData->GetStrokeStyle());
     }
@@ -2998,7 +3000,7 @@ ID2D1Factory* wxD2DRenderer::GetD2DFactory()
     return m_direct2dFactory;
 }
 
-ID2D1Factory* GetD2DFactory(wxGraphicsRenderer* renderer)
+ID2D1Factory* wxGetD2DFactory(wxGraphicsRenderer* renderer)
 {
     return static_cast<wxD2DRenderer*>(renderer)->GetD2DFactory();
 }
