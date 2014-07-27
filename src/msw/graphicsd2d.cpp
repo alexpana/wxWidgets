@@ -616,14 +616,6 @@ bool operator==(const D2D1::Matrix3x2F& lhs, const D2D1::Matrix3x2F& rhs)
         lhs._31 == rhs._31 && lhs._32 == rhs._32;
 }
 
-// Interface used by objects holding Direct2D device-dependent resources.
-class DeviceDependentResourceHolder
-{
-public:
-    virtual void AcquireDeviceDependentResources(ID2D1RenderTarget* renderTarget) = 0;
-    virtual void ReleaseDeviceDependentResources() = 0;
-};
-
 //-----------------------------------------------------------------------------
 // wxD2DMatrixData declaration
 //-----------------------------------------------------------------------------
