@@ -2093,13 +2093,6 @@ public:
     }
 
 private:
-    enum RenderTargetType
-    {
-        RTT_HWND,
-        RTT_DC
-    };
-
-private:
     void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
 
     void EnsureInitialized();
@@ -2121,8 +2114,6 @@ private:
     };
 
 private:
-    RenderTargetType m_renderTargetType;
-
     ID2D1Factory* m_direct2dFactory;
 
     wxD2DHwndRenderTargetResourceHolder m_renderTargetHolder;
@@ -2152,9 +2143,9 @@ private:
 //-----------------------------------------------------------------------------
 
 wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : 
-    wxGraphicsContext(renderer), m_renderTargetType(RTT_HWND), 
-    m_direct2dFactory(direct2dFactory), m_clipMode(CLIP_MODE_NONE), 
-    m_clipLayerAcquired(false), m_renderTargetHolder(hwnd, direct2dFactory)
+    wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory), 
+	m_clipMode(CLIP_MODE_NONE), m_clipLayerAcquired(false), 
+	m_renderTargetHolder(hwnd, direct2dFactory)
 {
     m_renderTargetHolder.Bind(this);
     m_enableOffset = true;
