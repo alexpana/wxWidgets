@@ -2946,9 +2946,8 @@ wxGraphicsBitmap wxD2DRenderer::CreateBitmapFromImage(const wxImage& image)
 
 wxImage wxD2DRenderer::CreateImageFromBitmap(const wxGraphicsBitmap& bmp)
 {
-    return static_cast<wxD2DBitmapData::PseudoNativeBitmap*>(bmp.GetNativeBitmap())
-        ->m_sourceBitmap
-        .ConvertToImage();
+    return static_cast<wxD2DBitmapData::NativeType*>(bmp.GetNativeBitmap())
+        ->GetSourceBitmap().ConvertToImage();
 }
 #endif
 
