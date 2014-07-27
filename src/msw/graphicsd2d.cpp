@@ -1103,7 +1103,7 @@ void wxD2DPathData::GetBox(wxDouble* x, wxDouble* y, wxDouble* w, wxDouble *h) c
     if (h != NULL) *h = bounds.bottom - bounds.top;
 }
 
-bool wxD2DPathData::Contains(wxDouble x, wxDouble y, wxPolygonFillMode fillStyle) const
+bool wxD2DPathData::Contains(wxDouble x, wxDouble y, wxPolygonFillMode WXUNUSED(fillStyle)) const
 {
     BOOL result;
     m_pathGeometry->FillContainsPoint(D2D1::Point2F(x, y), D2D1::Matrix3x2F::Identity(), &result);
@@ -1207,9 +1207,9 @@ public:
     }
 
     HRESULT STDMETHODCALLTYPE CopyPixels(
-        __RPC__in_opt const WICRect *prc, 
-        UINT stride,
-        UINT bufferSize,
+        __RPC__in_opt const WICRect* WXUNUSED(prc), 
+        UINT WXUNUSED(stride),
+        UINT WXUNUSED(bufferSize),
         __RPC__out_ecount_full(bufferSize) BYTE *buffer) wxOVERRIDE
     {
         // patterns are encoded in a bit map of size 8 x 8
@@ -2779,20 +2779,20 @@ wxD2DRenderer::~wxD2DRenderer()
     m_direct2dFactory.Release();
 }
 
-wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& WXUNUSED(dc))
 {
     wxFAIL_MSG("not implemented");
     return NULL;
 }
 
-wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& WXUNUSED(dc))
 {
     wxFAIL_MSG("not implemented");
     return NULL;
 }
 
 #if wxUSE_PRINTING_ARCHITECTURE
-wxGraphicsContext* wxD2DRenderer::CreateContext(const wxPrinterDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxPrinterDC& WXUNUSED(dc))
 {
     wxFAIL_MSG("not implemented");
     return NULL;
@@ -2800,14 +2800,14 @@ wxGraphicsContext* wxD2DRenderer::CreateContext(const wxPrinterDC& dc)
 #endif
 
 #if wxUSE_ENH_METAFILE
-wxGraphicsContext* wxD2DRenderer::CreateContext(const wxEnhMetaFileDC& dc)
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxEnhMetaFileDC& WXUNUSED(dc))
 {
     wxFAIL_MSG("not implemented");
     return NULL;
 }
 #endif
 
-wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* context)
+wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* WXUNUSED(context))
 {
     wxFAIL_MSG("not implemented");
     return NULL;
@@ -2824,7 +2824,7 @@ wxGraphicsContext* wxD2DRenderer::CreateContext(wxWindow* window)
 }
 
 #if wxUSE_IMAGE
-wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& image)
+wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& WXUNUSED(image))
 {
     wxFAIL_MSG("not implemented");
     return NULL;
