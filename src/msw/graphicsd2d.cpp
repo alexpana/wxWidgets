@@ -1862,7 +1862,7 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
     // Ensure the LOGFONT object contains the correct font face name
     if (logfont.lfFaceName[0] == '\0')
     {
-        for (int i = 0; i < font.GetFaceName().Length(); ++i)
+        for (unsigned int i = 0; i < font.GetFaceName().Length(); ++i)
         {
             logfont.lfFaceName[i] = font.GetFaceName().GetChar(i);
         }
@@ -2472,7 +2472,7 @@ void wxD2DContext::GetTextExtent(
 
 void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
 {
-    for (int i = 0; i < text.Length(); ++i)
+    for (unsigned int i = 0; i < text.Length(); ++i)
     {
         wxDouble width;
         GetTextExtent(text.SubString(0, i), &width, NULL, NULL, NULL);
