@@ -1528,7 +1528,7 @@ protected:
             D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR), 
             &m_nativeResource);
 
-		wxCHECK_HRESULT_RET(result);
+        wxCHECK_HRESULT_RET(result);
     }
 };
 
@@ -2144,8 +2144,8 @@ private:
 
 wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : 
     wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory), 
-	m_clipMode(CLIP_MODE_NONE), m_clipLayerAcquired(false), 
-	m_renderTargetHolder(hwnd, direct2dFactory)
+    m_clipMode(CLIP_MODE_NONE), m_clipLayerAcquired(false), 
+    m_renderTargetHolder(hwnd, direct2dFactory)
 {
     m_renderTargetHolder.Bind(this);
     m_enableOffset = true;
