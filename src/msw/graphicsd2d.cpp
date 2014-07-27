@@ -1525,6 +1525,8 @@ protected:
             D2D1_EXTEND_MODE_WRAP,
             D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR), 
             &m_nativeResource);
+
+		wxCHECK_HRESULT_RET(result);
     }
 };
 
@@ -1541,9 +1543,6 @@ protected:
         CComPtr<ID2D1Bitmap> bitmap;
 
         HRESULT hr = GetContext()->CreateBitmapFromWicBitmap(hatchBitmapSource, &bitmap);
-
-        D2D1_SIZE_U size = bitmap->GetPixelSize();
-        D2D1_PIXEL_FORMAT pixelFormat = bitmap->GetPixelFormat();
 
         hr = GetContext()->CreateBitmapBrush(
             bitmap, 
@@ -1858,7 +1857,7 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
     hr = DWriteFactory()->GetGdiInterop(&gdiInterop);
 
     LOGFONT logfont;
-    int bytesStored = GetObject(font.GetHFONT(), sizeof(logfont), &logfont);
+    GetObject(font.GetHFONT(), sizeof(logfont), &logfont);
 
     // Ensure the LOGFONT object contains the correct font face name
     if (logfont.lfFaceName[0] == '\0')
