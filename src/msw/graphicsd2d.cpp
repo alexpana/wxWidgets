@@ -582,7 +582,7 @@ CComPtr<ID2D1Geometry> ConvertRegionToGeometry(ID2D1Factory* direct2dFactory, co
 
     delete[] geometries;
 
-    return resultGeometry;
+    return CComPtr<ID2D1Geometry>(resultGeometry);
 }
 
 class wxD2DOffsetHelper
@@ -1163,7 +1163,7 @@ CComPtr<IWICBitmapSource> wxCreateWICBitmap(const WXHBITMAP sourceBitmap, bool h
         WICBitmapPaletteTypeMedianCut);
     wxCHECK_HRESULT_RET_PTR(hr);
 
-    return converter;
+    return CComPtr<IWICBitmapSource>(converter);
 }
 
 CComPtr<IWICBitmapSource> wxCreateWICBitmap(const wxBitmap& sourceBitmap, bool hasAlpha = false)
