@@ -1238,7 +1238,7 @@ public:
     // Implementations adapted from: "Implementing IUnknown in C++"
     // http://msdn.microsoft.com/en-us/library/office/cc839627%28v=office.15%29.aspx
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID referenceId, void **object) wxOVERRIDE 
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID referenceId, void** object) wxOVERRIDE 
     {
         if (!object)
         {
@@ -1276,7 +1276,7 @@ public:
 private:
 
     // Copies an 8x8 bit pattern to a PBGRA byte buffer
-    void CopyPattern(BYTE *buffer, const unsigned char* pattern) const
+    void CopyPattern(BYTE* buffer, const unsigned char* pattern) const
     {
         static const wxPBGRAColor transparent(wxTransparentColour);
 
@@ -1826,7 +1826,7 @@ wxD2DPenData* wxGetD2DPenData(const wxGraphicsPen& pen)
 class wxD2DFontData : public wxGraphicsObjectRefData
 {
 public:
-    wxD2DFontData(wxGraphicsRenderer *renderer, ID2D1Factory* d2d1Factory, const wxFont& font, const wxColor& color);
+    wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2d1Factory, const wxFont& font, const wxColor& color);
 
     CComPtr<IDWriteTextLayout> CreateTextLayout(const wxString& text) const;
 
@@ -2019,7 +2019,7 @@ public:
 
     ~wxD2DContext() wxOVERRIDE;
 
-    void Clip(const wxRegion &region) wxOVERRIDE;
+    void Clip(const wxRegion& region) wxOVERRIDE;
 
     void Clip(wxDouble x, wxDouble y, wxDouble w, wxDouble h) wxOVERRIDE;
 
@@ -2524,7 +2524,7 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
 {
     wxGraphicsContext::SetPen(pen);
 
-    if ( !m_pen.IsNull() )
+    if (!m_pen.IsNull())
     {
         EnsureInitialized();
 
