@@ -2008,6 +2008,88 @@ private:
     ID2D1Factory* m_factory;
 };
 
+// The null context has no state of its own and does nothing.
+// It is only used as a base class for the lightweight
+// measuring context. The measuring context cannot inherit from
+// the default implementation wxD2DContext, because some methods
+// from wxD2DContext require the presence of a "context" 
+// (render target) in order to acquire various device-dependent 
+// resources. Without a proper context, those methods would fail. 
+// The methods implemented in the null context are fundamentally no-ops.
+class wxNullContext : public wxGraphicsContext
+{
+public:
+	wxNullContext(wxGraphicsRenderer* renderer) : wxGraphicsContext(renderer) {}
+	void GetTextExtent(const wxString&, wxDouble*, wxDouble*, wxDouble*, wxDouble*) const wxOVERRIDE {}
+	void GetPartialTextExtents(const wxString&, wxArrayDouble&) const wxOVERRIDE {}
+	void Clip(const wxRegion&) wxOVERRIDE {}
+	void Clip(wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+	void ResetClip() wxOVERRIDE {}
+	void* GetNativeContext() wxOVERRIDE { return NULL; }
+	bool SetAntialiasMode(wxAntialiasMode) wxOVERRIDE { return false; }
+	bool SetInterpolationQuality(wxInterpolationQuality) wxOVERRIDE { return false; }
+	bool SetCompositionMode(wxCompositionMode) wxOVERRIDE { return false; }
+	void BeginLayer(wxDouble) wxOVERRIDE {}
+	void EndLayer() wxOVERRIDE {}
+	void Translate(wxDouble, wxDouble) wxOVERRIDE {}
+	void Scale(wxDouble, wxDouble) wxOVERRIDE {}
+	void Rotate(wxDouble) wxOVERRIDE {}
+	void ConcatTransform(const wxGraphicsMatrix&) wxOVERRIDE {}
+	void SetTransform(const wxGraphicsMatrix&) wxOVERRIDE {}
+	wxGraphicsMatrix GetTransform() const wxOVERRIDE { return wxNullGraphicsMatrix; }
+	void StrokePath(const wxGraphicsPath&) wxOVERRIDE {}
+	void FillPath(const wxGraphicsPath&, wxPolygonFillMode) wxOVERRIDE {}	void DrawBitmap(const wxGraphicsBitmap&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+	void DrawBitmap(const wxBitmap&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+	void DrawIcon(const wxIcon&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+	void PushState() wxOVERRIDE {}
+	void PopState() wxOVERRIDE {}
+	void Flush() wxOVERRIDE {}
+
+protected:
+	void DoDrawText(const wxString&, wxDouble, wxDouble) wxOVERRIDE {}
+};
+
+class wxD2DMeasuringContext : public wxNullContext
+{
+public:
+    wxD2DMeasuringContext(wxGraphicsRenderer* renderer) : wxNullContext(renderer) {}
+
+	void GetTextExtent(const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading) const wxOVERRIDE 
+	{
+		GetTextExtent(wxGetD2DFontData(m_font), str, width, height, descent, externalLeading);
+	}
+
+	void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE 
+	{
+		GetPartialTextExtents(wxGetD2DFontData(m_font), text, widths);
+	}
+
+	static void GetPartialTextExtents(wxD2DFontData* fontData, const wxString& text, wxArrayDouble& widths)
+	{
+		for (unsigned int i = 0; i < text.Length(); ++i)
+		{
+			wxDouble width;
+			GetTextExtent(fontData, text.SubString(0, i), &width, NULL, NULL, NULL);
+			widths.push_back(width);
+		}
+	}
+
+	static void GetTextExtent(wxD2DFontData* fontData, const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading)
+	{
+		CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
+
+		DWRITE_TEXT_METRICS textMetrics;
+		textLayout->GetMetrics(&textMetrics);
+
+		if (width != NULL) *width = textMetrics.widthIncludingTrailingWhitespace;
+		if (height != NULL) *height = textMetrics.height;
+
+		// TODO: Find a way of extracting this information
+		if (descent != NULL) *descent = 0;
+		if (externalLeading != NULL) *externalLeading = 0;
+	}
+};
+
 //-----------------------------------------------------------------------------
 // wxD2DContext declaration
 //-----------------------------------------------------------------------------
@@ -2449,28 +2531,14 @@ void wxD2DContext::GetTextExtent(
     wxDouble* descent,
     wxDouble* externalLeading) const
 {
-    wxD2DFontData* fontData = wxGetD2DFontData(m_font);
-    CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
-
-    DWRITE_TEXT_METRICS textMetrics;
-    textLayout->GetMetrics(&textMetrics);
-
-    if (width != NULL) *width = textMetrics.widthIncludingTrailingWhitespace;
-    if (height != NULL) *height = textMetrics.height;
-
-    // TODO: Find a way of extracting this information
-    if (descent != NULL) *descent = 0;
-    if (externalLeading != NULL) *externalLeading = 0;
+    wxD2DMeasuringContext::GetTextExtent(
+		wxGetD2DFontData(m_font), str, width, height, descent, externalLeading);
 }
 
 void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
 {
-    for (unsigned int i = 0; i < text.Length(); ++i)
-    {
-        wxDouble width;
-        GetTextExtent(text.SubString(0, i), &width, NULL, NULL, NULL);
-        widths.push_back(width);
-    }
+	return wxD2DMeasuringContext::GetPartialTextExtents(
+		wxGetD2DFontData(m_font), text, widths);
 }
 
 bool wxD2DContext::ShouldOffset() const
@@ -2825,8 +2893,7 @@ wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& WXUNUSED(image
 
 wxGraphicsContext* wxD2DRenderer::CreateMeasuringContext()
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return new wxD2DMeasuringContext(this);
 }
 
 wxGraphicsPath wxD2DRenderer::CreatePath()
