@@ -2666,7 +2666,7 @@ public :
 
     virtual ~wxD2DRenderer();
 
-    wxGraphicsContext* CreateContext(const wxWindowDC& dc);
+    wxGraphicsContext* CreateContext(const wxWindowDC& dc) wxOVERRIDE;
 
     wxGraphicsContext* CreateContext(const wxMemoryDC& dc) wxOVERRIDE;
 
