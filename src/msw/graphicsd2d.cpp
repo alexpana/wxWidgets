@@ -2019,34 +2019,35 @@ private:
 class wxNullContext : public wxGraphicsContext
 {
 public:
-	wxNullContext(wxGraphicsRenderer* renderer) : wxGraphicsContext(renderer) {}
-	void GetTextExtent(const wxString&, wxDouble*, wxDouble*, wxDouble*, wxDouble*) const wxOVERRIDE {}
-	void GetPartialTextExtents(const wxString&, wxArrayDouble&) const wxOVERRIDE {}
-	void Clip(const wxRegion&) wxOVERRIDE {}
-	void Clip(wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
-	void ResetClip() wxOVERRIDE {}
-	void* GetNativeContext() wxOVERRIDE { return NULL; }
-	bool SetAntialiasMode(wxAntialiasMode) wxOVERRIDE { return false; }
-	bool SetInterpolationQuality(wxInterpolationQuality) wxOVERRIDE { return false; }
-	bool SetCompositionMode(wxCompositionMode) wxOVERRIDE { return false; }
-	void BeginLayer(wxDouble) wxOVERRIDE {}
-	void EndLayer() wxOVERRIDE {}
-	void Translate(wxDouble, wxDouble) wxOVERRIDE {}
-	void Scale(wxDouble, wxDouble) wxOVERRIDE {}
-	void Rotate(wxDouble) wxOVERRIDE {}
-	void ConcatTransform(const wxGraphicsMatrix&) wxOVERRIDE {}
-	void SetTransform(const wxGraphicsMatrix&) wxOVERRIDE {}
-	wxGraphicsMatrix GetTransform() const wxOVERRIDE { return wxNullGraphicsMatrix; }
-	void StrokePath(const wxGraphicsPath&) wxOVERRIDE {}
-	void FillPath(const wxGraphicsPath&, wxPolygonFillMode) wxOVERRIDE {}	void DrawBitmap(const wxGraphicsBitmap&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
-	void DrawBitmap(const wxBitmap&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
-	void DrawIcon(const wxIcon&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
-	void PushState() wxOVERRIDE {}
-	void PopState() wxOVERRIDE {}
-	void Flush() wxOVERRIDE {}
+    wxNullContext(wxGraphicsRenderer* renderer) : wxGraphicsContext(renderer) {}
+    void GetTextExtent(const wxString&, wxDouble*, wxDouble*, wxDouble*, wxDouble*) const wxOVERRIDE {}
+    void GetPartialTextExtents(const wxString&, wxArrayDouble&) const wxOVERRIDE {}
+    void Clip(const wxRegion&) wxOVERRIDE {}
+    void Clip(wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+    void ResetClip() wxOVERRIDE {}
+    void* GetNativeContext() wxOVERRIDE { return NULL; }
+    bool SetAntialiasMode(wxAntialiasMode) wxOVERRIDE { return false; }
+    bool SetInterpolationQuality(wxInterpolationQuality) wxOVERRIDE { return false; }
+    bool SetCompositionMode(wxCompositionMode) wxOVERRIDE { return false; }
+    void BeginLayer(wxDouble) wxOVERRIDE {}
+    void EndLayer() wxOVERRIDE {}
+    void Translate(wxDouble, wxDouble) wxOVERRIDE {}
+    void Scale(wxDouble, wxDouble) wxOVERRIDE {}
+    void Rotate(wxDouble) wxOVERRIDE {}
+    void ConcatTransform(const wxGraphicsMatrix&) wxOVERRIDE {}
+    void SetTransform(const wxGraphicsMatrix&) wxOVERRIDE {}
+    wxGraphicsMatrix GetTransform() const wxOVERRIDE { return wxNullGraphicsMatrix; }
+    void StrokePath(const wxGraphicsPath&) wxOVERRIDE {}
+    void FillPath(const wxGraphicsPath&, wxPolygonFillMode) wxOVERRIDE {}
+    void DrawBitmap(const wxGraphicsBitmap&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+    void DrawBitmap(const wxBitmap&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+    void DrawIcon(const wxIcon&, wxDouble, wxDouble, wxDouble, wxDouble) wxOVERRIDE {}
+    void PushState() wxOVERRIDE {}
+    void PopState() wxOVERRIDE {}
+    void Flush() wxOVERRIDE {}
 
 protected:
-	void DoDrawText(const wxString&, wxDouble, wxDouble) wxOVERRIDE {}
+    void DoDrawText(const wxString&, wxDouble, wxDouble) wxOVERRIDE {}
 };
 
 class wxD2DMeasuringContext : public wxNullContext
@@ -2054,40 +2055,40 @@ class wxD2DMeasuringContext : public wxNullContext
 public:
     wxD2DMeasuringContext(wxGraphicsRenderer* renderer) : wxNullContext(renderer) {}
 
-	void GetTextExtent(const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading) const wxOVERRIDE 
-	{
-		GetTextExtent(wxGetD2DFontData(m_font), str, width, height, descent, externalLeading);
-	}
+    void GetTextExtent(const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading) const wxOVERRIDE 
+    {
+        GetTextExtent(wxGetD2DFontData(m_font), str, width, height, descent, externalLeading);
+    }
 
-	void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE 
-	{
-		GetPartialTextExtents(wxGetD2DFontData(m_font), text, widths);
-	}
+    void GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const wxOVERRIDE 
+    {
+        GetPartialTextExtents(wxGetD2DFontData(m_font), text, widths);
+    }
 
-	static void GetPartialTextExtents(wxD2DFontData* fontData, const wxString& text, wxArrayDouble& widths)
-	{
-		for (unsigned int i = 0; i < text.Length(); ++i)
-		{
-			wxDouble width;
-			GetTextExtent(fontData, text.SubString(0, i), &width, NULL, NULL, NULL);
-			widths.push_back(width);
-		}
-	}
+    static void GetPartialTextExtents(wxD2DFontData* fontData, const wxString& text, wxArrayDouble& widths)
+    {
+        for (unsigned int i = 0; i < text.Length(); ++i)
+        {
+            wxDouble width;
+            GetTextExtent(fontData, text.SubString(0, i), &width, NULL, NULL, NULL);
+            widths.push_back(width);
+        }
+    }
 
-	static void GetTextExtent(wxD2DFontData* fontData, const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading)
-	{
-		CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
+    static void GetTextExtent(wxD2DFontData* fontData, const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading)
+    {
+        CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
 
-		DWRITE_TEXT_METRICS textMetrics;
-		textLayout->GetMetrics(&textMetrics);
+        DWRITE_TEXT_METRICS textMetrics;
+        textLayout->GetMetrics(&textMetrics);
 
-		if (width != NULL) *width = textMetrics.widthIncludingTrailingWhitespace;
-		if (height != NULL) *height = textMetrics.height;
+        if (width != NULL) *width = textMetrics.widthIncludingTrailingWhitespace;
+        if (height != NULL) *height = textMetrics.height;
 
-		// TODO: Find a way of extracting this information
-		if (descent != NULL) *descent = 0;
-		if (externalLeading != NULL) *externalLeading = 0;
-	}
+        // TODO: Find a way of extracting this information
+        if (descent != NULL) *descent = 0;
+        if (externalLeading != NULL) *externalLeading = 0;
+    }
 };
 
 //-----------------------------------------------------------------------------
@@ -2532,13 +2533,13 @@ void wxD2DContext::GetTextExtent(
     wxDouble* externalLeading) const
 {
     wxD2DMeasuringContext::GetTextExtent(
-		wxGetD2DFontData(m_font), str, width, height, descent, externalLeading);
+        wxGetD2DFontData(m_font), str, width, height, descent, externalLeading);
 }
 
 void wxD2DContext::GetPartialTextExtents(const wxString& text, wxArrayDouble& widths) const
 {
-	return wxD2DMeasuringContext::GetPartialTextExtents(
-		wxGetD2DFontData(m_font), text, widths);
+    return wxD2DMeasuringContext::GetPartialTextExtents(
+        wxGetD2DFontData(m_font), text, widths);
 }
 
 bool wxD2DContext::ShouldOffset() const
