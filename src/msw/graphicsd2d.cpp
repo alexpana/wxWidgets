@@ -876,8 +876,12 @@ ID2D1PathGeometry* wxD2DPathData::GetPathGeometry()
 
 wxD2DPathData::wxGraphicsObjectRefData* wxD2DPathData::Clone() const
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    wxD2DPathData* newPathData = new wxD2DPathData(GetRenderer(), m_direct2dfactory);
+
+    newPathData->EnsureGeometryOpen();
+    m_pathGeometry->Stream(newPathData->m_geometrySink);
+
+    return newPathData;
 }
 
 void wxD2DPathData::Flush()
