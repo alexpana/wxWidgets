@@ -45,7 +45,7 @@
 #include "wx/dc.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
-
+#include "wx/sharedptr.h"
 
 // Generic error message for a failed direct2d operation
 #define wxFAILED_HRESULT_MSG(result) wxString::Format("Direct2D failed with HRESULT %ld", (result))
@@ -1944,17 +1944,18 @@ wxD2DFontData* wxGetD2DFontData(const wxGraphicsFont& font)
 
 // A render target resource holder exposes methods relevant
 // for native render targets such as resize
-template <typename T>
-class wxD2DRenderTargetResourceHolder : public wxD2DResourceHolder<T>
+class wxD2DRenderTargetResourceHolder : public wxD2DResourceHolder<ID2D1RenderTarget>
 {
 public:
     virtual void Resize() = 0;
     virtual D2D1_SIZE_U GetSize() = 0;
 };
 
-class wxD2DHwndRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder<ID2D1HwndRenderTarget>
+class wxD2DHwndRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
 {
 public:
+    typedef ID2D1HwndRenderTarget* ImplementationType;
+
     wxD2DHwndRenderTargetResourceHolder(HWND hwnd, ID2D1Factory* factory) :
         m_hwnd(hwnd), m_factory(factory)
     {
@@ -1969,22 +1970,24 @@ public:
             clientRect.right - clientRect.left,
             clientRect.bottom - clientRect.top);
 
-        D2D1_SIZE_U renderTargetSize = GetD2DResource()->GetPixelSize();
+        D2D1_SIZE_U renderTargetSize = GetRenderTarget()->GetPixelSize();
 
         if (hwndSize.width != renderTargetSize.width || hwndSize.height != renderTargetSize.height)
         {
-            GetD2DResource()->Resize(hwndSize);
+            GetRenderTarget()->Resize(hwndSize);
         }
     }
 
     D2D1_SIZE_U GetSize() wxOVERRIDE
     {
-        return GetD2DResource()->GetPixelSize();
+        return GetRenderTarget()->GetPixelSize();
     }
 
 protected:
     void DoAcquireResource() wxOVERRIDE
     {
+        CComPtr<ID2D1HwndRenderTarget> renderTarget;
+
         HRESULT result;
 
         RECT clientRect;
@@ -1997,14 +2000,23 @@ protected:
         result = m_factory->CreateHwndRenderTarget(
             D2D1::RenderTargetProperties(),
             D2D1::HwndRenderTargetProperties(m_hwnd, size),
-            &m_nativeResource);
+            &renderTarget);
 
         if (FAILED(result))
         {
             wxFAIL_MSG("Could not create Direct2D render target");
         }
 
-        m_nativeResource->SetTransform(D2D1::Matrix3x2F::Identity());
+        renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+
+        m_nativeResource = renderTarget;
+    }
+private:
+    // Converts the underlying resource pointer of type
+    // ID2D1RenderTarget* to the actual implementation type
+    ImplementationType GetRenderTarget()
+    {
+        return static_cast<ImplementationType>(GetD2DResource().p);
     }
 
 private:
@@ -2104,6 +2116,8 @@ class wxD2DContext : public wxGraphicsContext, wxD2DResourceManager
 public:
     wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd);
 
+    wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, void* nativeContext);
+
     ~wxD2DContext() wxOVERRIDE;
 
     void Clip(const wxRegion& region) wxOVERRIDE;
@@ -2180,6 +2194,8 @@ public:
     }
 
 private:
+    void Init(); 
+
     void DoDrawText(const wxString& str, wxDouble x, wxDouble y) wxOVERRIDE;
 
     void EnsureInitialized();
@@ -2203,7 +2219,7 @@ private:
 private:
     ID2D1Factory* m_direct2dFactory;
 
-    wxD2DHwndRenderTargetResourceHolder m_renderTargetHolder;
+    wxSharedPtr<wxD2DRenderTargetResourceHolder> m_renderTargetHolder;
 
     // A ID2D1DrawingStateBlock represents the drawing state of a render target: 
     // the anti aliasing mode, transform, tags, and text-rendering options.
@@ -2231,10 +2247,24 @@ private:
 
 wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : 
     wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory), 
-    m_clipMode(CLIP_MODE_NONE), m_clipLayerAcquired(false), 
-    m_renderTargetHolder(hwnd, direct2dFactory)
+    m_renderTargetHolder(new wxD2DHwndRenderTargetResourceHolder(hwnd, direct2dFactory))
 {
-    m_renderTargetHolder.Bind(this);
+    Init();
+}
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, void* nativeContext) :
+    wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory)
+{
+    m_renderTargetHolder = *((wxSharedPtr<wxD2DRenderTargetResourceHolder>*)nativeContext);
+    Init();
+}
+
+void wxD2DContext::Init()
+{
+    m_cachedRenderTarget = NULL;
+    m_clipMode = CLIP_MODE_NONE;
+    m_clipLayerAcquired = false; 
+    m_renderTargetHolder->Bind(this);
     m_enableOffset = true;
     EnsureInitialized();
 }
@@ -2306,7 +2336,7 @@ void wxD2DContext::ResetClip()
 
 void* wxD2DContext::GetNativeContext()
 {
-    return GetRenderTarget();
+    return &m_renderTargetHolder;
 }
 
 void wxD2DContext::StrokePath(const wxGraphicsPath& p)
@@ -2585,11 +2615,15 @@ void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
 
 void wxD2DContext::EnsureInitialized()
 {
-    if (!m_renderTargetHolder.IsResourceAcquired())
+    if (!m_renderTargetHolder->IsResourceAcquired())
     {
-        m_cachedRenderTarget = m_renderTargetHolder.GetD2DResource();
+        m_cachedRenderTarget = m_renderTargetHolder->GetD2DResource();
         GetRenderTarget()->SetTransform(D2D1::Matrix3x2F::Identity());
         GetRenderTarget()->BeginDraw();
+    } 
+    else
+    {
+        m_cachedRenderTarget = m_renderTargetHolder->GetD2DResource();
     }
 }
 
@@ -2609,9 +2643,9 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
 
 void wxD2DContext::AdjustRenderTargetSize()
 {
-    m_renderTargetHolder.Resize();
-    m_width = m_renderTargetHolder.GetSize().width;
-    m_height =  m_renderTargetHolder.GetSize().height;
+    m_renderTargetHolder->Resize();
+    m_width = m_renderTargetHolder->GetSize().width;
+    m_height =  m_renderTargetHolder->GetSize().height;
 }
 
 void wxD2DContext::ReleaseDeviceDependentResources()
@@ -2872,10 +2906,9 @@ wxGraphicsContext* wxD2DRenderer::CreateContext(const wxEnhMetaFileDC& WXUNUSED(
 }
 #endif
 
-wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* WXUNUSED(context))
+wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeContext(void* nativeContext)
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return new wxD2DContext(this, m_direct2dFactory, nativeContext);
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContextFromNativeWindow(void* window)
