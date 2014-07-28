@@ -1838,6 +1838,8 @@ public:
 
     CComPtr<IDWriteTextFormat> GetTextFormat() const { return m_textFormat; }
 
+    CComPtr<IDWriteFont> GetFont() { return m_font; };
+
 private:
     // The native, device-independent font object
     CComPtr<IDWriteFont> m_font;
@@ -2094,16 +2096,21 @@ public:
     static void GetTextExtent(wxD2DFontData* fontData, const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading)
     {
         CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
+        CComPtr<IDWriteFont> font = fontData->GetFont();
 
         DWRITE_TEXT_METRICS textMetrics;
         textLayout->GetMetrics(&textMetrics);
 
+        DWRITE_FONT_METRICS fontMetrics;
+        font->GetMetrics(&fontMetrics);
+
+        FLOAT ratio = fontData->GetTextFormat()->GetFontSize() / (FLOAT)fontMetrics.designUnitsPerEm;
+
         if (width != NULL) *width = textMetrics.widthIncludingTrailingWhitespace;
         if (height != NULL) *height = textMetrics.height;
 
-        // TODO: Find a way of extracting this information
-        if (descent != NULL) *descent = 0;
-        if (externalLeading != NULL) *externalLeading = 0;
+        if (descent != NULL) *descent = fontMetrics.descent * ratio;
+        if (externalLeading != NULL) *externalLeading = std::max(0.0f, (fontMetrics.ascent + fontMetrics.descent) * ratio - textMetrics.height);
     }
 };
 
