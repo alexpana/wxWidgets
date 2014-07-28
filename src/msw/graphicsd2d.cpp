@@ -15,6 +15,7 @@
 #define D2D1_DEVICE_CONTEXT_SUPPORTED 1
 
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
 #include <list>
 
@@ -1908,9 +1909,8 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
 
 CComPtr<IDWriteTextLayout> wxD2DFontData::CreateTextLayout(const wxString& text) const
 {
-    // TODO: Find relevant values for MAX_WIDTH and MAX_HEIGHT parameters
-    static const FLOAT MAX_WIDTH = 4096.0f;
-    static const FLOAT MAX_HEIGHT = 1024.0f;
+    static const FLOAT MAX_WIDTH = FLT_MAX;
+    static const FLOAT MAX_HEIGHT = FLT_MAX;
 
     HRESULT hr;
 
