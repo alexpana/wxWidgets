@@ -201,7 +201,6 @@ public:
 
     virtual ~wxD2DResourceManager()
     {
-        ListType::iterator it;
         while (!m_resources.empty())
         {
             m_resources.front()->ReleaseResource();
