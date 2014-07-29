@@ -1713,7 +1713,6 @@ class wxD2DPenData : public wxGraphicsObjectRefData, public wxD2DManagedGraphics
 {
 public:
     wxD2DPenData(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, const wxPen& pen);
-    ~wxD2DPenData();
 
     void CreateStrokeStyle(ID2D1Factory* const direct2dfactory);
 
@@ -1738,7 +1737,7 @@ private:
     CComPtr<ID2D1StrokeStyle> m_strokeStyle;
 
     // Drawing outlines with Direct2D requires a brush for the color or stipple.
-    wxD2DBrushData* m_stippleBrush;
+    wxSharedPtr<wxD2DBrushData> m_stippleBrush;
 
     // The width of the stroke
     FLOAT m_width;
@@ -1752,8 +1751,7 @@ wxD2DPenData::wxD2DPenData(
     wxGraphicsRenderer* renderer, 
     ID2D1Factory* direct2dFactory, 
     const wxPen& pen)
-    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth()),
-    m_stippleBrush(NULL)
+    : wxGraphicsObjectRefData(renderer), m_sourcePen(pen), m_width(pen.GetWidth())
 {
     CreateStrokeStyle(direct2dFactory);
 
@@ -1771,11 +1769,6 @@ wxD2DPenData::wxD2DPenData(
     }
 
     m_stippleBrush = new wxD2DBrushData(renderer, strokeBrush);
-}
-
-wxD2DPenData::~wxD2DPenData()
-{
-    delete m_stippleBrush;
 }
 
 void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
