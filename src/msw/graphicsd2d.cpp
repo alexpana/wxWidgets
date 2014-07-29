@@ -1639,11 +1639,6 @@ public:
 
     wxD2DBrushData(wxGraphicsRenderer* renderer);
 
-    ~wxD2DBrushData()
-    {
-        delete m_brushResourceHolder;
-    }
-
     void CreateLinearGradientBrush(wxDouble x1, wxDouble y1, wxDouble x2, wxDouble y2, const wxGraphicsGradientStops& stops);
 
     void CreateRadialGradientBrush(wxDouble xo, wxDouble yo, wxDouble xc, wxDouble yc, wxDouble radius, const wxGraphicsGradientStops& stops);
@@ -1655,11 +1650,11 @@ public:
 
     wxD2DManagedObject* GetManagedObject() wxOVERRIDE
     {
-        return m_brushResourceHolder;
+        return m_brushResourceHolder.get();
     }
 
 private:
-    wxManagedResourceHolder* m_brushResourceHolder;
+    wxSharedPtr<wxManagedResourceHolder> m_brushResourceHolder;
 };
 
 //-----------------------------------------------------------------------------
