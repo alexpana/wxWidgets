@@ -1183,7 +1183,7 @@ class wxHatchBitmapSource : public IWICBitmapSource
 {
 public:
     wxHatchBitmapSource(wxBrushStyle brushStyle, const wxColor& color) : 
-        m_brushStyle(brushStyle), m_color(color), m_refCount(1)
+        m_brushStyle(brushStyle), m_color(color), m_refCount(0l)
     {
     }
 
@@ -1270,6 +1270,8 @@ public:
 
     ULONG STDMETHODCALLTYPE Release(void) wxOVERRIDE 
     {
+        wxCHECK2_MSG(m_refCount > 0, 0, "Unbalanced number of calls to Release");
+
         ULONG refCount = InterlockedDecrement(&m_refCount);
         if (m_refCount == 0)
         {
