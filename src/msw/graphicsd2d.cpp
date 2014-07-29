@@ -1803,6 +1803,8 @@ void wxD2DPenData::CreateStrokeStyle(ID2D1Factory* const direct2dfactory)
         D2D1::StrokeStyleProperties(capStyle, capStyle, capStyle, lineJoin, 0, dashStyle, 0.0f),
         dashes, dashCount, 
         &m_strokeStyle);
+
+    delete[] dashes;
 }
 
 ID2D1Brush* wxD2DPenData::GetBrush()
