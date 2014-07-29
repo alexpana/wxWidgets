@@ -29,9 +29,6 @@
 
 #include <wincodec.h>
 
-// Used for the CComPtr smart pointer
-#include <atlbase.h>
-
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
@@ -44,6 +41,7 @@
 
 #include "wx/graphics.h"
 #include "wx/dc.h"
+#include "wx/msw/private/comptr.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
 #include "wx/sharedptr.h"
@@ -239,7 +237,7 @@ public:
         return GetD2DResource();
     }
 
-    CComPtr<T>& GetD2DResource()
+    wxCOMPtr<T>& GetD2DResource()
     {
         if (!IsResourceAcquired())
         {
@@ -260,7 +258,7 @@ public:
 
     void ReleaseResource() wxOVERRIDE
     {
-        m_nativeResource.Release();
+        m_nativeResource.reset();
     }
 
     wxD2DContextSupplier::ContextType GetContext()
@@ -303,7 +301,7 @@ private:
     wxD2DResourceManager* m_resourceManager;
 
 protected:
-    CComPtr<T> m_nativeResource;
+    wxCOMPtr<T> m_nativeResource;
 };
 
 // Used as super class for graphics data objects
@@ -540,7 +538,7 @@ D2D1_RECT_F wxD2DConvertRect(const wxRect& rect)
     return D2D1::RectF(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
 }
 
-CComPtr<ID2D1Geometry> wxD2DConvertRegionToGeometry(ID2D1Factory* direct2dFactory, const wxRegion& region)
+wxCOMPtr<ID2D1Geometry> wxD2DConvertRegionToGeometry(ID2D1Factory* direct2dFactory, const wxRegion& region)
 {
     wxRegionIterator regionIterator(region);
 
@@ -569,7 +567,7 @@ CComPtr<ID2D1Geometry> wxD2DConvertRegionToGeometry(ID2D1Factory* direct2dFactor
     }
 
     // Create a geometry group to hold all the rectangles
-    CComPtr<ID2D1GeometryGroup> resultGeometry = NULL;
+    wxCOMPtr<ID2D1GeometryGroup> resultGeometry;
     direct2dFactory->CreateGeometryGroup(
         D2D1_FILL_MODE_WINDING, 
         geometries, 
@@ -584,7 +582,7 @@ CComPtr<ID2D1Geometry> wxD2DConvertRegionToGeometry(ID2D1Factory* direct2dFactor
 
     delete[] geometries;
 
-    return CComPtr<ID2D1Geometry>(resultGeometry);
+    return wxCOMPtr<ID2D1Geometry>(resultGeometry);
 }
 
 class wxD2DOffsetHelper
@@ -835,13 +833,13 @@ private:
     void EnsureFigureOpen(wxDouble x = 0, wxDouble y = 0);
 
 private :
-    CComPtr<ID2D1PathGeometry> m_pathGeometry;
+    wxCOMPtr<ID2D1PathGeometry> m_pathGeometry;
 
-    CComPtr<ID2D1GeometrySink> m_geometrySink;
+    wxCOMPtr<ID2D1GeometrySink> m_geometrySink;
 
-    CComPtr<ID2D1Factory> m_direct2dfactory;
+    wxCOMPtr<ID2D1Factory> m_direct2dfactory;
 
-    mutable CComPtr<ID2D1TransformedGeometry> m_transformedGeometry;
+    mutable wxCOMPtr<ID2D1TransformedGeometry> m_transformedGeometry;
 
     D2D1_POINT_2F m_currentPoint;
 
@@ -903,10 +901,10 @@ void wxD2DPathData::Flush()
 void wxD2DPathData::EnsureGeometryOpen()
 {
     if (!m_geometryWritable) {
-        CComPtr<ID2D1PathGeometry> newPathGeometry;
+        wxCOMPtr<ID2D1PathGeometry> newPathGeometry;
         m_direct2dfactory->CreatePathGeometry(&newPathGeometry);
 
-        m_geometrySink.Release();
+        m_geometrySink.reset();
         newPathGeometry->Open(&m_geometrySink);
 
         if (m_pathGeometry != NULL)
@@ -1039,8 +1037,8 @@ void wxD2DPathData::AddEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 {
     Flush();
 
-    CComPtr<ID2D1EllipseGeometry> ellipseGeometry;
-    CComPtr<ID2D1PathGeometry> newPathGeometry;
+    wxCOMPtr<ID2D1EllipseGeometry> ellipseGeometry;
+    wxCOMPtr<ID2D1PathGeometry> newPathGeometry;
 
     D2D1_ELLIPSE ellipse = { {x + w / 2, y + h / 2}, w / 2, h / 2 };
 
@@ -1089,7 +1087,7 @@ void wxD2DPathData::CloseSubpath()
 
 void* wxD2DPathData::GetNativePath() const
 {
-    m_transformedGeometry.Release();
+    m_transformedGeometry.reset();
     m_direct2dfactory->CreateTransformedGeometry(m_pathGeometry, m_transformMatrix, &m_transformedGeometry);
     return m_transformedGeometry;
 }
@@ -1148,17 +1146,17 @@ struct wxPBGRAColor
     BYTE b, g, r, a;
 };
 
-CComPtr<IWICBitmapSource> wxCreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = false)
+wxCOMPtr<IWICBitmapSource> wxCreateWICBitmap(const WXHBITMAP sourceBitmap, bool hasAlpha = false)
 {
     HRESULT hr;
 
-    CComPtr<IWICBitmap> wicBitmap;
+    wxCOMPtr<IWICBitmap> wicBitmap;
     hr = wxWICImagingFactory()->CreateBitmapFromHBITMAP(sourceBitmap, NULL, WICBitmapUseAlpha, &wicBitmap);
-    wxCHECK_HRESULT_RET_PTR(hr);
+    wxCHECK2_HRESULT_RET(hr, wxCOMPtr<IWICBitmapSource>(NULL));
 
-    CComPtr<IWICFormatConverter> converter;
+    wxCOMPtr<IWICFormatConverter> converter;
     hr = wxWICImagingFactory()->CreateFormatConverter(&converter);
-    wxCHECK_HRESULT_RET_PTR(hr);
+    wxCHECK2_HRESULT_RET(hr, wxCOMPtr<IWICBitmapSource>(NULL));
 
     WICPixelFormatGUID pixelFormat = hasAlpha ? GUID_WICPixelFormat32bppPBGRA : GUID_WICPixelFormat32bppBGR;
 
@@ -1167,12 +1165,12 @@ CComPtr<IWICBitmapSource> wxCreateWICBitmap(const WXHBITMAP sourceBitmap, bool h
         pixelFormat,
         WICBitmapDitherTypeNone, NULL, 0.f, 
         WICBitmapPaletteTypeMedianCut);
-    wxCHECK_HRESULT_RET_PTR(hr);
+    wxCHECK2_HRESULT_RET(hr, wxCOMPtr<IWICBitmapSource>(NULL));
 
-    return CComPtr<IWICBitmapSource>(converter);
+    return wxCOMPtr<IWICBitmapSource>(converter);
 }
 
-CComPtr<IWICBitmapSource> wxCreateWICBitmap(const wxBitmap& sourceBitmap, bool hasAlpha = false)
+wxCOMPtr<IWICBitmapSource> wxCreateWICBitmap(const wxBitmap& sourceBitmap, bool hasAlpha = false)
 {
     return wxCreateWICBitmap(sourceBitmap.GetHBITMAP(), hasAlpha);
 }
@@ -1329,7 +1327,7 @@ public:
     IWICBitmapLock* GetLock() { return m_pixelLock; }
 
 private:
-    CComPtr<IWICBitmapLock> m_pixelLock;
+    wxCOMPtr<IWICBitmapLock> m_pixelLock;
 };
 
 class wxD2DBitmapResourceHolder : public wxD2DResourceHolder<ID2D1Bitmap>
@@ -1354,9 +1352,9 @@ protected:
             int w = m_sourceBitmap.GetWidth();
             int h = m_sourceBitmap.GetHeight();
 
-            CComPtr<IWICBitmapSource> colorBitmap = wxCreateWICBitmap(m_sourceBitmap);
-            CComPtr<IWICBitmapSource> maskBitmap = wxCreateWICBitmap(m_sourceBitmap.GetMask()->GetMaskBitmap());
-            CComPtr<IWICBitmap> resultBitmap;
+            wxCOMPtr<IWICBitmapSource> colorBitmap = wxCreateWICBitmap(m_sourceBitmap);
+            wxCOMPtr<IWICBitmapSource> maskBitmap = wxCreateWICBitmap(m_sourceBitmap.GetMask()->GetMaskBitmap());
+            wxCOMPtr<IWICBitmap> resultBitmap;
 
             wxWICImagingFactory()->CreateBitmap(
                 w, h, 
@@ -1404,7 +1402,7 @@ protected:
         }
         else
         {
-            CComPtr<IWICBitmapSource> bitmapSource = wxCreateWICBitmap(m_sourceBitmap, m_sourceBitmap.HasAlpha());
+            wxCOMPtr<IWICBitmapSource> bitmapSource = wxCreateWICBitmap(m_sourceBitmap, m_sourceBitmap.HasAlpha());
             hr = renderTarget->CreateBitmapFromWicBitmap(bitmapSource, 0, &m_nativeResource);
         }
     }
@@ -1431,7 +1429,7 @@ public:
     // returns the native representation
     void* GetNativeBitmap() const wxOVERRIDE;
 
-    CComPtr<ID2D1Bitmap> GetD2DBitmap();
+    wxCOMPtr<ID2D1Bitmap> GetD2DBitmap();
 
     wxD2DManagedObject* GetManagedObject() wxOVERRIDE
     {
@@ -1451,7 +1449,7 @@ void* wxD2DBitmapData::GetNativeBitmap() const
     return (void*)&m_bitmapHolder;
 }
 
-CComPtr<ID2D1Bitmap> wxD2DBitmapData::GetD2DBitmap()
+wxCOMPtr<ID2D1Bitmap> wxD2DBitmapData::GetD2DBitmap()
 {
     return m_bitmapHolder.GetD2DResource();
 }
@@ -1488,7 +1486,7 @@ public:
     }
 
 private:
-    CComPtr<ID2D1GradientStopCollection> m_gradientStopCollection;
+    wxCOMPtr<ID2D1GradientStopCollection> m_gradientStopCollection;
 };
 
 template <typename B>
@@ -1546,9 +1544,9 @@ public:
 protected:
     void DoAcquireResource() wxOVERRIDE
     {
-        CComPtr<wxHatchBitmapSource> hatchBitmapSource = new wxHatchBitmapSource(m_sourceBrush.GetStyle(), m_sourceBrush.GetColour());
+        wxCOMPtr<wxHatchBitmapSource> hatchBitmapSource(new wxHatchBitmapSource(m_sourceBrush.GetStyle(), m_sourceBrush.GetColour()));
 
-        CComPtr<ID2D1Bitmap> bitmap;
+        wxCOMPtr<ID2D1Bitmap> bitmap;
 
         HRESULT hr = GetContext()->CreateBitmapFromWicBitmap(hatchBitmapSource, &bitmap);
 
@@ -1733,7 +1731,7 @@ private:
 
     // A stroke style is a device-independent resource.
     // Describes the caps, miter limit, line join, and dash information.
-    CComPtr<ID2D1StrokeStyle> m_strokeStyle;
+    wxCOMPtr<ID2D1StrokeStyle> m_strokeStyle;
 
     // Drawing outlines with Direct2D requires a brush for the color or stipple.
     wxSharedPtr<wxD2DBrushData> m_stippleBrush;
@@ -1824,20 +1822,20 @@ class wxD2DFontData : public wxGraphicsObjectRefData
 public:
     wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2d1Factory, const wxFont& font, const wxColor& color);
 
-    CComPtr<IDWriteTextLayout> CreateTextLayout(const wxString& text) const;
+    wxCOMPtr<IDWriteTextLayout> CreateTextLayout(const wxString& text) const;
 
     wxD2DBrushData& GetBrushData() { return m_brushData; }
 
-    CComPtr<IDWriteTextFormat> GetTextFormat() const { return m_textFormat; }
+    wxCOMPtr<IDWriteTextFormat> GetTextFormat() const { return m_textFormat; }
 
-    CComPtr<IDWriteFont> GetFont() { return m_font; };
+    wxCOMPtr<IDWriteFont> GetFont() { return m_font; };
 
 private:
     // The native, device-independent font object
-    CComPtr<IDWriteFont> m_font;
+    wxCOMPtr<IDWriteFont> m_font;
 
     // The native, device-independent font object
-    CComPtr<IDWriteTextFormat> m_textFormat;
+    wxCOMPtr<IDWriteTextFormat> m_textFormat;
 
     // We use a color brush to render the font
     wxD2DBrushData m_brushData;
@@ -1853,7 +1851,7 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
 {
     HRESULT hr;
 
-    CComPtr<IDWriteGdiInterop> gdiInterop;
+    wxCOMPtr<IDWriteGdiInterop> gdiInterop;
     hr = wxDWriteFactory()->GetGdiInterop(&gdiInterop);
 
     LOGFONT logfont;
@@ -1870,10 +1868,10 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
 
     hr = gdiInterop->CreateFontFromLOGFONT(&logfont, &m_font);
 
-    CComPtr<IDWriteFontFamily> fontFamily = NULL;
+    wxCOMPtr<IDWriteFontFamily> fontFamily;
     m_font->GetFontFamily(&fontFamily);
 
-    CComPtr<IDWriteLocalizedStrings> familyNames = NULL;
+    wxCOMPtr<IDWriteLocalizedStrings> familyNames;
     fontFamily->GetFamilyNames(&familyNames);
 
     UINT32 length;
@@ -1898,14 +1896,14 @@ wxD2DFontData::wxD2DFontData(wxGraphicsRenderer* renderer, ID2D1Factory* d2dFact
     delete[] name;
 }
 
-CComPtr<IDWriteTextLayout> wxD2DFontData::CreateTextLayout(const wxString& text) const
+wxCOMPtr<IDWriteTextLayout> wxD2DFontData::CreateTextLayout(const wxString& text) const
 {
     static const FLOAT MAX_WIDTH = FLT_MAX;
     static const FLOAT MAX_HEIGHT = FLT_MAX;
 
     HRESULT hr;
 
-    CComPtr<IDWriteTextLayout> textLayout;
+    wxCOMPtr<IDWriteTextLayout> textLayout;
 
     hr = wxDWriteFactory()->CreateTextLayout(
         text.c_str(),
@@ -1979,7 +1977,7 @@ public:
 protected:
     void DoAcquireResource() wxOVERRIDE
     {
-        CComPtr<ID2D1HwndRenderTarget> renderTarget;
+        wxCOMPtr<ID2D1HwndRenderTarget> renderTarget;
 
         HRESULT result;
 
@@ -2009,7 +2007,7 @@ private:
     // ID2D1RenderTarget* to the actual implementation type
     ImplementationType GetRenderTarget()
     {
-        return static_cast<ImplementationType>(GetD2DResource().p);
+        return static_cast<ImplementationType>(GetD2DResource().get());
     }
 
 private:
@@ -2086,8 +2084,8 @@ public:
 
     static void GetTextExtent(wxD2DFontData* fontData, const wxString& str, wxDouble* width, wxDouble* height, wxDouble* descent, wxDouble* externalLeading)
     {
-        CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
-        CComPtr<IDWriteFont> font = fontData->GetFont();
+        wxCOMPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
+        wxCOMPtr<IDWriteFont> font = fontData->GetFont();
 
         DWRITE_TEXT_METRICS textMetrics;
         textLayout->GetMetrics(&textMetrics);
@@ -2222,16 +2220,16 @@ private:
     // A ID2D1DrawingStateBlock represents the drawing state of a render target: 
     // the anti aliasing mode, transform, tags, and text-rendering options.
     // The context owns these pointers and is responsible for releasing them.
-    wxStack<CComPtr<ID2D1DrawingStateBlock>> m_stateStack;
+    wxStack<wxCOMPtr<ID2D1DrawingStateBlock>> m_stateStack;
 
     ClipMode m_clipMode;
 
     bool m_clipLayerAcquired;
 
     // A direct2d layer is a device-dependent resource.
-    CComPtr<ID2D1Layer> m_clipLayer;
+    wxCOMPtr<ID2D1Layer> m_clipLayer;
 
-    wxStack<CComPtr<ID2D1Layer>> m_layers;
+    wxStack<wxCOMPtr<ID2D1Layer>> m_layers;
 
     ID2D1RenderTarget* m_cachedRenderTarget;
 
@@ -2292,7 +2290,7 @@ void wxD2DContext::Clip(const wxRegion& region)
     GetRenderTarget()->Flush();
     ResetClip();
 
-    CComPtr<ID2D1Geometry> clipGeometry = wxD2DConvertRegionToGeometry(m_direct2dFactory, region);
+    wxCOMPtr<ID2D1Geometry> clipGeometry = wxD2DConvertRegionToGeometry(m_direct2dFactory, region);
 
     if (!m_clipLayerAcquired)
     {
@@ -2420,7 +2418,7 @@ bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
 {
-    CComPtr<ID2D1Layer> layer;
+    wxCOMPtr<ID2D1Layer> layer;
     GetRenderTarget()->CreateLayer(&layer);
     m_layers.push(layer);
 
@@ -2436,7 +2434,7 @@ void wxD2DContext::EndLayer()
 {
     if (!m_layers.empty())
     {
-        CComPtr<ID2D1Layer> topLayer = m_layers.top();
+        wxCOMPtr<ID2D1Layer> topLayer = m_layers.top();
 
         GetRenderTarget()->PopLayer();
 
@@ -2540,7 +2538,7 @@ void wxD2DContext::PushState()
 {
     ID2D1Factory* wxGetD2DFactory(wxGraphicsRenderer* renderer);
 
-    CComPtr<ID2D1DrawingStateBlock> drawStateBlock;
+    wxCOMPtr<ID2D1DrawingStateBlock> drawStateBlock;
     wxGetD2DFactory(GetRenderer())->CreateDrawingStateBlock(&drawStateBlock);
     GetRenderTarget()->SaveDrawingState(drawStateBlock);
 
@@ -2551,7 +2549,7 @@ void wxD2DContext::PopState()
 {
     wxCHECK_RET(!m_stateStack.empty(), wxT("No state to pop"));
 
-    CComPtr<ID2D1DrawingStateBlock> drawStateBlock = m_stateStack.top();
+    wxCOMPtr<ID2D1DrawingStateBlock> drawStateBlock = m_stateStack.top();
     m_stateStack.pop();
 
     GetRenderTarget()->RestoreDrawingState(drawStateBlock);
@@ -2602,7 +2600,7 @@ void wxD2DContext::DoDrawText(const wxString& str, wxDouble x, wxDouble y)
     wxD2DFontData* fontData = wxGetD2DFontData(m_font);
     fontData->GetBrushData().Bind(this);
 
-    CComPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
+    wxCOMPtr<IDWriteTextLayout> textLayout = fontData->CreateTextLayout(str);
 
     // Render the text
     GetRenderTarget()->DrawTextLayout(
@@ -2650,7 +2648,7 @@ void wxD2DContext::ReleaseDeviceDependentResources()
 {
     ReleaseResources();
 
-    m_clipLayer.Release();
+    m_clipLayer.reset();
     m_clipLayerAcquired = false;
 }
 
@@ -2843,7 +2841,7 @@ public :
     ID2D1Factory* GetD2DFactory();
 
 private:
-    CComPtr<ID2D1Factory> m_direct2dFactory;
+    wxCOMPtr<ID2D1Factory> m_direct2dFactory;
 
 private :
     DECLARE_DYNAMIC_CLASS_NO_COPY(wxD2DRenderer)
@@ -2873,7 +2871,7 @@ wxD2DRenderer::wxD2DRenderer()
 
 wxD2DRenderer::~wxD2DRenderer()
 {
-    m_direct2dFactory.Release();
+    m_direct2dFactory.reset();
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& WXUNUSED(dc))
