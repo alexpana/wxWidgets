@@ -12,7 +12,7 @@
 // Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
 // Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
 // Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
-#define D2D1_DEVICE_CONTEXT_SUPPORTED 1
+#define wxD2D_DEVICE_CONTEXT_SUPPORTED 1
 
 #include <algorithm>
 #include <cfloat>
@@ -28,6 +28,12 @@
 #include <dwrite.h>
 
 #include <wincodec.h>
+
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
+#include <D3D11.h>
+#include <D2d1_1.h>
+#include <DXGI1_2.h>
+#endif
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -442,7 +448,7 @@ D2D1_ANTIALIAS_MODE wxD2DConvertAntialiasMode(wxAntialiasMode antialiasMode)
     return D2D1_ANTIALIAS_MODE_ALIASED;;
 }
 
-#if D2D1_DEVICE_CONTEXT_SUPPORTED
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
 bool wxD2DCompositionModeSupported(wxCompositionMode compositionMode)
 {
     if (compositionMode == wxCOMPOSITION_CLEAR || compositionMode == wxCOMPOSITION_INVALID)
@@ -493,7 +499,7 @@ D2D1_COMPOSITE_MODE wxD2DConvertCompositionMode(wxCompositionMode compositionMod
 }
 #endif // D2D1_BLEND_SUPPORTED
 
-#if D2D1_DEVICE_CONTEXT_SUPPORTED
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
 D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
 {
     switch (interpolationQuality)
@@ -2002,6 +2008,7 @@ protected:
 
         m_nativeResource = renderTarget;
     }
+
 private:
     // Converts the underlying resource pointer of type
     // ID2D1RenderTarget* to the actual implementation type
@@ -2013,6 +2020,175 @@ private:
 private:
     HWND m_hwnd;
     ID2D1Factory* m_factory;
+};
+
+class wxD2DDeviceContextResourceHolder : public wxD2DRenderTargetResourceHolder
+{
+public:
+    wxD2DDeviceContextResourceHolder(ID2D1Factory* factory, HWND hwnd) :
+        m_factory(NULL), m_hwnd(hwnd)
+    {
+        HRESULT hr = factory->QueryInterface(IID_ID2D1Factory1, (void**)&m_factory);
+        wxCHECK_HRESULT_RET(hr);
+    }
+
+    void Resize() wxOVERRIDE
+    {
+    }
+
+    D2D1_SIZE_U GetSize() wxOVERRIDE
+    {
+        D2D1_SIZE_F realSize = m_context->GetSize();
+        return D2D1::SizeU((UINT)realSize.width, (UINT)realSize.height);
+    }
+
+protected:
+
+    // Adapted from http://msdn.microsoft.com/en-us/library/windows/desktop/hh780339%28v=vs.85%29.aspx
+    void DoAcquireResource() wxOVERRIDE
+    {
+        HRESULT hr;
+
+        // This flag adds support for surfaces with a different color channel ordering than the API default.
+        // You need it for compatibility with Direct2D.
+        UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
+        // This array defines the set of DirectX hardware feature levels this app  supports.
+        // The ordering is important and you should  preserve it.
+        // Don't forget to declare your app's minimum required feature level in its
+        // description.  All apps are assumed to support 9.1 unless otherwise stated.
+        D3D_FEATURE_LEVEL featureLevels[] = 
+        {
+            D3D_FEATURE_LEVEL_11_1,
+            D3D_FEATURE_LEVEL_11_0,
+            D3D_FEATURE_LEVEL_10_1,
+            D3D_FEATURE_LEVEL_10_0,
+            D3D_FEATURE_LEVEL_9_3,
+            D3D_FEATURE_LEVEL_9_2,
+            D3D_FEATURE_LEVEL_9_1
+        };
+
+        // Create the DX11 API device object, and get a corresponding context.
+        wxCOMPtr<ID3D11Device> device;
+        wxCOMPtr<ID3D11DeviceContext> context;
+
+        hr = D3D11CreateDevice(
+            NULL,                    // specify null to use the default adapter
+            D3D_DRIVER_TYPE_HARDWARE,
+            0,                          
+            creationFlags,              // optionally set debug and Direct2D compatibility flags
+            featureLevels,              // list of feature levels this app can support
+            ARRAYSIZE(featureLevels),   // number of possible feature levels
+            D3D11_SDK_VERSION,          
+            &device,                    // returns the Direct3D device created
+            &m_featureLevel,            // returns feature level of device created
+            &context);                  // returns the device immediate context
+        wxCHECK_HRESULT_RET(hr);
+
+        // Obtain the underlying DXGI device of the Direct3D11 device.
+        hr = device->QueryInterface(IID_IDXGIDevice, (void**)&m_dxgiDevice);
+        wxCHECK_HRESULT_RET(hr);
+
+        // Obtain the Direct2D device for 2-D rendering.
+        hr = m_factory->CreateDevice(m_dxgiDevice, &m_device);
+        wxCHECK_HRESULT_RET(hr);
+
+        // Get Direct2D device's corresponding device context object.
+        hr = m_device->CreateDeviceContext(
+            D2D1_DEVICE_CONTEXT_OPTIONS_NONE,
+            &m_context);
+        wxCHECK_HRESULT_RET(hr);
+
+        m_nativeResource = m_context;
+
+        AttachSurface();
+    }
+
+private:
+    void AttachSurface()
+    {
+        HRESULT hr;
+
+        // Allocate a descriptor.
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
+        swapChainDesc.Width = 0;
+        swapChainDesc.Height = 0;
+        swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        swapChainDesc.Stereo = false; 
+        swapChainDesc.SampleDesc.Count = 1;
+        swapChainDesc.SampleDesc.Quality = 0;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount = 2;
+        swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+        swapChainDesc.Flags = 0;
+
+        // Identify the physical adapter (GPU or card) this device is runs on.
+        wxCOMPtr<IDXGIAdapter> dxgiAdapter;
+        m_dxgiDevice->GetAdapter(&dxgiAdapter);
+
+        // Get the factory object that created the DXGI device.
+        wxCOMPtr<IDXGIFactory2> dxgiFactory;
+        dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
+
+        // Get the final swap chain for this window from the DXGI factory.
+        hr = dxgiFactory->CreateSwapChainForHwnd(
+            m_dxgiDevice,
+            m_hwnd,
+            &swapChainDesc,
+            NULL,    // allow on all displays
+            NULL,
+            &m_swapChain);
+
+        // Ensure that DXGI doesn't queue more than one frame at a time.
+        m_dxgiDevice->SetMaximumFrameLatency(1);
+
+        // Get the backbuffer for this window which is be the final 3D render target.
+        wxCOMPtr<ID3D11Texture2D> backBuffer;
+        m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+
+        FLOAT dpiX, dpiY;
+        m_factory->GetDesktopDpi(&dpiX, &dpiY);
+
+        // Now we set up the Direct2D render target bitmap linked to the swapchain. 
+        // Whenever we render to this bitmap, it is directly rendered to the 
+        // swap chain associated with the window.
+        D2D1_BITMAP_PROPERTIES1 bitmapProperties =  D2D1::BitmapProperties1(
+            D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+            D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE),
+            dpiX, dpiY);
+
+        // Direct2D needs the dxgi version of the backbuffer surface pointer.
+        wxCOMPtr<IDXGISurface> dxgiBackBuffer;
+        m_swapChain->GetBuffer(0, IID_PPV_ARGS(&dxgiBackBuffer));
+
+        // Get a D2D surface from the DXGI back buffer to use as the D2D render target.
+        m_context->CreateBitmapFromDxgiSurface(
+            dxgiBackBuffer.get(),
+            &bitmapProperties,
+            &m_targetBitmap);
+
+        // Now we can set the Direct2D render target.
+        m_context->SetTarget(m_targetBitmap);
+    }
+
+    ~wxD2DDeviceContextResourceHolder()
+    {
+        DXGI_PRESENT_PARAMETERS params = { 0 };
+        m_swapChain->Present1(1, 0, &params);
+    }
+
+private:
+    ID2D1Factory1* m_factory;
+
+    HWND m_hwnd;
+
+    D3D_FEATURE_LEVEL m_featureLevel;
+    wxCOMPtr<IDXGIDevice1> m_dxgiDevice;
+    wxCOMPtr<ID2D1Device> m_device;
+    wxCOMPtr<ID2D1DeviceContext> m_context;
+    wxCOMPtr<ID2D1Bitmap1> m_targetBitmap;
+    wxCOMPtr<IDXGISwapChain1> m_swapChain;
 };
 
 // The null context has no state of its own and does nothing.
@@ -2242,8 +2418,12 @@ private:
 //-----------------------------------------------------------------------------
 
 wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd) : 
-    wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory), 
+    wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory),
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
+    m_renderTargetHolder(new wxD2DDeviceContextResourceHolder(direct2dFactory, hwnd))
+#else
     m_renderTargetHolder(new wxD2DHwndRenderTargetResourceHolder(hwnd, direct2dFactory))
+#endif
 {
     Init();
 }
@@ -2391,17 +2571,17 @@ bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
 
 bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
 {
-#if D2D1_DEVICE_CONTEXT_SUPPORTED
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
     m_interpolation = interpolation;
     return true;
 #else
     return false;
-#endif // D2D1_DEVICE_CONTEXT_SUPPORTED
+#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 }
 
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 {
-#if D2D1_DEVICE_CONTEXT_SUPPORTED
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
     if (wxD2DCompositionModeSupported(op))
     {
         m_composition = op;
@@ -2413,7 +2593,7 @@ bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
     }
 #else
     return false;
-#endif // D2D1_DEVICE_CONTEXT_SUPPORTED
+#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 }
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
