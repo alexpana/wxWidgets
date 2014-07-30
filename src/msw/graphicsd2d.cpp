@@ -1946,6 +1946,9 @@ class wxD2DRenderTargetResourceHolder : public wxD2DResourceHolder<ID2D1RenderTa
 public:
     virtual void Resize() = 0;
     virtual D2D1_SIZE_U GetSize() = 0;
+    virtual void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
+        D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
+        wxCompositionMode compositionMode) = 0;
 };
 
 class wxD2DHwndRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
@@ -1978,6 +1981,19 @@ public:
     D2D1_SIZE_U GetSize() wxOVERRIDE
     {
         return GetRenderTarget()->GetPixelSize();
+    }
+
+    void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
+        D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
+        wxCompositionMode WXUNUSED(compositionMode)) wxOVERRIDE
+    {
+        D2D1_RECT_F destinationRectangle = D2D1::RectF(offset.x, offset.y, offset.x + imageRectangle.right, offset.y + imageRectangle.bottom);
+        GetRenderTarget()->DrawBitmap(
+            (ID2D1Bitmap*)image, 
+            destinationRectangle, 
+            1.0f, 
+            wxD2DConvertBitmapInterpolationMode(interpolationQuality),
+            imageRectangle);
     }
 
 protected:
@@ -2041,6 +2057,17 @@ public:
     {
         D2D1_SIZE_F realSize = m_context->GetSize();
         return D2D1::SizeU((UINT)realSize.width, (UINT)realSize.height);
+    }
+
+    void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
+        D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
+        wxCompositionMode compositionMode) wxOVERRIDE
+    {
+        m_context->DrawImage(image, 
+            offset, 
+            imageRectangle, 
+            wxD2DConvertInterpolationQuality(interpolationQuality), 
+            wxD2DConvertCompositionMode(compositionMode));
     }
 
 protected:
@@ -2698,11 +2725,12 @@ void wxD2DContext::DrawBitmap(const wxGraphicsBitmap& bmp, wxDouble x, wxDouble 
     wxD2DBitmapData* bitmapData = wxGetD2DBitmapData(bmp);
     bitmapData->Bind(this);
 
-    GetRenderTarget()->DrawBitmap(
-        bitmapData->GetD2DBitmap(), 
-        D2D1::RectF(x, y, x + w, y + h), 
-        1.0f, 
-        wxD2DConvertBitmapInterpolationMode(GetInterpolationQuality()));
+    m_renderTargetHolder->DrawBitmap(
+        bitmapData->GetD2DBitmap(),
+        D2D1::Point2F(x, y),
+        D2D1::RectF(0, 0, w, h),
+        GetInterpolationQuality(),
+        GetCompositionMode());
 }
 
 void wxD2DContext::DrawBitmap(const wxBitmap& bmp, wxDouble x, wxDouble y, wxDouble w, wxDouble h)
