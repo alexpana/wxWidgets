@@ -2022,6 +2022,7 @@ private:
     ID2D1Factory* m_factory;
 };
 
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
 class wxD2DDeviceContextResourceHolder : public wxD2DRenderTargetResourceHolder
 {
 public:
@@ -2190,6 +2191,7 @@ private:
     wxCOMPtr<ID2D1Bitmap1> m_targetBitmap;
     wxCOMPtr<IDXGISwapChain1> m_swapChain;
 };
+#endif
 
 // The null context has no state of its own and does nothing.
 // It is only used as a base class for the lightweight
