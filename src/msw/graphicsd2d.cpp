@@ -1945,7 +1945,6 @@ class wxD2DRenderTargetResourceHolder : public wxD2DResourceHolder<ID2D1RenderTa
 {
 public:
     virtual void Resize() = 0;
-    virtual D2D1_SIZE_U GetSize() = 0;
     virtual void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
         D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
         wxCompositionMode compositionMode) = 0;
@@ -1976,11 +1975,6 @@ public:
         {
             GetRenderTarget()->Resize(hwndSize);
         }
-    }
-
-    D2D1_SIZE_U GetSize() wxOVERRIDE
-    {
-        return GetRenderTarget()->GetPixelSize();
     }
 
     void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
@@ -2051,12 +2045,6 @@ public:
 
     void Resize() wxOVERRIDE
     {
-    }
-
-    D2D1_SIZE_U GetSize() wxOVERRIDE
-    {
-        D2D1_SIZE_F realSize = m_context->GetSize();
-        return D2D1::SizeU((UINT)realSize.width, (UINT)realSize.height);
     }
 
     void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
@@ -2850,8 +2838,9 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
 void wxD2DContext::AdjustRenderTargetSize()
 {
     m_renderTargetHolder->Resize();
-    m_width = m_renderTargetHolder->GetSize().width;
-    m_height =  m_renderTargetHolder->GetSize().height;
+    D2D1_SIZE_F renderTargetSize = m_renderTargetHolder->GetD2DResource()->GetSize();
+    m_width = renderTargetSize.width;
+    m_height =  renderTargetSize.height;
 }
 
 void wxD2DContext::ReleaseDeviceDependentResources()
