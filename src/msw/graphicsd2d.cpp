@@ -54,7 +54,7 @@
 #include "wx/sharedptr.h"
 
 // Generic error message for a failed direct2d operation
-#define wxFAILED_HRESULT_MSG(result) wxString::Format("Direct2D failed with HRESULT %ld", (result))
+#define wxFAILED_HRESULT_MSG(result) wxString::Format("Direct2D failed with HRESULT %x", (result))
 
 // Checks a HRESULT and displaying an error message when
 // and returning from the enclosing function when the result
