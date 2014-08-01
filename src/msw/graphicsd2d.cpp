@@ -3399,12 +3399,15 @@ wxString wxD2DRenderer::GetName() const
 
 void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro) const
 {
-    if ( major )
-        *major = wxPlatformInfo::Get().GetOSMajorVersion();
-    if ( minor )
-        *minor = wxPlatformInfo::Get().GetOSMinorVersion();
-    if ( micro )
-        *micro = 0;
+    if ( major ) *major = 1;
+
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
+    if ( minor ) *minor = 1;
+#else
+    if ( minor ) *minor = 0;
+#endif
+
+    if ( micro ) *micro = 0;
 }
 
 ID2D1Factory* wxD2DRenderer::GetD2DFactory()
