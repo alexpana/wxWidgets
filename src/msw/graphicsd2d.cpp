@@ -1372,8 +1372,8 @@ protected:
             BYTE* maskBuffer = new BYTE[4 * w * h];
             BYTE* resultBuffer;
 
-            hr = colorBitmap->CopyPixels(NULL, w * 4, 32 * w * h, colorBuffer);
-            hr = maskBitmap->CopyPixels(NULL, w * 4, 32 * w * h, maskBuffer);
+            hr = colorBitmap->CopyPixels(NULL, w * 4, 4 * w * h, colorBuffer);
+            hr = maskBitmap->CopyPixels(NULL, w * 4, 4 * w * h, maskBuffer);
 
             {
                 wxBitmapPixelWriteLock lock(resultBitmap);
