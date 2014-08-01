@@ -1948,6 +1948,8 @@ public:
     virtual void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
         D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
         wxCompositionMode compositionMode) = 0;
+    virtual HRESULT Flush() = 0;
+};
 };
 
 class wxD2DHwndRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
@@ -1988,6 +1990,11 @@ public:
             1.0f, 
             wxD2DConvertBitmapInterpolationMode(interpolationQuality),
             imageRectangle);
+    }
+
+    HRESULT Flush() wxOVERRIDE
+    {
+        return m_nativeResource->Flush();
     }
 
 protected:
@@ -2056,6 +2063,14 @@ public:
             imageRectangle, 
             wxD2DConvertInterpolationQuality(interpolationQuality), 
             wxD2DConvertCompositionMode(compositionMode));
+    }
+
+    HRESULT Flush() wxOVERRIDE
+    {
+        HRESULT hr = m_nativeResource->Flush();
+        DXGI_PRESENT_PARAMETERS params = { 0 };
+        m_swapChain->Present1(1, 0, &params);
+        return hr;
     }
 
 protected:
@@ -2941,7 +2956,7 @@ void wxD2DContext::DrawEllipse(wxDouble x, wxDouble y, wxDouble w, wxDouble h)
 
 void wxD2DContext::Flush()
 {
-    HRESULT result = GetRenderTarget()->EndDraw();
+    HRESULT result = m_renderTargetHolder->Flush();
 
     if (result == D2DERR_RECREATE_TARGET)
     {
