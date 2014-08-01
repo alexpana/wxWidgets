@@ -80,17 +80,31 @@
 #define wxCHECK_RESOURCE_HOLDER_POST() \
     wxCHECK_RET(m_nativeResource != NULL, "Could not acquire native resource");
 
+static bool gs_isComInitialized = false;
+
+void wxEnsureCOMLibraryInitialized()
+{
+    if (!gs_isComInitialized)
+    {
+        CoInitializeEx(NULL, COINIT_MULTITHREADED);
+        gs_isComInitialized = true;
+    }
+}
+
 static IWICImagingFactory* gs_WICImagingFactory = NULL;
 
 IWICImagingFactory* wxWICImagingFactory() 
 {
     if (gs_WICImagingFactory == NULL) {
-        CoCreateInstance(
+        wxEnsureCOMLibraryInitialized();
+
+        HRESULT hr = CoCreateInstance(
             CLSID_WICImagingFactory,
             NULL,
             CLSCTX_INPROC_SERVER,
             IID_IWICImagingFactory,
             (LPVOID*)&gs_WICImagingFactory);
+        wxCHECK_HRESULT_RET_PTR(hr);
     }
     return gs_WICImagingFactory;
 }
@@ -100,6 +114,8 @@ static IDWriteFactory* gs_IDWriteFactory = NULL;
 IDWriteFactory* wxDWriteFactory() 
 {
     if (gs_IDWriteFactory == NULL) {
+        wxEnsureCOMLibraryInitialized();
+
         DWriteCreateFactory(
             DWRITE_FACTORY_TYPE_SHARED,
             __uuidof(IDWriteFactory),
@@ -3183,6 +3199,8 @@ wxGraphicsRenderer* wxGraphicsRenderer::GetDirect2DRenderer()
 
 wxD2DRenderer::wxD2DRenderer()
 {
+    wxEnsureCOMLibraryInitialized();
+
     HRESULT result;
     result = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_direct2dFactory);
     if (FAILED(result)) {
