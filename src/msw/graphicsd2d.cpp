@@ -23,7 +23,6 @@
 #undef GetHwnd
 
 #include <d2d1.h>
-#include <d2d1effectauthor.h>
 
 #include <dwrite.h>
 
