@@ -1987,7 +1987,7 @@ public:
 
     void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
         D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
-        wxCompositionMode compositionMode) wxOVERRIDE
+        wxCompositionMode WXUNUSED(compositionMode)) wxOVERRIDE
     {
         D2D1_RECT_F destinationRectangle = D2D1::RectF(offset.x, offset.y, offset.x + imageRectangle.right, offset.y + imageRectangle.bottom);
         GetD2DResource()->DrawBitmap(
