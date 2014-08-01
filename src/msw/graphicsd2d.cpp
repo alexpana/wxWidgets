@@ -47,6 +47,7 @@
 
 #include "wx/graphics.h"
 #include "wx/dc.h"
+#include "wx/image.h"
 #include "wx/msw/private/comptr.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
@@ -1955,6 +1956,98 @@ public:
         wxCompositionMode compositionMode) = 0;
     virtual HRESULT Flush() = 0;
 };
+
+class wxD2DImageRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
+{
+public:
+    wxD2DImageRenderTargetResourceHolder(wxImage* image, ID2D1Factory* factory) :
+        m_resultImage(image), m_factory(factory)
+    {
+    }
+
+    virtual void Resize() wxOVERRIDE
+    {
+        // No resizing with bitmap render targets
+    }
+
+    void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
+        D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
+        wxCompositionMode compositionMode) wxOVERRIDE
+    {
+        D2D1_RECT_F destinationRectangle = D2D1::RectF(offset.x, offset.y, offset.x + imageRectangle.right, offset.y + imageRectangle.bottom);
+        GetD2DResource()->DrawBitmap(
+            (ID2D1Bitmap*)image, 
+            destinationRectangle, 
+            1.0f, 
+            wxD2DConvertBitmapInterpolationMode(interpolationQuality),
+            imageRectangle);
+    }
+
+    HRESULT Flush() wxOVERRIDE
+    {
+        HRESULT hr = m_nativeResource->Flush();
+        FlushRenderTargetToImage();
+        return hr;
+    }
+
+    ~wxD2DImageRenderTargetResourceHolder()
+    {
+        FlushRenderTargetToImage();
+    }
+
+protected:
+    void DoAcquireResource() wxOVERRIDE
+    {
+        HRESULT hr;
+
+        // Create a compatible WIC Bitmap
+        hr = wxWICImagingFactory()->CreateBitmap(
+            m_resultImage->GetWidth(), 
+            m_resultImage->GetHeight(), 
+            GUID_WICPixelFormat32bppPBGRA, 
+            WICBitmapCacheOnDemand, 
+            &m_wicBitmap);
+        wxCHECK_HRESULT_RET(hr);
+
+        // Create the render target
+        hr = m_factory->CreateWicBitmapRenderTarget(
+            m_wicBitmap, 
+            D2D1::RenderTargetProperties(
+                D2D1_RENDER_TARGET_TYPE_SOFTWARE, 
+                D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),
+            &m_nativeResource);
+        wxCHECK_HRESULT_RET(hr);
+    }
+
+private:
+    void FlushRenderTargetToImage()
+    {
+        int width = m_resultImage->GetWidth();
+        int height = m_resultImage->GetHeight();
+        int bufferSize = 4 * width * height;
+
+        BYTE* buffer = new BYTE[bufferSize];
+        m_wicBitmap->CopyPixels(NULL, 4 * width, bufferSize, buffer);
+        unsigned char* dest = m_resultImage->GetData();
+
+        int k = 0;
+        while (k < width * height)
+        {
+            wxPBGRAColor color = wxPBGRAColor(buffer + k * 4);
+            dest[k * 3 + 0] = color.r;
+            dest[k * 3 + 1] = color.g;
+            dest[k * 3 + 2] = color.b;
+            ++k;
+        }
+
+        delete[] buffer;
+    }
+
+private:
+    wxImage* m_resultImage;
+    wxCOMPtr<IWICBitmap> m_wicBitmap;
+
+    ID2D1Factory* m_factory;
 };
 
 class wxD2DHwndRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
@@ -2325,6 +2418,8 @@ class wxD2DContext : public wxGraphicsContext, wxD2DResourceManager
 public:
     wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd);
 
+    wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, wxImage& image);
+
     wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, void* nativeContext);
 
     ~wxD2DContext() wxOVERRIDE;
@@ -2461,6 +2556,13 @@ wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dF
 #else
     m_renderTargetHolder(new wxD2DHwndRenderTargetResourceHolder(hwnd, direct2dFactory))
 #endif
+{
+    Init();
+}
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, wxImage& image) :
+    wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory),
+    m_renderTargetHolder(new wxD2DImageRenderTargetResourceHolder(&image, direct2dFactory))
 {
     Init();
 }
@@ -3137,10 +3239,9 @@ wxGraphicsContext* wxD2DRenderer::CreateContext(wxWindow* window)
 }
 
 #if wxUSE_IMAGE
-wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& WXUNUSED(image))
+wxGraphicsContext* wxD2DRenderer::CreateContextFromImage(wxImage& image)
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    return new wxD2DContext(this, m_direct2dFactory, image);
 }
 #endif // wxUSE_IMAGE
 
