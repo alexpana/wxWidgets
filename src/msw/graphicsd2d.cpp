@@ -1965,11 +1965,27 @@ wxD2DFontData* wxGetD2DFontData(const wxGraphicsFont& font)
 class wxD2DRenderTargetResourceHolder : public wxD2DResourceHolder<ID2D1RenderTarget>
 {
 public:
-    virtual void Resize() = 0;
+    virtual void Resize()
+    {
+    }
+
     virtual void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
         D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
-        wxCompositionMode compositionMode) = 0;
-    virtual HRESULT Flush() = 0;
+        wxCompositionMode WXUNUSED(compositionMode))
+    {
+        D2D1_RECT_F destinationRectangle = D2D1::RectF(offset.x, offset.y, offset.x + imageRectangle.right, offset.y + imageRectangle.bottom);
+        m_nativeResource->DrawBitmap(
+            (ID2D1Bitmap*)image, 
+            destinationRectangle, 
+            1.0f, 
+            wxD2DConvertBitmapInterpolationMode(interpolationQuality),
+            imageRectangle);
+    }
+
+    virtual HRESULT Flush()
+    {
+        return m_nativeResource->Flush();
+    }
 };
 
 class wxD2DImageRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
@@ -1978,24 +1994,6 @@ public:
     wxD2DImageRenderTargetResourceHolder(wxImage* image, ID2D1Factory* factory) :
         m_resultImage(image), m_factory(factory)
     {
-    }
-
-    virtual void Resize() wxOVERRIDE
-    {
-        // No resizing with bitmap render targets
-    }
-
-    void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
-        D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
-        wxCompositionMode WXUNUSED(compositionMode)) wxOVERRIDE
-    {
-        D2D1_RECT_F destinationRectangle = D2D1::RectF(offset.x, offset.y, offset.x + imageRectangle.right, offset.y + imageRectangle.bottom);
-        GetD2DResource()->DrawBitmap(
-            (ID2D1Bitmap*)image, 
-            destinationRectangle, 
-            1.0f, 
-            wxD2DConvertBitmapInterpolationMode(interpolationQuality),
-            imageRectangle);
     }
 
     HRESULT Flush() wxOVERRIDE
@@ -2092,24 +2090,6 @@ public:
         }
     }
 
-    void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
-        D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
-        wxCompositionMode WXUNUSED(compositionMode)) wxOVERRIDE
-    {
-        D2D1_RECT_F destinationRectangle = D2D1::RectF(offset.x, offset.y, offset.x + imageRectangle.right, offset.y + imageRectangle.bottom);
-        GetRenderTarget()->DrawBitmap(
-            (ID2D1Bitmap*)image, 
-            destinationRectangle, 
-            1.0f, 
-            wxD2DConvertBitmapInterpolationMode(interpolationQuality),
-            imageRectangle);
-    }
-
-    HRESULT Flush() wxOVERRIDE
-    {
-        return m_nativeResource->Flush();
-    }
-
 protected:
     void DoAcquireResource() wxOVERRIDE
     {
@@ -2161,10 +2141,6 @@ public:
     {
         HRESULT hr = factory->QueryInterface(IID_ID2D1Factory1, (void**)&m_factory);
         wxCHECK_HRESULT_RET(hr);
-    }
-
-    void Resize() wxOVERRIDE
-    {
     }
 
     void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
