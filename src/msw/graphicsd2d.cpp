@@ -2312,6 +2312,43 @@ private:
 };
 #endif
 
+class wxD2DDCRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
+{
+public:
+    wxD2DDCRenderTargetResourceHolder(ID2D1Factory* factory, HDC hdc, const wxSize dcSize) : 
+        m_factory(factory), m_hdc(hdc)
+    {
+        m_dcSize.left = 0;
+        m_dcSize.top = 0;
+        m_dcSize.right = dcSize.GetWidth();
+        m_dcSize.bottom = dcSize.GetHeight();
+    }
+
+protected:
+    void DoAcquireResource()
+    {
+        ID2D1DCRenderTarget* renderTarget;
+        D2D1_RENDER_TARGET_PROPERTIES renderTargetProperties = D2D1::RenderTargetProperties(
+            D2D1_RENDER_TARGET_TYPE_DEFAULT, 
+            D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
+
+        HRESULT hr = m_factory->CreateDCRenderTarget(
+            &renderTargetProperties, 
+            &renderTarget);
+        wxCHECK_HRESULT_RET(hr);
+
+        hr = renderTarget->BindDC(m_hdc, &m_dcSize);
+        wxCHECK_HRESULT_RET(hr);
+
+        m_nativeResource = renderTarget;
+    }
+
+private:
+    ID2D1Factory* m_factory;
+    HDC m_hdc;
+    RECT m_dcSize;
+};
+
 // The null context has no state of its own and does nothing.
 // It is only used as a base class for the lightweight
 // measuring context. The measuring context cannot inherit from
@@ -2408,6 +2445,8 @@ class wxD2DContext : public wxGraphicsContext, wxD2DResourceManager
 {
 public:
     wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HWND hwnd);
+
+    wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HDC hdc, const wxSize& dcSize);
 
     wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, wxImage& image);
 
@@ -2547,6 +2586,13 @@ wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dF
 #else
     m_renderTargetHolder(new wxD2DHwndRenderTargetResourceHolder(hwnd, direct2dFactory))
 #endif
+{
+    Init();
+}
+
+wxD2DContext::wxD2DContext(wxGraphicsRenderer* renderer, ID2D1Factory* direct2dFactory, HDC hdc, const wxSize& dcSize) :
+    wxGraphicsContext(renderer), m_direct2dFactory(direct2dFactory),
+    m_renderTargetHolder(new wxD2DDCRenderTargetResourceHolder(direct2dFactory, hdc, dcSize))
 {
     Init();
 }
@@ -3188,10 +3234,12 @@ wxD2DRenderer::~wxD2DRenderer()
     m_direct2dFactory.reset();
 }
 
-wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& WXUNUSED(dc))
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& dc)
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    int width, height;
+    dc.GetSize(&width, &height);
+
+    return new wxD2DContext(this, m_direct2dFactory, dc.GetHDC(), wxSize(width, height));
 }
 
 wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& WXUNUSED(dc))
