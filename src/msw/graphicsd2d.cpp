@@ -513,7 +513,7 @@ D2D1_COMPOSITE_MODE wxD2DConvertCompositionMode(wxCompositionMode compositionMod
 
     return D2D1_COMPOSITE_MODE_SOURCE_COPY;
 }
-#endif // D2D1_BLEND_SUPPORTED
+#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 
 #if wxD2D_DEVICE_CONTEXT_SUPPORTED
 D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
@@ -534,7 +534,7 @@ D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationQuality(wxInterpolationQuality 
 
     return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
 }
-#endif // D2D1_INTERPOLATION_MODE_SUPPORTED
+#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 
 D2D1_BITMAP_INTERPOLATION_MODE wxD2DConvertBitmapInterpolationMode(wxInterpolationQuality interpolationQuality)
 {
