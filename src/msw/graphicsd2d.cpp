@@ -2278,7 +2278,7 @@ private:
         // Now we set up the Direct2D render target bitmap linked to the swapchain. 
         // Whenever we render to this bitmap, it is directly rendered to the 
         // swap chain associated with the window.
-        D2D1_BITMAP_PROPERTIES1 bitmapProperties =  D2D1::BitmapProperties1(
+        D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(
             D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
             D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE),
             dpiX, dpiY);
