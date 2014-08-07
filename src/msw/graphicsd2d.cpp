@@ -3248,10 +3248,12 @@ wxGraphicsContext* wxD2DRenderer::CreateContext(const wxWindowDC& dc)
     return new wxD2DContext(this, m_direct2dFactory, dc.GetHDC(), wxSize(width, height));
 }
 
-wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& WXUNUSED(dc))
+wxGraphicsContext* wxD2DRenderer::CreateContext(const wxMemoryDC& dc)
 {
-    wxFAIL_MSG("not implemented");
-    return NULL;
+    int width, height;
+    dc.GetSize(&width, &height);
+
+    return new wxD2DContext(this, m_direct2dFactory, dc.GetHDC(), wxSize(width, height));
 }
 
 #if wxUSE_PRINTING_ARCHITECTURE
