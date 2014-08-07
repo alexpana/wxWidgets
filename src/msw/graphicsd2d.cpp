@@ -2245,11 +2245,13 @@ private:
 
         // Identify the physical adapter (GPU or card) this device is runs on.
         wxCOMPtr<IDXGIAdapter> dxgiAdapter;
-        m_dxgiDevice->GetAdapter(&dxgiAdapter);
+        hr = m_dxgiDevice->GetAdapter(&dxgiAdapter);
+        wxCHECK_HRESULT_RET(hr);
 
         // Get the factory object that created the DXGI device.
         wxCOMPtr<IDXGIFactory2> dxgiFactory;
-        dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
+        hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
+        wxCHECK_HRESULT_RET(hr);
 
         // Get the final swap chain for this window from the DXGI factory.
         hr = dxgiFactory->CreateSwapChainForHwnd(
@@ -2259,13 +2261,16 @@ private:
             NULL,    // allow on all displays
             NULL,
             &m_swapChain);
+        wxCHECK_HRESULT_RET(hr);
 
         // Ensure that DXGI doesn't queue more than one frame at a time.
-        m_dxgiDevice->SetMaximumFrameLatency(1);
+        hr = m_dxgiDevice->SetMaximumFrameLatency(1);
+        wxCHECK_HRESULT_RET(hr);
 
         // Get the backbuffer for this window which is be the final 3D render target.
         wxCOMPtr<ID3D11Texture2D> backBuffer;
-        m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+        hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+        wxCHECK_HRESULT_RET(hr);
 
         FLOAT dpiX, dpiY;
         m_factory->GetDesktopDpi(&dpiX, &dpiY);
@@ -2280,13 +2285,15 @@ private:
 
         // Direct2D needs the dxgi version of the backbuffer surface pointer.
         wxCOMPtr<IDXGISurface> dxgiBackBuffer;
-        m_swapChain->GetBuffer(0, IID_PPV_ARGS(&dxgiBackBuffer));
+        hr = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&dxgiBackBuffer));
+        wxCHECK_HRESULT_RET(hr);
 
         // Get a D2D surface from the DXGI back buffer to use as the D2D render target.
-        m_context->CreateBitmapFromDxgiSurface(
+        hr = m_context->CreateBitmapFromDxgiSurface(
             dxgiBackBuffer.get(),
             &bitmapProperties,
             &m_targetBitmap);
+        wxCHECK_HRESULT_RET(hr);
 
         // Now we can set the Direct2D render target.
         m_context->SetTarget(m_targetBitmap);
