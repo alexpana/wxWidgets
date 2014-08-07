@@ -2997,7 +2997,6 @@ void wxD2DContext::SetPen(const wxGraphicsPen& pen)
 
         wxD2DPenData* penData = wxGetD2DPenData(pen);
         penData->Bind(this);
-        penData->GetBrush();
     }
 }
 
