@@ -1729,6 +1729,32 @@ wxD2DBrushData* wxGetD2DBrushData(const wxGraphicsBrush& brush)
     return static_cast<wxD2DBrushData*>(brush.GetGraphicsData());
 }
 
+bool wxIsHatchPenStyle(wxPenStyle penStyle)
+{
+    return penStyle >= wxPENSTYLE_FIRST_HATCH && penStyle <= wxPENSTYLE_LAST_HATCH;
+}
+
+wxBrushStyle wxConvertPenStyleToBrushStyle(wxPenStyle penStyle)
+{
+    switch(penStyle)
+    {
+    case wxPENSTYLE_BDIAGONAL_HATCH: 
+        return wxBRUSHSTYLE_BDIAGONAL_HATCH;
+    case wxPENSTYLE_CROSSDIAG_HATCH:
+        return wxBRUSHSTYLE_CROSSDIAG_HATCH;
+    case wxPENSTYLE_FDIAGONAL_HATCH:
+        return wxBRUSHSTYLE_FDIAGONAL_HATCH;
+    case wxPENSTYLE_CROSS_HATCH:
+        return wxBRUSHSTYLE_CROSS_HATCH;
+    case wxPENSTYLE_HORIZONTAL_HATCH:
+        return wxBRUSHSTYLE_HORIZONTAL_HATCH;
+    case wxPENSTYLE_VERTICAL_HATCH:
+        return wxBRUSHSTYLE_VERTICAL_HATCH;
+    }
+
+    return wxBRUSHSTYLE_SOLID;
+}
+
 //-----------------------------------------------------------------------------
 // wxD2DPenData declaration
 //-----------------------------------------------------------------------------
@@ -1785,6 +1811,11 @@ wxD2DPenData::wxD2DPenData(
     {
         strokeBrush.SetStipple(*(m_sourcePen.GetStipple()));
         strokeBrush.SetStyle(wxBRUSHSTYLE_STIPPLE);
+    }
+    else if(wxIsHatchPenStyle(m_sourcePen.GetStyle()))
+    {
+        strokeBrush.SetStyle(wxConvertPenStyleToBrushStyle(m_sourcePen.GetStyle()));
+        strokeBrush.SetColour(m_sourcePen.GetColour());
     }
     else
     {
