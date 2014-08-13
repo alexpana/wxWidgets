@@ -783,14 +783,21 @@
 
 // Enable wxGraphicsContext implementation using the Direct2D API.
 //
-// Default is 1 
+// The Direct2D API requires Windows 7 or Windows Vista with Service 
+// Pack 2 (SP2) and Platform Update for Windows Vista and later.
+// 
+// Default is 1 when available
 //
 // Recommended setting: 1 if supported by the Windows platform.
 //
 // notice that we can't use wxCHECK_VISUALC_VERSION() here as this file is
 // included from wx/platform.h before wxCHECK_VISUALC_VERSION() is defined
 #ifdef _MSC_VER
-#   define wxUSE_GRAPHICS_DIRECT2D 1
+#   if _MSC_VER >= 1500
+#       define wxUSE_GRAPHICS_DIRECT2D 1
+#   else
+#       define wxUSE_GRAPHICS_DIRECT2D 0
+#   endif
 #else
     // Disable support for other Windows compilers, enable it if your compiler
     // comes with new enough SDK or you installed the headers manually.
