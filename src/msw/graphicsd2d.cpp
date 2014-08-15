@@ -216,7 +216,8 @@ HRESULT WINAPI D2D1CreateFactory(
     CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
     void **ppIFactory)
 {
-    if (!wxDirect2D::Initialize()) return S_FALSE;
+    if (!wxDirect2D::Initialize()) 
+        return S_FALSE;
 
     return wxDirect2D::D2D1CreateFactory(
         factoryType,
@@ -230,7 +231,8 @@ void WINAPI D2D1MakeRotateMatrix(
     D2D1_POINT_2F center,
     D2D1_MATRIX_3X2_F *matrix)
 {
-    if (!wxDirect2D::Initialize()) return;
+    if (!wxDirect2D::Initialize()) 
+        return;
 
     wxDirect2D::D2D1MakeRotateMatrix(angle, center, matrix);
 }
@@ -238,7 +240,8 @@ void WINAPI D2D1MakeRotateMatrix(
 BOOL WINAPI D2D1InvertMatrix(
     D2D1_MATRIX_3X2_F *matrix)
 {
-    if (!wxDirect2D::Initialize()) return FALSE;
+    if (!wxDirect2D::Initialize()) 
+        return FALSE;
 
     return wxDirect2D::D2D1InvertMatrix(matrix);
 }
@@ -276,7 +279,8 @@ static IDWriteFactory* gs_IDWriteFactory = NULL;
 
 IDWriteFactory* wxDWriteFactory() 
 {
-    if (!wxDirect2D::Initialize()) return NULL;
+    if (!wxDirect2D::Initialize()) 
+        return NULL;
 
     if (gs_IDWriteFactory == NULL)
     {
@@ -731,7 +735,8 @@ wxCOMPtr<ID2D1Geometry> wxD2DConvertRegionToGeometry(ID2D1Factory* direct2dFacto
 
     // Count the number of rectangles which compose the region
     int rectCount = 0;
-    while(regionIterator++) rectCount++;
+    while(regionIterator++) 
+        rectCount++;
 
     // Build the array of geometries
     ID2D1Geometry** geometries = new ID2D1Geometry*[rectCount];
@@ -3417,7 +3422,8 @@ static wxD2DRenderer* gs_D2DRenderer = NULL;
 
 wxGraphicsRenderer* wxGraphicsRenderer::GetDirect2DRenderer()
 {
-    if (!wxDirect2D::Initialize()) return NULL;
+    if (!wxDirect2D::Initialize()) 
+        return NULL;
 
     if (gs_D2DRenderer == NULL)
     {
@@ -3433,9 +3439,9 @@ wxD2DRenderer::wxD2DRenderer()
 
     HRESULT result;
     result = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_direct2dFactory);
-    if (FAILED(result)) {
+
+    if (FAILED(result))
         wxFAIL_MSG("Could not create Direct2D Factory.");
-    }
 }
 
 wxD2DRenderer::~wxD2DRenderer()
