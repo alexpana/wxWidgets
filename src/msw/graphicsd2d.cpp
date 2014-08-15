@@ -137,15 +137,15 @@ private:
         if (!hasDirect2dSupport)
             return false;
 
-        #define wxLOAD_FUNC(dll, name, dllname)                \
-        name = (name##_t)dll.RawGetSymbol(dllname);            \
-            if ( !name )                                       \
+        #define wxLOAD_FUNC(dll, name)                    \
+        name = (name##_t)dll.RawGetSymbol(#name);         \
+            if ( !name )                                  \
             return false;
 
-        wxLOAD_FUNC(dllDirect2d, D2D1CreateFactory, "D2D1CreateFactory");
-        wxLOAD_FUNC(dllDirect2d, D2D1MakeRotateMatrix, "D2D1MakeRotateMatrix");
-        wxLOAD_FUNC(dllDirect2d, D2D1InvertMatrix, "D2D1InvertMatrix");
-        wxLOAD_FUNC(dllDirectWrite, DWriteCreateFactory, "DWriteCreateFactory");
+        wxLOAD_FUNC(dllDirect2d, D2D1CreateFactory);
+        wxLOAD_FUNC(dllDirect2d, D2D1MakeRotateMatrix);
+        wxLOAD_FUNC(dllDirect2d, D2D1InvertMatrix);
+        wxLOAD_FUNC(dllDirectWrite, DWriteCreateFactory);
 
         m_dllDirect2d = dllDirect2d.Detach();
         m_dllDirectWrite = dllDirectWrite.Detach();
