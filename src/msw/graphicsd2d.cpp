@@ -211,10 +211,10 @@ IMPLEMENT_DYNAMIC_CLASS(wxDirect2DModule, wxModule)
 
 // Implementation of the Direct2D functions
 HRESULT WINAPI D2D1CreateFactory(
-    _In_ D2D1_FACTORY_TYPE factoryType,
-    _In_ REFIID riid,
-    _In_opt_ CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
-    _Out_ void **ppIFactory)
+    D2D1_FACTORY_TYPE factoryType,
+    REFIID riid,
+    CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    void **ppIFactory)
 {
     if (!wxDirect2D::Initialize()) return S_FALSE;
 
@@ -226,9 +226,9 @@ HRESULT WINAPI D2D1CreateFactory(
 }
 
 void WINAPI D2D1MakeRotateMatrix(
-    _In_ FLOAT angle,
-    _In_ D2D1_POINT_2F center,
-    _Out_ D2D1_MATRIX_3X2_F *matrix)
+    FLOAT angle,
+    D2D1_POINT_2F center,
+    D2D1_MATRIX_3X2_F *matrix)
 {
     if (!wxDirect2D::Initialize()) return;
 
@@ -236,7 +236,7 @@ void WINAPI D2D1MakeRotateMatrix(
 }
 
 BOOL WINAPI D2D1InvertMatrix(
-    _Inout_ D2D1_MATRIX_3X2_F *matrix)
+    D2D1_MATRIX_3X2_F *matrix)
 {
     if (!wxDirect2D::Initialize()) return FALSE;
 
@@ -1398,10 +1398,10 @@ public:
     }
 
     HRESULT STDMETHODCALLTYPE CopyPixels(
-        __RPC__in_opt const WICRect* WXUNUSED(prc), 
+        const WICRect* WXUNUSED(prc), 
         UINT WXUNUSED(stride),
         UINT WXUNUSED(bufferSize),
-        __RPC__out_ecount_full(bufferSize) BYTE *buffer) wxOVERRIDE
+        BYTE *buffer) wxOVERRIDE
     {
         // patterns are encoded in a bit map of size 8 x 8
         static const unsigned char BDIAGONAL_PATTERN[8] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
