@@ -1984,11 +1984,15 @@ wxGraphicsRenderer* wxGraphicsRenderer::GetGDIPlusRenderer()
 
 wxGraphicsRenderer* wxGraphicsRenderer::GetDefaultRenderer()
 {
+    wxGraphicsRenderer* renderer;
+
 #if wxUSE_GRAPHICS_DIRECT2D
-    return wxGraphicsRenderer::GetDirect2DRenderer();
-#else
-    return wxGraphicsRenderer::GetGDIPlusRenderer()()
-#endif // wxUSE_GRAPHICS_DIRECT2D
+    renderer = wxGraphicsRenderer::GetDirect2DRenderer();
+    if (renderer == NULL)
+#endif
+        renderer = wxGraphicsRenderer::GetGDIPlusRenderer();
+
+    return renderer;
 }
 
 bool wxGDIPlusRenderer::EnsureIsLoaded()

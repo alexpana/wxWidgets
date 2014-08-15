@@ -12,7 +12,7 @@
 // Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
 // Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
 // Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
-#define wxD2D_DEVICE_CONTEXT_SUPPORTED 1
+#define wxD2D_DEVICE_CONTEXT_SUPPORTED 0
 
 #include <algorithm>
 #include <cfloat>
@@ -46,11 +46,17 @@
 
 #include "wx/graphics.h"
 #include "wx/dc.h"
+#include "wx/dynload.h"
 #include "wx/image.h"
 #include "wx/msw/private/comptr.h"
 #include "wx/private/graphics.h"
 #include "wx/stack.h"
 #include "wx/sharedptr.h"
+
+// This must be the last header included to only affect the DEFINE_GUID()
+// occurrences below but not any GUIDs declared in the standard files included
+// above.
+#include <initguid.h>
 
 // Generic error message for a failed direct2d operation
 #define wxFAILED_HRESULT_MSG(result) wxString::Format("Direct2D failed with HRESULT %x", (result))
@@ -79,6 +85,164 @@
 #define wxCHECK_RESOURCE_HOLDER_POST() \
     wxCHECK_RET(m_nativeResource != NULL, "Could not acquire native resource");
 
+// Helper class used to check for direct2d availability at
+// runtime and to dynamically load the required symbols
+// from d2d1.dll and dwrite.dll
+class wxDirect2D
+{
+public:
+    static bool Initialize()
+    {
+        if (!m_initialized)
+        {
+            m_hasDirect2dSupport = LoadLibraries();
+            m_initialized = true;
+        }
+
+        return m_hasDirect2dSupport;
+    }
+
+    static bool HasDirect2dSupport()
+    {
+        Initialize();
+
+        return m_hasDirect2dSupport;
+    }
+
+    static void Terminate()
+    {
+        if (!m_initialized)
+        {
+            return;
+        }
+
+        if (m_hasDirect2dSupport)
+        {
+            wxDynamicLibrary::Unload(m_dllDirect2d);
+            wxDynamicLibrary::Unload(m_dllDirectWrite);
+        }
+
+        m_hasDirect2dSupport = false;
+        m_initialized = false;
+    }
+
+private:
+    static bool LoadLibraries()
+    {
+        wxDynamicLibrary dllDirect2d(wxT("d2d1.dll"), wxDL_VERBATIM);
+        wxDynamicLibrary dllDirectWrite(wxT("dwrite.dll"), wxDL_VERBATIM);
+
+        bool hasDirect2dSupport = dllDirectWrite.IsLoaded() && dllDirectWrite.IsLoaded();
+
+        if (!hasDirect2dSupport)
+            return false;
+
+        #define wxLOAD_FUNC(dll, name, dllname)                \
+        name = (name##_t)dll.RawGetSymbol(dllname);            \
+            if ( !name )                                       \
+            return false;
+
+        wxLOAD_FUNC(dllDirect2d, D2D1CreateFactory, "D2D1CreateFactory");
+        wxLOAD_FUNC(dllDirect2d, D2D1MakeRotateMatrix, "D2D1MakeRotateMatrix");
+        wxLOAD_FUNC(dllDirect2d, D2D1InvertMatrix, "D2D1InvertMatrix");
+        wxLOAD_FUNC(dllDirectWrite, DWriteCreateFactory, "DWriteCreateFactory");
+
+        m_dllDirect2d = dllDirect2d.Detach();
+        m_dllDirectWrite = dllDirectWrite.Detach();
+
+        return true;
+    }
+
+public:
+    typedef HRESULT (WINAPI *D2D1CreateFactory_t)(D2D1_FACTORY_TYPE, REFIID, CONST D2D1_FACTORY_OPTIONS*, void**);
+    static D2D1CreateFactory_t D2D1CreateFactory;
+
+    typedef void (WINAPI *D2D1MakeRotateMatrix_t)(FLOAT, D2D1_POINT_2F, D2D1_MATRIX_3X2_F*);
+    static D2D1MakeRotateMatrix_t D2D1MakeRotateMatrix;
+
+    typedef BOOL (WINAPI *D2D1InvertMatrix_t)(D2D1_MATRIX_3X2_F*);
+    static D2D1InvertMatrix_t D2D1InvertMatrix;
+
+    typedef HRESULT (WINAPI *DWriteCreateFactory_t)(DWRITE_FACTORY_TYPE, REFIID, IUnknown**);
+    static DWriteCreateFactory_t DWriteCreateFactory;
+
+private:
+    static bool m_initialized;
+    static bool m_hasDirect2dSupport;
+
+    static wxDllType m_dllDirect2d;
+    static wxDllType m_dllDirectWrite;
+};
+
+// define the members
+bool wxDirect2D::m_initialized = false;
+bool wxDirect2D::m_hasDirect2dSupport = false;
+
+wxDllType wxDirect2D::m_dllDirect2d = NULL;
+wxDllType wxDirect2D::m_dllDirectWrite = NULL;
+
+// define the (not yet imported) functions
+wxDirect2D::D2D1CreateFactory_t wxDirect2D::D2D1CreateFactory = NULL;
+wxDirect2D::D2D1MakeRotateMatrix_t wxDirect2D::D2D1MakeRotateMatrix = NULL;
+wxDirect2D::D2D1InvertMatrix_t wxDirect2D::D2D1InvertMatrix = NULL;
+wxDirect2D::DWriteCreateFactory_t wxDirect2D::DWriteCreateFactory = NULL;
+
+// define the interface GUIDs
+DEFINE_GUID(wxIID_IWICImagingFactory, 
+            0xec5ec8a9, 0xc395, 0x4314, 0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70);
+
+DEFINE_GUID(wxIID_IDWriteFactory,
+            0xb859ee5a, 0xd838, 0x4b5b, 0xa2, 0xe8, 0x1a, 0xdc, 0x7d, 0x93, 0xdb, 0x48);
+
+DEFINE_GUID(wxIID_IWICBitmapSource,
+            0x00000120, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94);
+
+// module to unload Direct2D DLLs on program termination
+class wxDirect2DModule : public wxModule
+{
+public:
+    virtual bool OnInit() { return true; }
+    virtual void OnExit() { wxDirect2D::Terminate(); }
+
+    DECLARE_DYNAMIC_CLASS(wxDirect2DModule)
+};
+
+IMPLEMENT_DYNAMIC_CLASS(wxDirect2DModule, wxModule)
+
+// Implementation of the Direct2D functions
+HRESULT WINAPI D2D1CreateFactory(
+    _In_ D2D1_FACTORY_TYPE factoryType,
+    _In_ REFIID riid,
+    _In_opt_ CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    _Out_ void **ppIFactory)
+{
+    if (!wxDirect2D::Initialize()) return S_FALSE;
+
+    return wxDirect2D::D2D1CreateFactory(
+        factoryType,
+        riid,
+        pFactoryOptions,
+        ppIFactory);
+}
+
+void WINAPI D2D1MakeRotateMatrix(
+    _In_ FLOAT angle,
+    _In_ D2D1_POINT_2F center,
+    _Out_ D2D1_MATRIX_3X2_F *matrix)
+{
+    if (!wxDirect2D::Initialize()) return;
+
+    wxDirect2D::D2D1MakeRotateMatrix(angle, center, matrix);
+}
+
+BOOL WINAPI D2D1InvertMatrix(
+    _Inout_ D2D1_MATRIX_3X2_F *matrix)
+{
+    if (!wxDirect2D::Initialize()) return FALSE;
+
+    return wxDirect2D::D2D1InvertMatrix(matrix);
+}
+
 static bool gs_isComInitialized = false;
 
 void wxEnsureCOMLibraryInitialized()
@@ -101,7 +265,7 @@ IWICImagingFactory* wxWICImagingFactory()
             CLSID_WICImagingFactory,
             NULL,
             CLSCTX_INPROC_SERVER,
-            IID_IWICImagingFactory,
+            wxIID_IWICImagingFactory,
             (LPVOID*)&gs_WICImagingFactory);
         wxCHECK_HRESULT_RET_PTR(hr);
     }
@@ -112,12 +276,13 @@ static IDWriteFactory* gs_IDWriteFactory = NULL;
 
 IDWriteFactory* wxDWriteFactory() 
 {
-    if (gs_IDWriteFactory == NULL) {
-        wxEnsureCOMLibraryInitialized();
+    if (!wxDirect2D::Initialize()) return NULL;
 
-        DWriteCreateFactory(
+    if (gs_IDWriteFactory == NULL)
+    {
+        wxDirect2D::DWriteCreateFactory(
             DWRITE_FACTORY_TYPE_SHARED,
-            __uuidof(IDWriteFactory),
+            wxIID_IDWriteFactory,
             reinterpret_cast<IUnknown**>(&gs_IDWriteFactory)
             );
     }
@@ -1271,7 +1436,7 @@ public:
 
         *object = NULL;
 
-        if (referenceId == IID_IUnknown || referenceId == IID_IWICBitmapSource)
+        if (referenceId == IID_IUnknown || referenceId == wxIID_IWICBitmapSource)
         {
             *object = (LPVOID)this;
             AddRef();
@@ -3248,11 +3413,18 @@ private :
 
 IMPLEMENT_DYNAMIC_CLASS(wxD2DRenderer,wxGraphicsRenderer)
 
-static wxD2DRenderer gs_D2DRenderer;
+static wxD2DRenderer* gs_D2DRenderer = NULL;
 
 wxGraphicsRenderer* wxGraphicsRenderer::GetDirect2DRenderer()
 {
-    return &gs_D2DRenderer;
+    if (!wxDirect2D::Initialize()) return NULL;
+
+    if (gs_D2DRenderer == NULL)
+    {
+        gs_D2DRenderer = new wxD2DRenderer();
+    }
+
+    return gs_D2DRenderer;
 }
 
 wxD2DRenderer::wxD2DRenderer()
