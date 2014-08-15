@@ -46,7 +46,7 @@
 
 #include "wx/graphics.h"
 #include "wx/dc.h"
-#include "wx/dynload.h"
+#include "wx/dynlib.h"
 #include "wx/image.h"
 #include "wx/msw/private/comptr.h"
 #include "wx/private/graphics.h"
