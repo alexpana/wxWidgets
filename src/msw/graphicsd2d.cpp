@@ -109,30 +109,13 @@ public:
         return m_hasDirect2dSupport;
     }
 
-    static void Terminate()
-    {
-        if (!m_initialized)
-        {
-            return;
-        }
-
-        if (m_hasDirect2dSupport)
-        {
-            wxDynamicLibrary::Unload(m_dllDirect2d);
-            wxDynamicLibrary::Unload(m_dllDirectWrite);
-        }
-
-        m_hasDirect2dSupport = false;
-        m_initialized = false;
-    }
-
 private:
     static bool LoadLibraries()
     {
-        wxDynamicLibrary dllDirect2d(wxT("d2d1.dll"), wxDL_VERBATIM);
-        wxDynamicLibrary dllDirectWrite(wxT("dwrite.dll"), wxDL_VERBATIM);
+        m_dllDirect2d.Load(wxT("d2d1.dll"), wxDL_VERBATIM);
+        m_dllDirectWrite.Load(wxT("dwrite.dll"), wxDL_VERBATIM);
 
-        bool hasDirect2dSupport = dllDirectWrite.IsLoaded() && dllDirectWrite.IsLoaded();
+        bool hasDirect2dSupport = m_dllDirect2d.IsLoaded() && m_dllDirectWrite.IsLoaded();
 
         if (!hasDirect2dSupport)
             return false;
@@ -142,13 +125,10 @@ private:
             if ( !name )                                  \
             return false;
 
-        wxLOAD_FUNC(dllDirect2d, D2D1CreateFactory);
-        wxLOAD_FUNC(dllDirect2d, D2D1MakeRotateMatrix);
-        wxLOAD_FUNC(dllDirect2d, D2D1InvertMatrix);
-        wxLOAD_FUNC(dllDirectWrite, DWriteCreateFactory);
-
-        m_dllDirect2d = dllDirect2d.Detach();
-        m_dllDirectWrite = dllDirectWrite.Detach();
+        wxLOAD_FUNC(m_dllDirect2d, D2D1CreateFactory);
+        wxLOAD_FUNC(m_dllDirect2d, D2D1MakeRotateMatrix);
+        wxLOAD_FUNC(m_dllDirect2d, D2D1InvertMatrix);
+        wxLOAD_FUNC(m_dllDirectWrite, DWriteCreateFactory);
 
         return true;
     }
@@ -170,16 +150,16 @@ private:
     static bool m_initialized;
     static bool m_hasDirect2dSupport;
 
-    static wxDllType m_dllDirect2d;
-    static wxDllType m_dllDirectWrite;
+    static wxDynamicLibrary m_dllDirect2d;
+    static wxDynamicLibrary m_dllDirectWrite;
 };
 
 // define the members
 bool wxDirect2D::m_initialized = false;
 bool wxDirect2D::m_hasDirect2dSupport = false;
 
-wxDllType wxDirect2D::m_dllDirect2d = NULL;
-wxDllType wxDirect2D::m_dllDirectWrite = NULL;
+wxDynamicLibrary wxDirect2D::m_dllDirect2d;
+wxDynamicLibrary wxDirect2D::m_dllDirectWrite;
 
 // define the (not yet imported) functions
 wxDirect2D::D2D1CreateFactory_t wxDirect2D::D2D1CreateFactory = NULL;
@@ -196,18 +176,6 @@ DEFINE_GUID(wxIID_IDWriteFactory,
 
 DEFINE_GUID(wxIID_IWICBitmapSource,
             0x00000120, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94);
-
-// module to unload Direct2D DLLs on program termination
-class wxDirect2DModule : public wxModule
-{
-public:
-    virtual bool OnInit() { return true; }
-    virtual void OnExit() { wxDirect2D::Terminate(); }
-
-    DECLARE_DYNAMIC_CLASS(wxDirect2DModule)
-};
-
-IMPLEMENT_DYNAMIC_CLASS(wxDirect2DModule, wxModule)
 
 // Implementation of the Direct2D functions
 HRESULT WINAPI D2D1CreateFactory(
