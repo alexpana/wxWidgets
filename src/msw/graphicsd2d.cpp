@@ -22,6 +22,10 @@
 // Ensure no previous defines interfere with the Direct2D API headers
 #undef GetHwnd
 
+#define D2D1CreateFactory wxD2D1CreateFactory
+#define D2D1MakeRotateMatrix wxD2D1MakeRotateMatrix
+#define D2D1InvertMatrix wxD2D1InvertMatrix
+
 #include <d2d1.h>
 
 #include <dwrite.h>
@@ -178,7 +182,7 @@ DEFINE_GUID(wxIID_IWICBitmapSource,
             0x00000120, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94);
 
 // Implementation of the Direct2D functions
-HRESULT WINAPI D2D1CreateFactory(
+HRESULT WINAPI wxD2D1CreateFactory(
     D2D1_FACTORY_TYPE factoryType,
     REFIID riid,
     CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
@@ -194,7 +198,7 @@ HRESULT WINAPI D2D1CreateFactory(
         ppIFactory);
 }
 
-void WINAPI D2D1MakeRotateMatrix(
+void WINAPI wxD2D1MakeRotateMatrix(
     FLOAT angle,
     D2D1_POINT_2F center,
     D2D1_MATRIX_3X2_F *matrix)
@@ -205,7 +209,7 @@ void WINAPI D2D1MakeRotateMatrix(
     wxDirect2D::D2D1MakeRotateMatrix(angle, center, matrix);
 }
 
-BOOL WINAPI D2D1InvertMatrix(
+BOOL WINAPI wxD2D1InvertMatrix(
     D2D1_MATRIX_3X2_F *matrix)
 {
     if (!wxDirect2D::Initialize()) 
