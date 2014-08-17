@@ -2939,12 +2939,12 @@ bool wxD2DContext::SetAntialiasMode(wxAntialiasMode antialias)
 
 bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
 {
-#if wxD2D_DEVICE_CONTEXT_SUPPORTED
+    // Since different versions of Direct2D have different enumerations for
+    // interpolation quality, we deffer the conversion to the method which
+    // does the actual drawing.
+
     m_interpolation = interpolation;
     return true;
-#else
-    return false;
-#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 }
 
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
