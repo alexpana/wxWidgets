@@ -2134,10 +2134,22 @@ wxD2DFontData* wxGetD2DFontData(const wxGraphicsFont& font)
 class wxD2DRenderTargetResourceHolder : public wxD2DResourceHolder<ID2D1RenderTarget>
 {
 public:
+    // This method is called when an external event signals the underlying DC
+    // is resized (e.g. the resizing of a window). Some implementations can leave
+    // this method empty, while others must adjust the render target size to match
+    // the underlying DC.
     virtual void Resize()
     {
     }
 
+    // We use this method instead of the one provided by the native render target
+    // because Direct2D 1.0 render targets do not accept a composition mode
+    // parameter, while the device context in Direct2D 1.1 does. This way, we make
+    // best use of the capabilities of each render target.
+    //
+    // The default implementation works for all render targets, but the D2D 1.0
+    // render target holders shouldn't need to override it, since none of the
+    // 1.0 render targets offer a better version of this method.
     virtual void DrawBitmap(ID2D1Image* image, D2D1_POINT_2F offset,
         D2D1_RECT_F imageRectangle, wxInterpolationQuality interpolationQuality,
         wxCompositionMode WXUNUSED(compositionMode))
@@ -2151,6 +2163,10 @@ public:
             imageRectangle);
     }
 
+    // We use this method instead of the one provided by the native render target
+    // because some contexts might require writing to a buffer (e.g. an image
+    // context), and some render targets might require additional operations to
+    // be executed (e.g. the device context must present the swap chain)
     virtual HRESULT Flush()
     {
         return m_nativeResource->Flush();
