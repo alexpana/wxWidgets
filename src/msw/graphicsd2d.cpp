@@ -657,7 +657,7 @@ D2D1_COMPOSITE_MODE wxD2DConvertCompositionMode(wxCompositionMode compositionMod
 #endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 
 #if wxD2D_DEVICE_CONTEXT_SUPPORTED
-D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationQuality(wxInterpolationQuality interpolationQuality)
+D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationMode(wxInterpolationQuality interpolationQuality)
 {
     switch (interpolationQuality)
     {
@@ -2339,7 +2339,7 @@ public:
         m_context->DrawImage(image, 
             offset, 
             imageRectangle, 
-            wxD2DConvertInterpolationQuality(interpolationQuality), 
+            wxD2DConvertInterpolationMode(interpolationQuality), 
             wxD2DConvertCompositionMode(compositionMode));
     }
 
