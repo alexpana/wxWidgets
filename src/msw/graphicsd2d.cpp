@@ -2953,9 +2953,9 @@ bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
     return true;
 }
 
+#if wxD2D_DEVICE_CONTEXT_SUPPORTED
 bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
 {
-#if wxD2D_DEVICE_CONTEXT_SUPPORTED
     if (wxD2DCompositionModeSupported(op))
     {
         m_composition = op;
@@ -2965,10 +2965,13 @@ bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
     {
         return false;
     }
-#else
-    return false;
-#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 }
+#else
+bool wxD2DContext::SetCompositionMode(wxCompositionMode)
+{
+    return false;
+}
+#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
 {
