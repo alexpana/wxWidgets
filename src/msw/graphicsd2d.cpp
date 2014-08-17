@@ -656,6 +656,8 @@ D2D1_COMPOSITE_MODE wxD2DConvertCompositionMode(wxCompositionMode compositionMod
 }
 #endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 
+// Direct2D 1.1 introduces a new enum for specifying the interpolation quality 
+// which is only used with the ID2D1DeviceContext::DrawImage method.
 #if wxD2D_DEVICE_CONTEXT_SUPPORTED
 D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationMode(wxInterpolationQuality interpolationQuality)
 {
