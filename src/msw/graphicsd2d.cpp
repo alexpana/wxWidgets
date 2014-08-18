@@ -9,9 +9,7 @@
 
 #include "wx/wxprec.h"
 
-// Minimum supported client    Windows 8 and Platform Update for Windows 7 [desktop apps | Windows Store apps]
-// Minimum supported server    Windows Server 2012 and Platform Update for Windows Server 2008 R2 [desktop apps | Windows Store apps]
-// Minimum supported phone     Windows Phone 8.1 [Windows Phone Silverlight 8.1 and Windows Runtime apps]
+// Minimum supported client: Windows 8 and Platform Update for Windows 7
 #define wxD2D_DEVICE_CONTEXT_SUPPORTED 0
 
 #include <algorithm>
