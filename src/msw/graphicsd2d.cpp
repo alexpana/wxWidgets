@@ -88,9 +88,9 @@
 #define wxCHECK_RESOURCE_HOLDER_POST() \
     wxCHECK_RET(m_nativeResource != NULL, "Could not acquire native resource");
 
-// Helper class used to check for direct2d availability at
-// runtime and to dynamically load the required symbols
-// from d2d1.dll and dwrite.dll
+
+// Helper class used to check for direct2d availability at runtime and to 
+// dynamically load the required symbols from d2d1.dll and dwrite.dll
 class wxDirect2D
 {
 public:
