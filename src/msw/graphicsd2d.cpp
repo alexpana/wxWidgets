@@ -9,6 +9,8 @@
 
 #include "wx/wxprec.h"
 
+#if wxUSE_GRAPHICS_DIRECT2D
+
 // Minimum supported client: Windows 8 and Platform Update for Windows 7
 #define wxD2D_DEVICE_CONTEXT_SUPPORTED 0
 
@@ -43,8 +45,6 @@
 #ifdef __BORLANDC__
 #pragma hdrstop
 #endif
-
-#if wxUSE_GRAPHICS_DIRECT2D
 
 #include "wx/graphics.h"
 #include "wx/dc.h"
