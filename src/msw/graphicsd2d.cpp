@@ -100,18 +100,18 @@ public:
     {
         if (!m_initialized)
         {
-            m_hasDirect2dSupport = LoadLibraries();
+            m_hasDirect2DSupport = LoadLibraries();
             m_initialized = true;
         }
 
-        return m_hasDirect2dSupport;
+        return m_hasDirect2DSupport;
     }
 
-    static bool HasDirect2dSupport()
+    static bool HasDirect2DSupport()
     {
         Initialize();
 
-        return m_hasDirect2dSupport;
+        return m_hasDirect2DSupport;
     }
 
 private:
@@ -153,7 +153,7 @@ public:
 
 private:
     static bool m_initialized;
-    static bool m_hasDirect2dSupport;
+    static bool m_hasDirect2DSupport;
 
     static wxDynamicLibrary m_dllDirect2d;
     static wxDynamicLibrary m_dllDirectWrite;
@@ -161,7 +161,7 @@ private:
 
 // define the members
 bool wxDirect2D::m_initialized = false;
-bool wxDirect2D::m_hasDirect2dSupport = false;
+bool wxDirect2D::m_hasDirect2DSupport = false;
 
 wxDynamicLibrary wxDirect2D::m_dllDirect2d;
 wxDynamicLibrary wxDirect2D::m_dllDirectWrite;
