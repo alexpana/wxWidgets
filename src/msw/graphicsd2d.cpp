@@ -48,10 +48,6 @@
 
 #if wxUSE_GRAPHICS_DIRECT2D
 
-#ifndef WX_PRECOMP
-// add individual includes here
-#endif
-
 #include "wx/graphics.h"
 #include "wx/dc.h"
 #include "wx/dynlib.h"
