@@ -63,29 +63,32 @@
 #include <initguid.h>
 
 // Generic error message for a failed direct2d operation
-#define wxFAILED_HRESULT_MSG(result) wxString::Format("Direct2D failed with HRESULT %x", (result))
+#define wxFAILED_HRESULT_MSG(result) \
+    wxString::Format("Direct2D failed with HRESULT %x", (result))
 
-// Checks a HRESULT and displaying an error message when
-// and returning from the enclosing function when the result
-// indicates a failure
-#define wxCHECK_HRESULT_RET(result) wxCHECK_RET(SUCCEEDED(result), wxFAILED_HRESULT_MSG(result))
+// Checks a HRESULT value for success, otherwise displays an error message and
+// returns from the enclosing function.
+#define wxCHECK_HRESULT_RET(result) \
+    wxCHECK_RET(SUCCEEDED(result), wxFAILED_HRESULT_MSG(result))
 
-#define wxCHECK2_HRESULT_RET(result, returnValue) \
-    wxCHECK2_MSG(SUCCEEDED(result), return returnValue, wxFAILED_HRESULT_MSG(result))
+#define wxCHECK2_HRESULT_RET(result, returnValue)                             \
+    wxCHECK2_MSG(SUCCEEDED(result), return returnValue,                       \
+        wxFAILED_HRESULT_MSG(result))
 
-// Variation of wxCHECK_HRESULT_RET when the enclosing
-// function must return a pointer result. This macro
-// returns with NULL.
+// Variation of wxCHECK_HRESULT_RET for functions which must return a pointer
 #define wxCHECK_HRESULT_RET_PTR(result) wxCHECK2_HRESULT_RET(result, NULL)
 
-// Checks the preconditions of wxManagedResourceHolder::AcquireResource, 
-// namely that it is bound to a manager.
-#define wxCHECK_RESOURCE_HOLDER_PRE() { \
-    if (IsResourceAcquired()) return; \
-    wxCHECK_RET(IsBound(), "Cannot acquire a native resource without being bound to a manager"); }\
+// Checks the precondition of wxManagedResourceHolder::AcquireResource, namely
+// that it is bound to a manager.
+#define wxCHECK_RESOURCE_HOLDER_PRE()                                         \
+    {                                                                         \
+    if (IsResourceAcquired()) return;                                         \
+    wxCHECK_RET(IsBound(),                                                    \
+        "Cannot acquire a native resource without being bound to a manager"); \
+    }
 
-// Checks the postconditions of wxManagedResourceHolder::AcquireResource,
-// namely that it was successful in acquiring the native resource.
+// Checks the postcondition of wxManagedResourceHolder::AcquireResource, namely 
+// that it was successful in acquiring the native resource.
 #define wxCHECK_RESOURCE_HOLDER_POST() \
     wxCHECK_RET(m_nativeResource != NULL, "Could not acquire native resource");
 
