@@ -96,6 +96,14 @@
 class wxDirect2D
 {
 public:
+
+    enum wxD2DVersion 
+    {
+        wxD2D_VERSION_1_0,
+        wxD2D_VERSION_1_1,
+        wxD2D_VERSION_NONE
+    };
+
     static bool Initialize()
     {
         if (!m_initialized)
@@ -112,6 +120,11 @@ public:
         Initialize();
 
         return m_hasDirect2DSupport;
+    }
+
+    static wxD2DVersion GetDirect2DVersion()
+    {
+        return m_D2DRuntimeVersion;
     }
 
 private:
@@ -135,6 +148,8 @@ private:
         wxLOAD_FUNC(m_dllDirect2d, D2D1InvertMatrix);
         wxLOAD_FUNC(m_dllDirectWrite, DWriteCreateFactory);
 
+        m_D2DRuntimeVersion = wxD2D_VERSION_1_0;
+
         return true;
     }
 
@@ -154,6 +169,7 @@ public:
 private:
     static bool m_initialized;
     static bool m_hasDirect2DSupport;
+    static wxD2DVersion m_D2DRuntimeVersion;
 
     static wxDynamicLibrary m_dllDirect2d;
     static wxDynamicLibrary m_dllDirectWrite;
@@ -162,6 +178,7 @@ private:
 // define the members
 bool wxDirect2D::m_initialized = false;
 bool wxDirect2D::m_hasDirect2DSupport = false;
+wxDirect2D::wxD2DVersion wxDirect2D::m_D2DRuntimeVersion = wxD2D_VERSION_NONE;
 
 wxDynamicLibrary wxDirect2D::m_dllDirect2d;
 wxDynamicLibrary wxDirect2D::m_dllDirectWrite;
