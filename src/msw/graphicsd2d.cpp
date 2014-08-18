@@ -3667,15 +3667,27 @@ wxString wxD2DRenderer::GetName() const
 
 void wxD2DRenderer::GetVersion(int* major, int* minor, int* micro) const
 {
-    if ( major ) *major = 1;
+    if (wxDirect2D::HasDirect2DSupport())
+    {
+        if (major) 
+            *major = 1;
 
-#if wxD2D_DEVICE_CONTEXT_SUPPORTED
-    if ( minor ) *minor = 1;
-#else
-    if ( minor ) *minor = 0;
-#endif
+        if (minor)
+        {
+            switch(wxDirect2D::GetDirect2DVersion())
+            {
+            case wxDirect2D::wxD2D_VERSION_1_0:
+                *minor = 0;
+                break;
+            case wxDirect2D::wxD2D_VERSION_1_1:
+                *minor = 1;
+                break;
+            }
+        }
 
-    if ( micro ) *micro = 0;
+        if (micro) 
+            *micro = 0;
+    }
 }
 
 ID2D1Factory* wxD2DRenderer::GetD2DFactory()
