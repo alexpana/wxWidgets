@@ -22,6 +22,10 @@
 // Ensure no previous defines interfere with the Direct2D API headers
 #undef GetHwnd
 
+// We load these functions at runtime from the d2d1.dll.
+// However, since they are also used inside the d2d1.h header we must provide
+// implementations matching the exact declarations. These defines ensures we
+// are not violating the ODR rule.
 #define D2D1CreateFactory wxD2D1CreateFactory
 #define D2D1MakeRotateMatrix wxD2D1MakeRotateMatrix
 #define D2D1InvertMatrix wxD2D1InvertMatrix
