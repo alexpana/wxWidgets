@@ -31,9 +31,7 @@
 #define D2D1InvertMatrix wxD2D1InvertMatrix
 
 #include <d2d1.h>
-
 #include <dwrite.h>
-
 #include <wincodec.h>
 
 #if wxD2D_DEVICE_CONTEXT_SUPPORTED
@@ -521,13 +519,10 @@ D2D1_CAP_STYLE wxD2DConvertPenCap(wxPenCap cap)
     {
     case wxCAP_ROUND:
         return D2D1_CAP_STYLE_ROUND;
-
     case wxCAP_PROJECTING:
         return D2D1_CAP_STYLE_SQUARE;
-
     case wxCAP_BUTT:
         return D2D1_CAP_STYLE_FLAT;
-
     case wxCAP_INVALID: 
         return D2D1_CAP_STYLE_FLAT;
     }
@@ -542,13 +537,10 @@ D2D1_LINE_JOIN wxD2DConvertPenJoin(wxPenJoin join)
     {
     case wxJOIN_BEVEL:
         return D2D1_LINE_JOIN_BEVEL;
-
     case wxJOIN_MITER:
         return D2D1_LINE_JOIN_MITER;
-
     case wxJOIN_ROUND:
         return D2D1_LINE_JOIN_ROUND;
-
     case wxJOIN_INVALID:
         return D2D1_LINE_JOIN_MITER;
     }
