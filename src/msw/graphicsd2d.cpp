@@ -514,6 +514,7 @@ D2D1_CAP_STYLE wxD2DConvertPenCap(wxPenCap cap)
         return D2D1_CAP_STYLE_FLAT;
     }
 
+    wxFAIL_MSG("unknown pen cap"); 
     return D2D1_CAP_STYLE_FLAT;
 }
 
@@ -534,6 +535,7 @@ D2D1_LINE_JOIN wxD2DConvertPenJoin(wxPenJoin join)
         return D2D1_LINE_JOIN_MITER;
     }
 
+    wxFAIL_MSG("unknown pen join");
     return D2D1_LINE_JOIN_MITER;
 }
 
@@ -580,6 +582,7 @@ D2D1_DASH_STYLE wxD2DConvertPenStyle(wxPenStyle dashStyle)
         return D2D1_DASH_STYLE_SOLID;
     }
 
+    wxFAIL_MSG("unknown pen style");
     return D2D1_DASH_STYLE_SOLID;
 }
 
@@ -602,7 +605,8 @@ D2D1_ANTIALIAS_MODE wxD2DConvertAntialiasMode(wxAntialiasMode antialiasMode)
         return D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
     }
 
-    return D2D1_ANTIALIAS_MODE_ALIASED;;
+    wxFAIL_MSG("unknown antialias mode");
+    return D2D1_ANTIALIAS_MODE_ALIASED;
 }
 
 #if wxD2D_DEVICE_CONTEXT_SUPPORTED
@@ -652,6 +656,7 @@ D2D1_COMPOSITE_MODE wxD2DConvertCompositionMode(wxCompositionMode compositionMod
         return D2D1_COMPOSITE_MODE_SOURCE_COPY;
     }
 
+    wxFAIL_MSG("unknown composition mode");
     return D2D1_COMPOSITE_MODE_SOURCE_COPY;
 }
 #endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
@@ -675,6 +680,7 @@ D2D1_INTERPOLATION_MODE wxD2DConvertInterpolationMode(wxInterpolationQuality int
         return D2D1_INTERPOLATION_MODE_CUBIC;
     }
 
+    wxFAIL_MSG("unknown interpolation quality");
     return D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
 }
 #endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
@@ -695,6 +701,7 @@ D2D1_BITMAP_INTERPOLATION_MODE wxD2DConvertBitmapInterpolationMode(wxInterpolati
         return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
     }
 
+    wxFAIL_MSG("unknown interpolation quality");
     return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
 }
 
