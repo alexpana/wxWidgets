@@ -1409,12 +1409,24 @@ public:
 
         switch (m_brushStyle)
         {
-            case wxBRUSHSTYLE_BDIAGONAL_HATCH: CopyPattern(buffer, BDIAGONAL_PATTERN); break;
-            case wxBRUSHSTYLE_CROSSDIAG_HATCH: CopyPattern(buffer, CROSSDIAG_PATTERN); break;
-            case wxBRUSHSTYLE_FDIAGONAL_HATCH: CopyPattern(buffer, FDIAGONAL_PATTERN); break;
-            case wxBRUSHSTYLE_CROSS_HATCH: CopyPattern(buffer, CROSS_PATTERN); break;
-            case wxBRUSHSTYLE_HORIZONTAL_HATCH: CopyPattern(buffer, HORIZONTAL_PATTERN); break;
-            case wxBRUSHSTYLE_VERTICAL_HATCH: CopyPattern(buffer, VERTICAL_PATTERN); break;
+            case wxBRUSHSTYLE_BDIAGONAL_HATCH: 
+                CopyPattern(buffer, BDIAGONAL_PATTERN); 
+                break;
+            case wxBRUSHSTYLE_CROSSDIAG_HATCH: 
+                CopyPattern(buffer, CROSSDIAG_PATTERN); 
+                break;
+            case wxBRUSHSTYLE_FDIAGONAL_HATCH: 
+                CopyPattern(buffer, FDIAGONAL_PATTERN); 
+                break;
+            case wxBRUSHSTYLE_CROSS_HATCH: 
+                CopyPattern(buffer, CROSS_PATTERN); 
+                break;
+            case wxBRUSHSTYLE_HORIZONTAL_HATCH: 
+                CopyPattern(buffer, HORIZONTAL_PATTERN); 
+                break;
+            case wxBRUSHSTYLE_VERTICAL_HATCH: 
+                CopyPattern(buffer, VERTICAL_PATTERN); 
+                break;
         }
 
         return S_OK;
