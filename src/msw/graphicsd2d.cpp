@@ -2206,6 +2206,25 @@ public:
     {
         return m_nativeResource->Flush();
     }
+
+    // Composition is not supported at in D2D 1.0, and we only allow for:
+    // wxCOMPOSITION_DEST - which is essentially a no-op and is handled
+    //                      externally by preventing any draw calls.
+    // wxCOMPOSITION_OVER - which copies the source over the destination using
+    //                      alpha blending. This is the default way D2D 1.0
+    //                      draws images.
+    virtual bool SetCompositionMode(wxCompositionMode compositionMode)
+    {
+        if (compositionMode == wxCOMPOSITION_DEST ||
+            compositionMode == wxCOMPOSITION_OVER)
+        {
+            // There's nothing we can do but notify the caller the composition
+            // mode is supported
+            return true;
+        }
+
+        return false;
+    }
 };
 
 class wxD2DImageRenderTargetResourceHolder : public wxD2DRenderTargetResourceHolder
@@ -2842,6 +2861,7 @@ void wxD2DContext::Init()
 {
     m_cachedRenderTarget = NULL;
     m_clipMode = CLIP_MODE_NONE;
+    m_composition = wxCOMPOSITION_OVER;
     m_clipLayerAcquired = false; 
     m_renderTargetHolder->Bind(this);
     m_enableOffset = true;
@@ -2982,25 +3002,20 @@ bool wxD2DContext::SetInterpolationQuality(wxInterpolationQuality interpolation)
     return true;
 }
 
-#if wxD2D_DEVICE_CONTEXT_SUPPORTED
-bool wxD2DContext::SetCompositionMode(wxCompositionMode op)
+bool wxD2DContext::SetCompositionMode(wxCompositionMode compositionMode)
 {
-    if (wxD2DCompositionModeSupported(op))
+    if (m_composition == compositionMode)
+        return true;
+
+    if (m_renderTargetHolder->SetCompositionMode(compositionMode))
     {
-        m_composition = op;
+        // the composition mode is supported by the render target
+        m_composition = compositionMode;
         return true;
     }
-    else 
-    {
-        return false;
-    }
-}
-#else
-bool wxD2DContext::SetCompositionMode(wxCompositionMode)
-{
+
     return false;
 }
-#endif // wxD2D_DEVICE_CONTEXT_SUPPORTED
 
 void wxD2DContext::BeginLayer(wxDouble opacity)
 {
