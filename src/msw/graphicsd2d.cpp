@@ -1584,6 +1584,7 @@ protected:
                     }
                     else
                     {
+                        color.a = 255;
                         color.Write(resultBuffer + i);
                     }
                 }
